@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:fx_tutor/common/enum/drawer_item.dart';
+import 'package:fx_tutor/main_cubit.dart';
 import 'package:fx_tutor/widgets/screens/auth/register_screen.dart';
 import 'package:fx_tutor/widgets/screens/home/home_screen.dart';
 
@@ -52,6 +54,7 @@ class Page extends StatelessWidget {
             ).showSnackBar(notiBar("Đăng nhập thất bại, hãy kiểm tra lại", true));
           } else if (state.loadStatus == LoadStatus.Done) {
             Navigator.pushReplacementNamed(context, HomeScreen.route);
+            context.read<MainCubit>().setSelected(DrawerItem.Home);
           }
         },
         builder: (context, state) {
