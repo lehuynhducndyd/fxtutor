@@ -6,6 +6,7 @@ import 'package:fx_tutor/widgets/screens/setting/setting_screen.dart';
 import '../../../common/enum/drawer_item.dart';
 import '../ai_chat/ai_chat_screen.dart';
 import '../caculator/caculator.dart';
+import '../content_manager/content_manager_screen.dart';
 import '../menu/menu_screen.dart';
 import '../profile/profile_screen.dart';
 
@@ -103,11 +104,18 @@ class _HomeScreenState extends State<HomeScreen> {
 
 class Body extends StatelessWidget {
   final PageController pageController;
+
   const Body({super.key, required this.pageController});
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<MainCubit, MainState>(
+    return BlocConsumer<MainCubit, MainState>(
+      listener: (context, state) {
+        if (state.selected == DrawerItem.ContentManager) {
+          Navigator.pushNamed(context, ContentManagerScreen.route);
+        }
+        ;
+      },
       builder: (context, state) {
         if (state.selected == DrawerItem.Setting) {
           return SafeArea(child: SettingScreen());
@@ -125,6 +133,7 @@ class Body extends StatelessWidget {
 
 class MainView extends StatelessWidget {
   final PageController pageController;
+
   const MainView({super.key, required this.pageController});
 
   @override

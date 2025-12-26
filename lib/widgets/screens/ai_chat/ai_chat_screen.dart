@@ -49,13 +49,13 @@ class _AiChatScreenState extends State<AiChatScreen> {
   }
 
   Future<void> _initializeModel() async {
-    //final instructions = await rootBundle.loadString("assets/system_instruction.txt");
-    //print(instructions.substring(0, 100));
+    final instructions = await rootBundle.loadString("assets/system_instruction.txt");
+    print(instructions.substring(0, 100));
     setState(() {
       _model = GenerativeModel(
         model: 'gemini-2.5-flash',
         apiKey: widget.apiKey,
-        //systemInstruction: Content.system(instructions),
+        systemInstruction: Content.system(instructions),
       );
     });
   }

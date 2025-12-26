@@ -4,6 +4,7 @@ class UserModel {
   final String? fullName;
   final String? avatarUrl;
   final DateTime createdAt;
+  final String role;
   factory UserModel.fromJson(Map<String, dynamic> json) {
     return UserModel(
       id: json['id'],
@@ -11,6 +12,7 @@ class UserModel {
       fullName: json['full_name'],
       avatarUrl: json['avatar_url'],
       createdAt: DateTime.parse(json['created_at']),
+      role: json['role'],
     );
   }
 
@@ -21,6 +23,7 @@ class UserModel {
     this.fullName,
     this.avatarUrl,
     required this.createdAt,
+    required this.role,
   });
 
   @override
@@ -32,11 +35,17 @@ class UserModel {
           email == other.email &&
           fullName == other.fullName &&
           avatarUrl == other.avatarUrl &&
-          createdAt == other.createdAt);
+          createdAt == other.createdAt &&
+          role == other.role);
 
   @override
   int get hashCode =>
-      id.hashCode ^ email.hashCode ^ fullName.hashCode ^ avatarUrl.hashCode ^ createdAt.hashCode;
+      id.hashCode ^
+      email.hashCode ^
+      fullName.hashCode ^
+      avatarUrl.hashCode ^
+      createdAt.hashCode ^
+      role.hashCode;
 
   @override
   String toString() {
@@ -46,6 +55,7 @@ class UserModel {
         ' fullName: $fullName,' +
         ' avatarUrl: $avatarUrl,' +
         ' createdAt: $createdAt,' +
+        ' role: $role,' +
         '}';
   }
 
@@ -55,6 +65,7 @@ class UserModel {
     String? fullName,
     String? avatarUrl,
     DateTime? createdAt,
+    String? role,
   }) {
     return UserModel(
       id: id ?? this.id,
@@ -62,6 +73,7 @@ class UserModel {
       fullName: fullName ?? this.fullName,
       avatarUrl: avatarUrl ?? this.avatarUrl,
       createdAt: createdAt ?? this.createdAt,
+      role: role ?? this.role,
     );
   }
 
@@ -72,6 +84,7 @@ class UserModel {
       'fullName': this.fullName,
       'avatarUrl': this.avatarUrl,
       'createdAt': this.createdAt,
+      'role': this.role,
     };
   }
 
@@ -82,6 +95,7 @@ class UserModel {
       fullName: map['fullName'] as String,
       avatarUrl: map['avatarUrl'] as String,
       createdAt: map['createdAt'] as DateTime,
+      role: map['role'] as String,
     );
   }
 

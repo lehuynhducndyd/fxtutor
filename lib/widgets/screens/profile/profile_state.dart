@@ -8,7 +8,8 @@ class ProfileState {
     return ProfileState(
       user: UserModel(
         id: '',
-        createdAt: DateTime.now(), // Hợp lệ khi dùng trong body của factory
+        createdAt: DateTime.now(),
+        role: '',
       ),
       loadStatus: LoadStatus.Init,
     );

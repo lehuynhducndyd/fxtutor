@@ -54,6 +54,7 @@ class _PageState extends State<Page> {
         return Column(
           children: [
             Text("${user.email}"),
+            Text("${user.role}"),
             ElevatedButton(
               onPressed: () {
                 context.read<AuthCubit>().logout();
