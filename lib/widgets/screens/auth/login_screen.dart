@@ -20,14 +20,13 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final authService = AuthService();
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) => AuthCubit(authService),
+      create: (context) => AuthCubit(context.read<AuthService>()),
       child: Page(emailController: emailController, passwordController: passwordController),
     );
   }

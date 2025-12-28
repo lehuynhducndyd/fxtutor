@@ -5,6 +5,7 @@ class UserModel {
   final String? avatarUrl;
   final DateTime createdAt;
   final String role;
+
   factory UserModel.fromJson(Map<String, dynamic> json) {
     return UserModel(
       id: json['id'],

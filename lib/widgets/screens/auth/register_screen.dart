@@ -17,7 +17,6 @@ class RegisterScreen extends StatefulWidget {
 }
 
 class _RegisterScreenState extends State<RegisterScreen> {
-  final authService = AuthService();
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
   final confirmPasswordController = TextEditingController();
@@ -25,7 +24,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) => AuthCubit(authService),
+      create: (context) => AuthCubit(context.read<AuthService>()),
       child: Page(
         emailController: emailController,
         passwordController: passwordController,

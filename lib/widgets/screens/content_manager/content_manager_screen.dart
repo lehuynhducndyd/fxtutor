@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:fx_tutor/widgets/screens/content_manager/manual_content_manager_screen.dart';
+import 'package:fx_tutor/widgets/screens/content_manager/manual_content/manual_content_manager_screen.dart';
 
 import '../../../common/enum/drawer_item.dart';
 import '../../../main_cubit.dart';
-import 'learning_content_manager_screen.dart';
+import 'learning_content/learning_content_manager_screen.dart';
 
 class ContentManagerScreen extends StatelessWidget {
   const ContentManagerScreen({super.key});

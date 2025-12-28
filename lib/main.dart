@@ -6,6 +6,8 @@ import 'package:fx_tutor/repositories/log_impl.dart';
 import 'package:fx_tutor/repositories/settings_store.dart';
 import 'package:fx_tutor/route.dart';
 import 'package:fx_tutor/services/auth_service.dart';
+import 'package:fx_tutor/services/profile_service.dart';
+import 'package:fx_tutor/services/topic_service.dart';
 import 'package:fx_tutor/widgets/screens/splash/splash_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -96,6 +98,12 @@ class Repository extends StatelessWidget {
       providers: [
         RepositoryProvider<AuthService>(
           create: (context) => AuthService(),
+        ),
+        RepositoryProvider<TopicService>(
+          create: (context) => TopicService(),
+        ),
+        RepositoryProvider<ProfileService>(
+          create: (context) => ProfileService(),
         ),
         RepositoryProvider<SettingsStore>(
           create: (context) => SettingsStore(),

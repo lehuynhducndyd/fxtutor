@@ -15,15 +15,12 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  final authService = AuthService();
-  final profileService = ProfileService();
-
   @override
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
-        BlocProvider(create: (context) => AuthCubit(authService)),
-        BlocProvider(create: (context) => ProfileCubit(profileService)..loadUser()),
+        BlocProvider(create: (context) => AuthCubit(context.read<AuthService>())),
+        BlocProvider(create: (context) => ProfileCubit(context.read<ProfileService>())..loadUser()),
       ],
       child: Page(),
     );
