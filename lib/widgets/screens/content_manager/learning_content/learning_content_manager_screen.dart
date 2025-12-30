@@ -6,7 +6,7 @@ import 'package:fx_tutor/widgets/screens/content_manager/learning_content/topic_
 import '../../../../common/enum/load_status.dart';
 import '../../../../services/topic_service.dart';
 import '../../../common_widgets/noti_bar.dart';
-import 'list_math_types_screen.dart';
+import 'learning_content_screen.dart';
 
 class LearningContentManagerScreen extends StatefulWidget {
   const LearningContentManagerScreen({super.key});
@@ -36,7 +36,7 @@ class Page extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Các chủ đề"),
+        title: Text("Các chủ đề học tập"),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
@@ -121,7 +121,7 @@ class Body extends StatelessWidget {
                   context.read<TopicCubit>().setSelectedIdx(index);
                   Navigator.pushNamed(
                     context,
-                    ListMathTypesScreen.route,
+                    LearningContentScreen.route,
                     arguments: {'cubit': context.read<TopicCubit>()},
                   );
                 },

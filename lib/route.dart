@@ -5,9 +5,10 @@ import 'package:fx_tutor/widgets/screens/auth/register_screen.dart';
 import 'package:fx_tutor/widgets/screens/content_manager/content_manager_screen.dart';
 import 'package:fx_tutor/widgets/screens/content_manager/learning_content/add_topic_screen.dart';
 import 'package:fx_tutor/widgets/screens/content_manager/learning_content/learning_content_manager_screen.dart';
-import 'package:fx_tutor/widgets/screens/content_manager/learning_content/list_math_types_screen.dart';
+import 'package:fx_tutor/widgets/screens/content_manager/learning_content/learning_content_screen.dart';
 import 'package:fx_tutor/widgets/screens/content_manager/learning_content/topic_cubit.dart';
 import 'package:fx_tutor/widgets/screens/content_manager/manual_content/manual_content_manager_screen.dart';
+import 'package:fx_tutor/widgets/screens/content_manager/manual_content/manual_content_screen.dart';
 import 'package:fx_tutor/widgets/screens/home/home_screen.dart';
 import 'package:fx_tutor/widgets/screens/splash/splash_screen.dart';
 
@@ -36,12 +37,20 @@ Route<dynamic>? mainRoute(RouteSettings settings) {
           child: AddTopicScreen(isAddMode),
         ),
       );
-    case ListMathTypesScreen.route:
+    case LearningContentScreen.route:
       var cubit = (settings.arguments as Map<String, dynamic>)['cubit'] as TopicCubit;
       return MaterialPageRoute(
         builder: (context) => BlocProvider.value(
           value: cubit,
-          child: ListMathTypesScreen(),
+          child: LearningContentScreen(),
+        ),
+      );
+    case ManualContentScreen.route:
+      var cubit = (settings.arguments as Map<String, dynamic>)['cubit'] as TopicCubit;
+      return MaterialPageRoute(
+        builder: (context) => BlocProvider.value(
+          value: cubit,
+          child: ManualContentScreen(),
         ),
       );
     default:

@@ -34,13 +34,17 @@ class AiChatScreen extends StatefulWidget {
 
 class _AiChatScreenState extends State<AiChatScreen> {
   GenerativeModel? _model;
+
+  // THAY ĐỔI 1: Thêm biến ChatSession để quản lý hội thoại
+  ChatSession? _chatSession;
+
   final List<ChatMessage> _messages = [];
   final TextEditingController _textController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   final ImagePicker _picker = ImagePicker();
 
   bool _isLoading = false;
-  XFile? _selectedImage; // Ảnh đang được chọn để gửi
+  XFile? _selectedImage;
 
   @override
   void initState() {
@@ -49,23 +53,33 @@ class _AiChatScreenState extends State<AiChatScreen> {
   }
 
   Future<void> _initializeModel() async {
-    final instructions = await rootBundle.loadString("assets/system_instruction.txt");
-    print(instructions.substring(0, 100));
+    // Lưu ý: Đảm bảo file assets/system_instruction.txt tồn tại và đã khai báo trong pubspec.yaml
+    String instructions = "";
+    try {
+      instructions = await rootBundle.loadString("assets/system_instruction.txt");
+    } catch (e) {
+      print("Không tìm thấy file instruction, dùng mặc định rỗng.");
+    }
+
     setState(() {
       _model = GenerativeModel(
+        // Lưu ý: Hiện tại model ổn định là 'gemini-1.5-flash' hoặc 'gemini-1.5-pro'
+        // 'gemini-2.5-flash' có thể chưa khả dụng public, hãy đổi lại nếu gặp lỗi 404
         model: 'gemini-2.5-flash',
         apiKey: widget.apiKey,
         systemInstruction: Content.system(instructions),
       );
+
+      // THAY ĐỔI 2: Bắt đầu một phiên chat (Session)
+      _chatSession = _model!.startChat(history: []);
     });
   }
 
-  // Hàm chọn ảnh
   Future<void> _pickImage(ImageSource source) async {
     try {
       final XFile? image = await _picker.pickImage(
         source: source,
-        imageQuality: 80, // Giảm chất lượng một chút để tối ưu tốc độ upload
+        imageQuality: 80,
       );
       if (image != null) {
         setState(() {
@@ -79,7 +93,6 @@ class _AiChatScreenState extends State<AiChatScreen> {
     }
   }
 
-  // Hàm gửi tin nhắn
   Future<void> _sendMessage() async {
     final String text = _textController.text.trim();
     final XFile? imageToSend = _selectedImage;
@@ -87,60 +100,50 @@ class _AiChatScreenState extends State<AiChatScreen> {
     if (text.isEmpty && imageToSend == null) return;
 
     setState(() {
-      // Thêm tin nhắn của user vào danh sách
       _messages.add(ChatMessage(text: text, isUser: true, image: imageToSend));
       _isLoading = true;
       _textController.clear();
-      _selectedImage = null; // Reset ảnh đã chọn sau khi nhấn gửi
+      _selectedImage = null;
     });
     _scrollToBottom();
 
     try {
-      // --- CHUẨN BỊ DỮ LIỆU GỬI ĐI ---
-      final List<Content> content;
+      // --- THAY ĐỔI 3: Cấu trúc lại dữ liệu để dùng sendMessage ---
+      final Content content; // sendMessage nhận vào 1 đối tượng Content, không phải List<Content>
+
+      // Câu lệnh prompt kèm theo (giữ nguyên logic của bạn)
+      String promptText = text.isEmpty
+          ? "Giải bài toán trong ảnh bằng Tiếng Việt. "
+                "Khi hiển thị latex, xuống dòng các phép biến đổi. "
+                "Hiển thị latex với markdown \$\$, chỉ hiển thị kết quả."
+          : "$text. Giải thích bằng Tiếng Việt, hiển thị latex với markdown \$\$, xuống dòng phép tính.";
 
       if (imageToSend != null) {
-        // Nếu có ảnh, cần đọc dữ liệu byte của ảnh
         final Uint8List imageBytes = await imageToSend.readAsBytes();
-        // Xác định mimeType cơ bản (đơn giản hóa cho ví dụ)
         final String path = imageToSend.path.toLowerCase();
-        String mimeType;
-        if (path.endsWith('.png')) {
-          mimeType = 'image/png';
-        } else if (path.endsWith('.heic')) {
-          mimeType = 'image/heic';
-        } else {
-          // Mặc định là jpeg cho các trường hợp còn lại (jpg, jpeg)
-          mimeType = 'image/jpeg';
-        }
+        String mimeType = 'image/jpeg';
+        if (path.endsWith('.png')) mimeType = 'image/png';
+        if (path.endsWith('.heic')) mimeType = 'image/heic';
+        if (path.endsWith('.webp')) mimeType = 'image/webp';
 
-        // Tạo Content multimodal (văn bản + ảnh)
-        content = [
-          Content.multi([
-            TextPart(
-              text.isEmpty
-                  ? "Hãy giải bài toán này bằng hình ảnh này, Hãy giải bài toán này bằng Tiếng việt,"
-                        " khi hiển thị latex, cố gắng xuống dòng các phép biến đổi, "
-                        "hiện thị latex với markdown \$\$ , chỉ hiển thị kêt quả, không nhắc lại chỉ dẫn này"
-                        "    "
-                  : text,
-            ),
-            DataPart(mimeType, imageBytes),
-          ]),
-        ];
+        content = Content.multi([
+          TextPart(promptText),
+          DataPart(mimeType, imageBytes),
+        ]);
       } else {
-        content = [
-          Content.text(
-            text +
-                " Hãy giải bài toán này bằng Tiếng việt, khi hiển thị latex, "
-                    "cố gắng xuống dòng các phép biến đổi, hiện thị latex với markdown \$\$ , "
-                    "chỉ hiển thị kêt quả, không nhắc lại chỉ dẫn này",
-          ),
-        ];
+        content = Content.text(promptText);
       }
-      final response = await _model?.generateContent(content);
 
-      final String? responseTextRaw = response?.text;
+      // --- THAY ĐỔI QUAN TRỌNG: Dùng _chatSession.sendMessage ---
+      // ChatSession tự động lưu history vào bộ nhớ tạm
+      if (_chatSession == null) {
+        // Re-init nếu bị null (trường hợp hiếm)
+        _chatSession = _model!.startChat();
+      }
+
+      final response = await _chatSession!.sendMessage(content);
+
+      final String? responseTextRaw = response.text;
       String responseText = "";
       if (responseTextRaw != null) {
         responseText = responseTextRaw
@@ -178,18 +181,33 @@ class _AiChatScreenState extends State<AiChatScreen> {
     });
   }
 
-  // --- PHẦN GIAO DIỆN NGƯỜI DÙNG ---
   @override
   Widget build(BuildContext context) {
+    // Nếu model chưa init xong thì loading
     if (_model == null) {
       return Scaffold(
+        appBar: AppBar(title: Text("AI Chat")),
         body: Center(child: CircularProgressIndicator()),
       );
     }
     return Scaffold(
+      // Thêm AppBar để có thể back hoặc clear chat nếu cần
+      // appBar: AppBar(
+      //   title: Text("Gia sư AI"),
+      //   actions: [
+      //     IconButton(
+      //       icon: Icon(Icons.refresh),
+      //       onPressed: () {
+      //         setState(() {
+      //           _messages.clear();
+      //           _chatSession = _model!.startChat(); // Reset hội thoại
+      //         });
+      //       },
+      //     )
+      //   ],
+      // ),
       body: Column(
         children: [
-          // Danh sách tin nhắn chat
           Expanded(
             child: ListView.builder(
               controller: _scrollController,
@@ -201,19 +219,14 @@ class _AiChatScreenState extends State<AiChatScreen> {
               },
             ),
           ),
-          // Hiển thị trạng thái đang loading
           if (_isLoading) const LinearProgressIndicator(),
-
-          // Khu vực nhập liệu (Input Area)
           _buildInputArea(),
         ],
       ),
     );
   }
 
-  // Widget hiển thị từng tin nhắn
   Widget _buildMessageItem(ChatMessage message) {
-    print(message.text);
     return Align(
       alignment: message.isUser ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
@@ -224,11 +237,8 @@ class _AiChatScreenState extends State<AiChatScreen> {
           color: message.isUser
               ? Colors.deepPurple
               : (Theme.of(context).brightness == Brightness.dark
-                    ? Colors
-                          .grey
-                          .shade800 // Nền tối cho AI khi Dark Mode
-                    : Colors.grey.shade200), // Nền sáng cho AI khi Light Mode
-
+                    ? Colors.grey.shade800
+                    : Colors.grey.shade200),
           borderRadius: BorderRadius.circular(16).copyWith(
             bottomRight: message.isUser ? Radius.zero : const Radius.circular(16),
             bottomLeft: !message.isUser ? Radius.zero : const Radius.circular(16),
@@ -237,7 +247,6 @@ class _AiChatScreenState extends State<AiChatScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Hiển thị ảnh thumbnail nếu tin nhắn user có đính kèm ảnh
             if (message.isUser && message.image != null)
               Padding(
                 padding: const EdgeInsets.only(bottom: 8.0),
@@ -251,7 +260,6 @@ class _AiChatScreenState extends State<AiChatScreen> {
                   ),
                 ),
               ),
-            // Hiển thị nội dung văn bản
             if (message.isUser)
               Text(
                 message.text,
@@ -275,7 +283,6 @@ class _AiChatScreenState extends State<AiChatScreen> {
     );
   }
 
-  // Widget khu vực nhập liệu ở dưới cùng
   Widget _buildInputArea() {
     return Card(
       margin: EdgeInsets.zero,
@@ -284,7 +291,6 @@ class _AiChatScreenState extends State<AiChatScreen> {
         padding: const EdgeInsets.all(8.0),
         child: Column(
           children: [
-            // Vùng xem trước ảnh đã chọn (Image Preview Area)
             if (_selectedImage != null)
               Container(
                 margin: const EdgeInsets.only(bottom: 8),
@@ -302,7 +308,6 @@ class _AiChatScreenState extends State<AiChatScreen> {
                             fit: BoxFit.cover,
                           ),
                         ),
-                        // Nút xóa ảnh đã chọn
                         Positioned(
                           right: 0,
                           top: 0,
@@ -328,16 +333,12 @@ class _AiChatScreenState extends State<AiChatScreen> {
                   ],
                 ),
               ),
-
-            // Hàng chứa TextField và các nút
             Row(
               children: [
-                // Nút chọn ảnh từ thư viện
                 IconButton(
                   icon: const Icon(Icons.image, color: Colors.deepPurple),
                   onPressed: _isLoading ? null : () => _pickImage(ImageSource.gallery),
                 ),
-                // Nút chụp ảnh
                 IconButton(
                   icon: const Icon(Icons.camera_alt, color: Colors.deepPurple),
                   onPressed: _isLoading ? null : () => _pickImage(ImageSource.camera),
@@ -347,7 +348,7 @@ class _AiChatScreenState extends State<AiChatScreen> {
                   child: TextField(
                     controller: _textController,
                     decoration: const InputDecoration(
-                      hintText: 'Nhập tin nhắn hoặc mô tả ảnh...',
+                      hintText: 'Hỏi bài toán tiếp theo...',
                       border: InputBorder.none,
                     ),
                     onSubmitted: (_) => _sendMessage(),
