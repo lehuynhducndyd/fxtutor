@@ -5,7 +5,9 @@ import 'package:fx_tutor/repositories/log.dart';
 import 'package:fx_tutor/repositories/log_impl.dart';
 import 'package:fx_tutor/repositories/settings_store.dart';
 import 'package:fx_tutor/route.dart';
+import 'package:fx_tutor/services/ai_chat_service.dart';
 import 'package:fx_tutor/services/auth_service.dart';
+import 'package:fx_tutor/services/guide_management_service.dart';
 import 'package:fx_tutor/services/profile_service.dart';
 import 'package:fx_tutor/services/topic_service.dart';
 import 'package:fx_tutor/widgets/screens/splash/splash_screen.dart';
@@ -104,6 +106,12 @@ class Repository extends StatelessWidget {
         ),
         RepositoryProvider<ProfileService>(
           create: (context) => ProfileService(),
+        ),
+        RepositoryProvider<AiChatService>(
+          create: (context) => AiChatService(),
+        ),
+        RepositoryProvider<GuideManagementService>(
+          create: (context) => GuideManagementService(),
         ),
         RepositoryProvider<SettingsStore>(
           create: (context) => SettingsStore(),

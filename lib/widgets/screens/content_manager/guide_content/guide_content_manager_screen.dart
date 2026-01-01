@@ -6,18 +6,18 @@ import 'package:fx_tutor/widgets/screens/content_manager/learning_content/topic_
 import '../../../../common/enum/load_status.dart';
 import '../../../../services/topic_service.dart';
 import '../../../common_widgets/noti_bar.dart';
-import 'manual_content_screen.dart'; // Đảm bảo import đúng file màn hình chi tiết manual
+import 'guide_content_screen.dart'; // Đã cập nhật import đúng file guide
 
-class ManualContentManagerScreen extends StatefulWidget {
-  const ManualContentManagerScreen({super.key});
+class GuideContentManagerScreen extends StatefulWidget {
+  const GuideContentManagerScreen({super.key});
 
-  static const String route = 'ManualContentManagerScreen';
+  static const String route = 'GuideContentManagerScreen';
 
   @override
-  State<ManualContentManagerScreen> createState() => _ManualContentManagerScreenState();
+  State<GuideContentManagerScreen> createState() => _GuideContentManagerScreenState();
 }
 
-class _ManualContentManagerScreenState extends State<ManualContentManagerScreen> {
+class _GuideContentManagerScreenState extends State<GuideContentManagerScreen> {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
@@ -35,7 +35,7 @@ class Page extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Các chủ đề hướng dẫn"), // Tiêu đề phù hợp với Manual
+        title: const Text("Các chủ đề hướng dẫn"), // Tiêu đề phù hợp với Guide
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
@@ -120,10 +120,10 @@ class Body extends StatelessWidget {
                 ),
                 onTap: () {
                   context.read<TopicCubit>().setSelectedIdx(index);
-                  // Điều hướng tới ManualContentScreen
+                  // Điều hướng tới GuideContentScreen
                   Navigator.pushNamed(
                     context,
-                    ManualContentScreen.route,
+                    GuideContentScreen.route,
                     arguments: {'cubit': context.read<TopicCubit>()},
                   );
                 },

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:fx_tutor/widgets/screens/content_manager/manual_content/manual_content_manager_screen.dart';
+import 'package:fx_tutor/widgets/screens/content_manager/guide_content/guide_content_manager_screen.dart';
 
 import '../../../common/enum/drawer_item.dart';
 import '../../../main_cubit.dart';
@@ -47,7 +47,7 @@ class ContentManagerScreen extends StatelessWidget {
               icon: Icons.calculate_outlined,
               color: Colors.orange,
               onTap: () {
-                Navigator.pushNamed(context, ManualContentManagerScreen.route);
+                Navigator.pushNamed(context, GuideContentManagerScreen.route);
               },
             ),
             _buildManagerCard(
