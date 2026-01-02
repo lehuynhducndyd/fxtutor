@@ -3,8 +3,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fx_tutor/widgets/screens/auth/login_screen.dart';
 import 'package:fx_tutor/widgets/screens/auth/register_screen.dart';
 import 'package:fx_tutor/widgets/screens/content_manager/content_manager_screen.dart';
+import 'package:fx_tutor/widgets/screens/content_manager/guide_content/add_guide_content_screen.dart';
 import 'package:fx_tutor/widgets/screens/content_manager/guide_content/guide_content_manager_screen.dart';
 import 'package:fx_tutor/widgets/screens/content_manager/guide_content/guide_content_screen.dart';
+import 'package:fx_tutor/widgets/screens/content_manager/guide_content/guide_manage_cubit.dart';
 import 'package:fx_tutor/widgets/screens/content_manager/learning_content/add_topic_screen.dart';
 import 'package:fx_tutor/widgets/screens/content_manager/learning_content/learning_content_manager_screen.dart';
 import 'package:fx_tutor/widgets/screens/content_manager/learning_content/learning_content_screen.dart';
@@ -58,7 +60,25 @@ Route<dynamic>? mainRoute(RouteSettings settings) {
           child: const GuideContentScreen(),
         ),
       );
+    case AddGuideContentScreen.route:
+      var topicCubit = (settings.arguments as Map<String, dynamic>)['topicCubit'] as TopicCubit;
+      var guideCubit =
+          (settings.arguments as Map<String, dynamic>)['guideCubit'] as GuideManageCubit;
+      var isAddMode = (settings.arguments as Map<String, dynamic>)['isAddMode'] as bool;
+      var editIndex = (settings.arguments as Map<String, dynamic>)['editIndex'] as int?;
 
+      return MaterialPageRoute(
+        builder: (context) => MultiBlocProvider(
+          providers: [
+            BlocProvider.value(value: topicCubit),
+            BlocProvider.value(value: guideCubit),
+          ],
+          child: AddGuideContentScreen(
+            isAddMode: isAddMode,
+            editIndex: editIndex,
+          ),
+        ),
+      );
     default:
       return MaterialPageRoute(builder: (context) => LoginScreen());
   }

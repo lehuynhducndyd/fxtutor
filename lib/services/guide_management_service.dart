@@ -20,7 +20,6 @@ class GuideManagementService {
         .select()
         .eq('topic_id', topicId) // <--- QUAN TRỌNG: Thêm dòng này để lọc theo Topic
         .order('created_at', ascending: false);
-
     return (response as List).map((e) => CalculatorGuideModel.fromJson(e)).toList();
   }
 

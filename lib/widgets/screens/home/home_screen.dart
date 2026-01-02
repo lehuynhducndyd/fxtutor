@@ -4,6 +4,8 @@ import 'package:fx_tutor/main_cubit.dart';
 import 'package:fx_tutor/widgets/screens/setting/setting_screen.dart';
 
 import '../../../common/enum/drawer_item.dart';
+import '../../../services/ai_chat_service.dart';
+import '../ai_chat/ai_chat_cubit.dart';
 import '../ai_chat/ai_chat_screen.dart';
 import '../caculator/caculator.dart';
 import '../content_manager/content_manager_screen.dart';
@@ -127,7 +129,10 @@ class MainView extends StatelessWidget {
         ),
 
         // Tab 2: AI Chat
-        AiChatScreen(),
+        BlocProvider(
+          create: (context) => AiChatCubit(context.read<AiChatService>()),
+          child: AiChatScreen(),
+        ),
       ],
     );
   }

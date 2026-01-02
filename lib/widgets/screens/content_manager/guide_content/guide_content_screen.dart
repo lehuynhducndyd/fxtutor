@@ -7,6 +7,8 @@ import 'package:fx_tutor/widgets/common_widgets/noti_bar.dart';
 import 'package:fx_tutor/widgets/screens/content_manager/guide_content/guide_manage_cubit.dart';
 import 'package:fx_tutor/widgets/screens/content_manager/learning_content/topic_cubit.dart';
 
+import 'add_guide_content_screen.dart';
+
 class GuideContentScreen extends StatefulWidget {
   const GuideContentScreen({super.key});
 
@@ -44,7 +46,16 @@ class Page extends StatelessWidget {
       // Giả sử bạn có trang AddGuideScreen, nếu không có hãy tạm để trống onPressed
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          // Navigator.pushNamed(context, 'AddGuideScreen', arguments: context.read<GuideManageCubit>());
+          Navigator.pushNamed(
+            context,
+            AddGuideContentScreen.route,
+            arguments: {
+              'topicCubit': context.read<TopicCubit>(), // Truyền TopicCubit
+              'guideCubit': context.read<GuideManageCubit>(), // Truyền GuideCubit
+              'isAddMode': true,
+              'editIndex': null,
+            },
+          );
         },
         child: const Icon(Icons.add),
       ),
@@ -131,7 +142,16 @@ class Body extends StatelessWidget {
                       trailing: PopupMenuButton<String>(
                         onSelected: (value) {
                           if (value == 'edit') {
-                            // Logic sửa guide
+                            Navigator.pushNamed(
+                              context,
+                              AddGuideContentScreen.route,
+                              arguments: {
+                                'topicCubit': context.read<TopicCubit>(),
+                                'guideCubit': context.read<GuideManageCubit>(),
+                                'isAddMode': false,
+                                'editIndex': index, // index của item trong danh sách
+                              },
+                            );
                           } else if (value == 'delete') {
                             _showDeleteDialog(context, guide.id!, guide.actionName);
                           }

@@ -1,174 +1,31 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:google_generative_ai/google_generative_ai.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:markdown_widget/config/markdown_generator.dart';
 import 'package:markdown_widget/widget/markdown.dart';
 
-import '../../../common/latex.dart';
-
-// --- MÔ HÌNH DỮ LIỆU ĐƠN GIẢN CHO TIN NHẮN ---
-class ChatMessage {
-  final String text;
-  final bool isUser;
-  final XFile? image;
-
-  ChatMessage({
-    required this.text,
-    required this.isUser,
-    this.image,
-  });
-}
+// --- IMPORT CÁC FILE CỦA BẠN ---
+import '../../../common/enum/load_status.dart';
+import '../../../common/latex.dart'; // File cấu hình Latex (đã tạo ở bài trước)
+import 'ai_chat_cubit.dart';
+import 'ai_chat_state.dart';
 
 class AiChatScreen extends StatefulWidget {
-  final String apiKey = dotenv.env['API_KEY'] ?? '';
-
-  AiChatScreen({super.key});
+  const AiChatScreen({super.key}); // Thêm const cho constructor
 
   @override
   State<AiChatScreen> createState() => _AiChatScreenState();
 }
 
 class _AiChatScreenState extends State<AiChatScreen> {
-  GenerativeModel? _model;
-
-  // THAY ĐỔI 1: Thêm biến ChatSession để quản lý hội thoại
-  ChatSession? _chatSession;
-
-  final List<ChatMessage> _messages = [];
-  final TextEditingController _textController = TextEditingController();
+  final TextEditingController _controller = TextEditingController();
   final ScrollController _scrollController = ScrollController();
-  final ImagePicker _picker = ImagePicker();
-
-  bool _isLoading = false;
+  final ImagePicker _picker = ImagePicker(); // Instance ImagePicker
   XFile? _selectedImage;
 
-  @override
-  void initState() {
-    super.initState();
-    _initializeModel();
-  }
-
-  Future<void> _initializeModel() async {
-    // Lưu ý: Đảm bảo file assets/system_instruction.txt tồn tại và đã khai báo trong pubspec.yaml
-    String instructions = "";
-    try {
-      instructions = await rootBundle.loadString("assets/system_instruction.txt");
-    } catch (e) {
-      print("Không tìm thấy file instruction, dùng mặc định rỗng.");
-    }
-
-    setState(() {
-      _model = GenerativeModel(
-        // Lưu ý: Hiện tại model ổn định là 'gemini-1.5-flash' hoặc 'gemini-1.5-pro'
-        // 'gemini-2.5-flash' có thể chưa khả dụng public, hãy đổi lại nếu gặp lỗi 404
-        model: 'gemini-2.5-flash',
-        apiKey: widget.apiKey,
-        systemInstruction: Content.system(instructions),
-      );
-
-      // THAY ĐỔI 2: Bắt đầu một phiên chat (Session)
-      _chatSession = _model!.startChat(history: []);
-    });
-  }
-
-  Future<void> _pickImage(ImageSource source) async {
-    try {
-      final XFile? image = await _picker.pickImage(
-        source: source,
-        imageQuality: 80,
-      );
-      if (image != null) {
-        setState(() {
-          _selectedImage = image;
-        });
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Lỗi chọn ảnh: $e')),
-      );
-    }
-  }
-
-  Future<void> _sendMessage() async {
-    final String text = _textController.text.trim();
-    final XFile? imageToSend = _selectedImage;
-
-    if (text.isEmpty && imageToSend == null) return;
-
-    setState(() {
-      _messages.add(ChatMessage(text: text, isUser: true, image: imageToSend));
-      _isLoading = true;
-      _textController.clear();
-      _selectedImage = null;
-    });
-    _scrollToBottom();
-
-    try {
-      // --- THAY ĐỔI 3: Cấu trúc lại dữ liệu để dùng sendMessage ---
-      final Content content; // sendMessage nhận vào 1 đối tượng Content, không phải List<Content>
-
-      // Câu lệnh prompt kèm theo (giữ nguyên logic của bạn)
-      String promptText = text.isEmpty
-          ? "Giải bài toán trong ảnh bằng Tiếng Việt. "
-                "Khi hiển thị latex, xuống dòng các phép biến đổi. "
-                "Hiển thị latex với markdown \$\$, chỉ hiển thị kết quả."
-          : "$text. Giải thích bằng Tiếng Việt, hiển thị latex với markdown \$\$, xuống dòng phép tính.";
-
-      if (imageToSend != null) {
-        final Uint8List imageBytes = await imageToSend.readAsBytes();
-        final String path = imageToSend.path.toLowerCase();
-        String mimeType = 'image/jpeg';
-        if (path.endsWith('.png')) mimeType = 'image/png';
-        if (path.endsWith('.heic')) mimeType = 'image/heic';
-        if (path.endsWith('.webp')) mimeType = 'image/webp';
-
-        content = Content.multi([
-          TextPart(promptText),
-          DataPart(mimeType, imageBytes),
-        ]);
-      } else {
-        content = Content.text(promptText);
-      }
-
-      // --- THAY ĐỔI QUAN TRỌNG: Dùng _chatSession.sendMessage ---
-      // ChatSession tự động lưu history vào bộ nhớ tạm
-      if (_chatSession == null) {
-        // Re-init nếu bị null (trường hợp hiếm)
-        _chatSession = _model!.startChat();
-      }
-
-      final response = await _chatSession!.sendMessage(content);
-
-      final String? responseTextRaw = response.text;
-      String responseText = "";
-      if (responseTextRaw != null) {
-        responseText = responseTextRaw
-            .replaceAll(r'\(', r'$')
-            .replaceAll(r'\)', r'$')
-            .replaceAll(r'\[', r'$$')
-            .replaceAll(r'\]', r'$$');
-      }
-
-      setState(() {
-        _isLoading = false;
-        if (responseText != "") {
-          _messages.add(ChatMessage(text: responseText, isUser: false));
-        }
-      });
-      _scrollToBottom();
-    } catch (e) {
-      setState(() {
-        _isLoading = false;
-        _messages.add(ChatMessage(text: "Lỗi: $e", isUser: false));
-      });
-      _scrollToBottom();
-    }
-  }
-
+  // Hàm cuộn xuống dưới cùng
   void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_scrollController.hasClients) {
@@ -183,98 +40,127 @@ class _AiChatScreenState extends State<AiChatScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Nếu model chưa init xong thì loading
-    if (_model == null) {
-      return Scaffold(
-        appBar: AppBar(title: Text("AI Chat")),
-        body: Center(child: CircularProgressIndicator()),
-      );
-    }
     return Scaffold(
-      // Thêm AppBar để có thể back hoặc clear chat nếu cần
-      // appBar: AppBar(
-      //   title: Text("Gia sư AI"),
-      //   actions: [
-      //     IconButton(
-      //       icon: Icon(Icons.refresh),
-      //       onPressed: () {
-      //         setState(() {
-      //           _messages.clear();
-      //           _chatSession = _model!.startChat(); // Reset hội thoại
-      //         });
-      //       },
-      //     )
-      //   ],
-      // ),
+      appBar: AppBar(
+        title: const Text("Gia sư AI (RAG)"),
+        elevation: 2,
+      ),
       body: Column(
         children: [
+          // KHU VỰC HIỂN THỊ TIN NHẮN
           Expanded(
-            child: ListView.builder(
-              controller: _scrollController,
-              padding: const EdgeInsets.all(16),
-              itemCount: _messages.length,
-              itemBuilder: (context, index) {
-                final message = _messages[index];
-                return _buildMessageItem(message);
+            child: BlocConsumer<AiChatCubit, AiChatState>(
+              listener: (context, state) {
+                // 1. Tự động cuộn khi có tin nhắn mới hoặc đang load
+                if (state.status == LoadStatus.Loading || state.status == LoadStatus.Done) {
+                  _scrollToBottom();
+                }
+                // 2. Hiện lỗi nếu có
+                if (state.status == LoadStatus.Error && state.errorMessage != null) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(state.errorMessage!),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              },
+              builder: (context, state) {
+                // Hiển thị màn hình trống nếu chưa có tin nhắn
+                if (state.messages.isEmpty && state.status != LoadStatus.Loading) {
+                  return _buildEmptyState();
+                }
+
+                return ListView.builder(
+                  controller: _scrollController,
+                  padding: const EdgeInsets.all(16),
+                  // Thêm 1 item loading nếu đang chờ
+                  itemCount: state.messages.length + (state.status == LoadStatus.Loading ? 1 : 0),
+                  itemBuilder: (context, index) {
+                    if (index == state.messages.length) {
+                      return const Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(8.0),
+                          child: CircularProgressIndicator(),
+                        ),
+                      );
+                    }
+                    return _buildMessageTile(state.messages[index]);
+                  },
+                );
               },
             ),
           ),
-          if (_isLoading) const LinearProgressIndicator(),
+
+          // KHU VỰC NHẬP LIỆU
           _buildInputArea(),
         ],
       ),
     );
   }
 
-  Widget _buildMessageItem(ChatMessage message) {
+  // Widget hiển thị khi chưa có tin nhắn
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.school_outlined, size: 80, color: Colors.grey[300]),
+          const SizedBox(height: 16),
+          Text(
+            "Hỏi tôi cách bấm máy tính\nhoặc giải toán nhé!",
+            textAlign: TextAlign.center,
+            style: TextStyle(color: Colors.grey[500], fontSize: 16),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Widget hiển thị từng tin nhắn
+  Widget _buildMessageTile(ChatMessage msg) {
     return Align(
-      alignment: message.isUser ? Alignment.centerRight : Alignment.centerLeft,
+      alignment: msg.isUser ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
         margin: const EdgeInsets.symmetric(vertical: 8),
         padding: const EdgeInsets.all(12),
         constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.9),
         decoration: BoxDecoration(
-          color: message.isUser
-              ? Colors.deepPurple
-              : (Theme.of(context).brightness == Brightness.dark
-                    ? Colors.grey.shade800
-                    : Colors.grey.shade200),
-          borderRadius: BorderRadius.circular(16).copyWith(
-            bottomRight: message.isUser ? Radius.zero : const Radius.circular(16),
-            bottomLeft: !message.isUser ? Radius.zero : const Radius.circular(16),
+          color: msg.isUser ? Colors.blue[100] : Colors.grey[100],
+          borderRadius: BorderRadius.circular(12).copyWith(
+            bottomRight: msg.isUser ? Radius.zero : const Radius.circular(12),
+            bottomLeft: !msg.isUser ? Radius.zero : const Radius.circular(12),
           ),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            if (message.isUser && message.image != null)
+            // Hiển thị ảnh nếu User gửi
+            if (msg.image != null)
               Padding(
                 padding: const EdgeInsets.only(bottom: 8.0),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(8),
-                  child: Image.file(
-                    File(message.image!.path),
+                  child: Image.memory(
+                    msg.image!, // Dữ liệu Uint8List
                     height: 150,
                     width: 150,
                     fit: BoxFit.cover,
                   ),
                 ),
               ),
-            if (message.isUser)
-              Text(
-                message.text,
-                style: const TextStyle(color: Colors.white),
-              )
+
+            // Hiển thị nội dung
+            if (msg.isUser)
+              Text(msg.text, style: const TextStyle(fontSize: 16))
             else
-              MediaQuery(
-                data: MediaQuery.of(context).copyWith(textScaler: TextScaler.noScaling),
-                child: MarkdownWidget(
-                  data: message.text,
-                  shrinkWrap: true,
-                  markdownGenerator: MarkdownGenerator(
-                    generators: [latexGenerator],
-                    inlineSyntaxList: [LatexSyntax()],
-                  ),
+              // AI trả lời: Dùng Markdown + Latex
+              MarkdownWidget(
+                data: msg.text,
+                shrinkWrap: true,
+                markdownGenerator: MarkdownGenerator(
+                  generators: [latexGenerator], // Kích hoạt Latex (file common/latex.dart)
+                  inlineSyntaxList: [LatexSyntax()],
                 ),
               ),
           ],
@@ -283,87 +169,123 @@ class _AiChatScreenState extends State<AiChatScreen> {
     );
   }
 
+  // Khu vực nhập liệu (Input)
   Widget _buildInputArea() {
-    return Card(
-      margin: EdgeInsets.zero,
-      elevation: 8,
-      child: Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: Column(
-          children: [
-            if (_selectedImage != null)
-              Container(
-                margin: const EdgeInsets.only(bottom: 8),
-                height: 80,
-                child: Row(
-                  children: [
-                    Stack(
-                      children: [
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
-                          child: Image.file(
-                            File(_selectedImage!.path),
-                            width: 80,
-                            height: 80,
-                            fit: BoxFit.cover,
-                          ),
+    final isLoading = context.watch<AiChatCubit>().state.status == LoadStatus.Loading;
+
+    return Container(
+      padding: const EdgeInsets.all(8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, -2))],
+      ),
+      child: Column(
+        children: [
+          // Preview ảnh đã chọn (có nút xóa)
+          if (_selectedImage != null)
+            Container(
+              margin: const EdgeInsets.only(bottom: 8),
+              height: 60,
+              child: Row(
+                children: [
+                  Stack(
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: Image.file(
+                          File(_selectedImage!.path),
+                          width: 60,
+                          height: 60,
+                          fit: BoxFit.cover,
                         ),
-                        Positioned(
-                          right: 0,
-                          top: 0,
-                          child: GestureDetector(
-                            onTap: () {
-                              setState(() {
-                                _selectedImage = null;
-                              });
-                            },
-                            child: Container(
-                              decoration: const BoxDecoration(
-                                color: Colors.black54,
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Icon(Icons.close, color: Colors.white, size: 18),
+                      ),
+                      Positioned(
+                        right: 0,
+                        top: 0,
+                        child: GestureDetector(
+                          onTap: () => setState(() => _selectedImage = null),
+                          child: Container(
+                            decoration: const BoxDecoration(
+                              color: Colors.black54,
+                              shape: BoxShape.circle,
                             ),
+                            child: const Icon(Icons.close, color: Colors.white, size: 16),
                           ),
                         ),
-                      ],
+                      ),
+                    ],
+                  ),
+                  const SizedBox(width: 10),
+                  const Text("Đã đính kèm ảnh", style: TextStyle(color: Colors.grey)),
+                ],
+              ),
+            ),
+
+          // Hàng Input
+          Row(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.image_outlined, color: Colors.blue),
+                onPressed: isLoading
+                    ? null
+                    : () async {
+                        final img = await _picker.pickImage(source: ImageSource.gallery);
+                        if (img != null) setState(() => _selectedImage = img);
+                      },
+              ),
+              IconButton(
+                icon: const Icon(Icons.camera_alt_outlined, color: Colors.blue),
+                onPressed: isLoading
+                    ? null
+                    : () async {
+                        final img = await _picker.pickImage(source: ImageSource.camera);
+                        if (img != null) setState(() => _selectedImage = img);
+                      },
+              ),
+              Expanded(
+                child: TextField(
+                  controller: _controller,
+                  decoration: InputDecoration(
+                    hintText: "Nhập câu hỏi...",
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(20),
+                      borderSide: BorderSide.none,
                     ),
-                    const SizedBox(width: 12),
-                    const Text("Đã đính kèm ảnh", style: TextStyle(fontStyle: FontStyle.italic)),
-                  ],
+                    filled: true,
+                    fillColor: Colors.grey[100],
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  ),
+                  onSubmitted: (_) => _handleSend(), // Gửi khi nhấn Enter
                 ),
               ),
-            Row(
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.image, color: Colors.deepPurple),
-                  onPressed: _isLoading ? null : () => _pickImage(ImageSource.gallery),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.camera_alt, color: Colors.deepPurple),
-                  onPressed: _isLoading ? null : () => _pickImage(ImageSource.camera),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: TextField(
-                    controller: _textController,
-                    decoration: const InputDecoration(
-                      hintText: 'Hỏi bài toán tiếp theo...',
-                      border: InputBorder.none,
-                    ),
-                    onSubmitted: (_) => _sendMessage(),
-                    enabled: !_isLoading,
-                  ),
-                ),
-                IconButton(
-                  icon: Icon(Icons.send, color: _isLoading ? Colors.grey : Colors.deepPurple),
-                  onPressed: _isLoading ? null : _sendMessage,
-                ),
-              ],
-            ),
-          ],
-        ),
+              const SizedBox(width: 8),
+              IconButton(
+                icon: Icon(Icons.send, color: isLoading ? Colors.grey : Colors.blue),
+                onPressed: isLoading ? null : _handleSend,
+              ),
+            ],
+          ),
+        ],
       ),
     );
+  }
+
+  // Logic gửi tin nhắn
+  Future<void> _handleSend() async {
+    final text = _controller.text.trim();
+    if (text.isEmpty && _selectedImage == null) return;
+
+    // Đọc bytes ảnh
+    final imageBytes = _selectedImage != null ? await _selectedImage!.readAsBytes() : null;
+
+    // Gọi Cubit
+    context.read<AiChatCubit>().sendMessage(
+      text: text.isEmpty ? null : text,
+      image: imageBytes,
+    );
+
+    // Dọn dẹp
+    _controller.clear();
+    setState(() => _selectedImage = null);
   }
 }
