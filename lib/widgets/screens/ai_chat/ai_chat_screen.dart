@@ -85,6 +85,7 @@ class _AiChatScreenState extends State<AiChatScreen> {
                         ),
                       );
                     }
+                    print(">>>messages: ${state.messages[index].text}");
                     return _buildMessageTile(state.messages[index]);
                   },
                 );

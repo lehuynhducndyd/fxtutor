@@ -40,7 +40,7 @@ class AiChatService {
       }
 
       // BƯỚC 2: Vector Search tìm hướng dẫn trong DB
-      final guide = await _searchSupabaseForGuide(topicName);
+      final guide = await _searchSupabaseForGuide(specificProblem);
       print("guide: $guide ");
       // BƯỚC 3: Tạo câu trả lời cuối cùng
       return await _generateFinalResponse(
@@ -158,10 +158,24 @@ class AiChatService {
         buffer.writeln("3. Trình bày tách biệt rõ ràng từng loại máy.");
       }
 
-      buffer.writeln("4. Các phím bấm BẮT BUỘC để trong ngoặc vuông [ ]. Ví dụ: [MENU], [AC].");
+      buffer.writeln(
+        "4. Các phím bấm BẮT BUỘC để trong ngoặc vuông [ ] giống như chi tiết cách bấm được cung cấp. Ví dụ: [MENU], [AC].",
+      );
+      buffer.writeln(
+        '''5. QUY ĐỊNH TRÌNH BÀY:
+    - KHÔNG sử dụng định dạng danh sách Markdown (1. 2. 3. hoặc * + -).
+    - Thay vào đó, hãy viết các bước theo kiểu: Bước 1:, Bước 2:... hoặc gạch đầu dòng bằng ký tự '-' thủ công.
+    - Giữ văn bản ở dạng đoạn văn (paragraph) đơn giản để đảm bảo hiển thị đồng nhất. Không gạch đầu dòng.''',
+      );
     } else {
       buffer.writeln(
         "\nChưa có hướng dẫn bấm máy trong DB cho dạng này. Hãy giải tay từng bước và giải thích kỹ.",
+      );
+      buffer.writeln(
+        '''QUY ĐỊNH TRÌNH BÀY:
+    - KHÔNG sử dụng định dạng danh sách Markdown (1. 2. 3. hoặc * + -).
+    - Thay vào đó, hãy viết các bước theo kiểu: Bước 1:, Bước 2:... hoặc gạch đầu dòng bằng ký tự '-' thủ công.
+    - Giữ văn bản ở dạng đoạn văn (paragraph) đơn giản để đảm bảo hiển thị đồng nhất. Không gạch đầu dòng''',
       );
     }
 

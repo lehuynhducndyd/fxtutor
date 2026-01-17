@@ -24,7 +24,7 @@ class Page extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Nội dung học tập"), // Đổi tiêu đề cho khớp tên file
+        title: const Text("Nội dung học tập"),
       ),
       body: const Body(),
     );

@@ -153,7 +153,7 @@ class _BodyState extends State<Body> {
                         methodName: _methods[idx].methodName,
                         content: v,
                       ),
-                      maxLines: 4,
+                      maxLines: 8,
                       decoration: const InputDecoration(
                         hintText: "Nhập nội dung (Dùng [PHÍM] để hiển thị icon phím)",
                       ),

@@ -180,7 +180,16 @@ class Body extends StatelessWidget {
                         ],
                       ),
                       onTap: () {
-                        // Xem chi tiết guide
+                        Navigator.pushNamed(
+                          context,
+                          AddGuideContentScreen.route,
+                          arguments: {
+                            'topicCubit': context.read<TopicCubit>(),
+                            'guideCubit': context.read<GuideManageCubit>(),
+                            'isAddMode': false,
+                            'editIndex': index, // index của item trong danh sách
+                          },
+                        );
                       },
                     ),
                   );
