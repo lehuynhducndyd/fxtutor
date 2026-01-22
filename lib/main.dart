@@ -8,11 +8,13 @@ import 'package:fx_tutor/route.dart';
 import 'package:fx_tutor/services/ai_chat_service.dart';
 import 'package:fx_tutor/services/auth_service.dart';
 import 'package:fx_tutor/services/guide_management_service.dart';
+import 'package:fx_tutor/services/learning_content_service.dart';
 import 'package:fx_tutor/services/profile_service.dart';
 import 'package:fx_tutor/services/topic_service.dart';
 import 'package:fx_tutor/widgets/screens/splash/splash_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'common/key_mapper.dart';
 import 'main_cubit.dart';
 
 class SimpleBlocObserver extends BlocObserver {
@@ -85,6 +87,8 @@ Future<void> main() async {
   );
   Log log = LogImpl();
   Bloc.observer = SimpleBlocObserver(log);
+  WidgetsFlutterBinding.ensureInitialized();
+  await KeyMapper.init();
   runApp(
     RepositoryProvider<Log>.value(
       value: log,
@@ -112,6 +116,9 @@ class Repository extends StatelessWidget {
         ),
         RepositoryProvider<GuideManagementService>(
           create: (context) => GuideManagementService(),
+        ),
+        RepositoryProvider<LearningService>(
+          create: (context) => LearningService(),
         ),
         RepositoryProvider<SettingsStore>(
           create: (context) => SettingsStore(),

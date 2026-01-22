@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fx_tutor/main_cubit.dart';
+import 'package:fx_tutor/widgets/screens/home/topic_list_screen.dart';
 import 'package:fx_tutor/widgets/screens/setting/setting_screen.dart';
 
 import '../../../common/enum/drawer_item.dart';
+import '../../../common/key_mapper.dart';
 import '../../../services/ai_chat_service.dart';
 import '../ai_chat/ai_chat_cubit.dart';
 import '../ai_chat/ai_chat_screen.dart';
@@ -121,7 +123,8 @@ class MainView extends StatelessWidget {
       index: selectedIndex,
       children: [
         // Tab 0: Học tập
-        const Center(child: Text("Học tập")),
+        TopicListScreen(),
+        //NewWidget(),
 
         // Tab 1: Máy tính (Vẫn dùng Scaffold bên trong để cô lập layout)
         const Scaffold(
@@ -134,6 +137,25 @@ class MainView extends StatelessWidget {
           child: AiChatScreen(),
         ),
       ],
+    );
+  }
+}
+
+class NewWidget extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    var text = KeyMapper.convert("[SHIFT][MENU][1][+][2]");
+    return RichText(
+      text: TextSpan(
+        style: const TextStyle(
+          fontFamily: 'Casio580',
+          fontSize: 24,
+          color: Colors.black,
+        ),
+        children: [
+          TextSpan(text: text),
+        ],
+      ),
     );
   }
 }

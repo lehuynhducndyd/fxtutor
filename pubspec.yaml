@@ -46,6 +46,7 @@ dependencies:
   flutter_math_fork: ^0.7.4
   math_expressions: ^2.0.1
   math_keyboard: ^0.3.2
+  path: ^1.8.3
 
 dev_dependencies:
   flutter_test:
@@ -102,3 +103,8 @@ flutter:
   assets:
     - .env
     - assets/system_instruction.txt
+    - assets/keymap/keymap580.json
+  fonts:
+    - family: Casio580
+      fonts:
+        - asset: assets/fonts/CASIOClassWiz.ttf

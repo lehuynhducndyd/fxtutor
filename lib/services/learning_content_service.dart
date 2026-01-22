@@ -21,4 +21,41 @@ class LearningService {
       throw Exception("Lỗi tải bài học: $e");
     }
   }
+
+  Future<void> createContent({
+    required int topicId,
+    required String title,
+    required List<ContentBlock> blocks,
+  }) async {
+    // Convert List Object -> List Map (JSON)
+    final blocksJson = blocks.map((e) => e.toJson()).toList();
+
+    await _supabase.from('learning_content').insert({
+      'topic_id': topicId,
+      'title': title,
+      'content': blocksJson, // Supabase tự hiểu đây là jsonb
+    });
+  }
+
+  // 2. CẬP NHẬT (Update)
+  Future<void> updateContent({
+    required int id,
+    required String title,
+    required List<ContentBlock> blocks,
+  }) async {
+    final blocksJson = blocks.map((e) => e.toJson()).toList();
+
+    await _supabase
+        .from('learning_content')
+        .update({
+          'title': title,
+          'content': blocksJson,
+        })
+        .eq('id', id);
+  }
+
+  // 3. XÓA (Delete)
+  Future<void> deleteContent(int id) async {
+    await _supabase.from('learning_content').delete().eq('id', id);
+  }
 }

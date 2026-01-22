@@ -1,15 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:fx_tutor/models/calculator_guide_model.dart';
+import 'package:fx_tutor/models/learning_content.dart';
 import 'package:fx_tutor/widgets/screens/auth/login_screen.dart';
 import 'package:fx_tutor/widgets/screens/auth/register_screen.dart';
 import 'package:fx_tutor/widgets/screens/content_manager/content_manager_screen.dart';
 import 'package:fx_tutor/widgets/screens/content_manager/guide_content/add_guide_content_screen.dart';
 import 'package:fx_tutor/widgets/screens/content_manager/guide_content/guide_content_manager_screen.dart';
 import 'package:fx_tutor/widgets/screens/content_manager/guide_content/guide_content_screen.dart';
+import 'package:fx_tutor/widgets/screens/content_manager/guide_content/guide_detail_screen.dart';
 import 'package:fx_tutor/widgets/screens/content_manager/guide_content/guide_manage_cubit.dart';
+import 'package:fx_tutor/widgets/screens/content_manager/learning_content/add_learning_content_screen.dart';
 import 'package:fx_tutor/widgets/screens/content_manager/learning_content/add_topic_screen.dart';
+import 'package:fx_tutor/widgets/screens/content_manager/learning_content/learning_content_cubit.dart';
 import 'package:fx_tutor/widgets/screens/content_manager/learning_content/learning_content_manager_screen.dart';
 import 'package:fx_tutor/widgets/screens/content_manager/learning_content/learning_content_screen.dart';
+import 'package:fx_tutor/widgets/screens/content_manager/learning_content/learning_detail_screen.dart';
 import 'package:fx_tutor/widgets/screens/content_manager/learning_content/topic_cubit.dart';
 import 'package:fx_tutor/widgets/screens/home/home_screen.dart';
 import 'package:fx_tutor/widgets/screens/splash/splash_screen.dart';
@@ -29,7 +35,6 @@ Route<dynamic>? mainRoute(RouteSettings settings) {
     case LearningContentManagerScreen.route:
       return MaterialPageRoute(builder: (context) => LearningContentManagerScreen());
 
-    // Sửa Manual thành Guide
     case GuideContentManagerScreen.route:
       return MaterialPageRoute(builder: (context) => GuideContentManagerScreen());
 
@@ -51,7 +56,6 @@ Route<dynamic>? mainRoute(RouteSettings settings) {
         ),
       );
 
-    // Sửa Manual thành Guide
     case GuideContentScreen.route:
       var cubit = (settings.arguments as Map<String, dynamic>)['cubit'] as TopicCubit;
       return MaterialPageRoute(
@@ -79,6 +83,39 @@ Route<dynamic>? mainRoute(RouteSettings settings) {
           ),
         ),
       );
+
+    case AddLearningContentScreen.route:
+      var topicCubit = (settings.arguments as Map<String, dynamic>)['topicCubit'] as TopicCubit;
+      var learningCubit =
+          (settings.arguments as Map<String, dynamic>)['learningCubit'] as LearningCubit;
+      var isAddMode = (settings.arguments as Map<String, dynamic>)['isAddMode'] as bool;
+      var editIndex = (settings.arguments as Map<String, dynamic>)['editIndex'] as int?;
+
+      return MaterialPageRoute(
+        builder: (context) => MultiBlocProvider(
+          providers: [
+            BlocProvider.value(value: topicCubit),
+            BlocProvider.value(value: learningCubit),
+          ],
+          child: AddLearningContentScreen(
+            isAddMode: isAddMode,
+            editIndex: editIndex,
+          ),
+        ),
+      );
+
+    case GuideDetailScreen.route:
+      var guide = settings.arguments as CalculatorGuideModel;
+      return MaterialPageRoute(
+        builder: (context) => GuideDetailScreen(guide: guide),
+      );
+
+    case LearningDetailScreen.route:
+      var content = settings.arguments as LearningContent;
+      return MaterialPageRoute(
+        builder: (context) => LearningDetailScreen(content: content),
+      );
+
     default:
       return MaterialPageRoute(builder: (context) => LoginScreen());
   }

@@ -4,6 +4,7 @@ import 'package:fx_tutor/common/enum/load_status.dart';
 import 'package:fx_tutor/models/topic_model.dart';
 import 'package:fx_tutor/services/guide_management_service.dart';
 import 'package:fx_tutor/widgets/common_widgets/noti_bar.dart';
+import 'package:fx_tutor/widgets/screens/content_manager/guide_content/guide_detail_screen.dart';
 import 'package:fx_tutor/widgets/screens/content_manager/guide_content/guide_manage_cubit.dart';
 import 'package:fx_tutor/widgets/screens/content_manager/learning_content/topic_cubit.dart';
 
@@ -43,15 +44,14 @@ class Page extends StatelessWidget {
       appBar: AppBar(
         title: const Text("Hướng dẫn máy tính"),
       ),
-      // Giả sử bạn có trang AddGuideScreen, nếu không có hãy tạm để trống onPressed
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           Navigator.pushNamed(
             context,
             AddGuideContentScreen.route,
             arguments: {
-              'topicCubit': context.read<TopicCubit>(), // Truyền TopicCubit
-              'guideCubit': context.read<GuideManageCubit>(), // Truyền GuideCubit
+              'topicCubit': context.read<TopicCubit>(),
+              'guideCubit': context.read<GuideManageCubit>(),
               'isAddMode': true,
               'editIndex': null,
             },
@@ -67,7 +67,7 @@ class Page extends StatelessWidget {
 class Body extends StatelessWidget {
   final TopicModel currentTopic;
 
-  const Body({super.key, required TopicModel this.currentTopic});
+  const Body({super.key, required this.currentTopic});
 
   @override
   Widget build(BuildContext context) {
@@ -85,7 +85,7 @@ class Body extends StatelessWidget {
           return Column(
             children: [
               Text("${currentTopic.title}"),
-              Center(child: Text("Chưa có hướng dẫn nào")),
+              const Center(child: Text("Chưa có hướng dẫn nào")),
             ],
           );
         }
@@ -149,7 +149,7 @@ class Body extends StatelessWidget {
                                 'topicCubit': context.read<TopicCubit>(),
                                 'guideCubit': context.read<GuideManageCubit>(),
                                 'isAddMode': false,
-                                'editIndex': index, // index của item trong danh sách
+                                'editIndex': index,
                               },
                             );
                           } else if (value == 'delete') {
@@ -182,13 +182,8 @@ class Body extends StatelessWidget {
                       onTap: () {
                         Navigator.pushNamed(
                           context,
-                          AddGuideContentScreen.route,
-                          arguments: {
-                            'topicCubit': context.read<TopicCubit>(),
-                            'guideCubit': context.read<GuideManageCubit>(),
-                            'isAddMode': false,
-                            'editIndex': index, // index của item trong danh sách
-                          },
+                          GuideDetailScreen.route,
+                          arguments: guide,
                         );
                       },
                     ),

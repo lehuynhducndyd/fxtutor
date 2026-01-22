@@ -41,10 +41,6 @@ class _AiChatScreenState extends State<AiChatScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Gia sư AI (RAG)"),
-        elevation: 2,
-      ),
       body: Column(
         children: [
           // KHU VỰC HIỂN THỊ TIN NHẮN
@@ -109,7 +105,7 @@ class _AiChatScreenState extends State<AiChatScreen> {
           Icon(Icons.school_outlined, size: 80, color: Colors.grey[300]),
           const SizedBox(height: 16),
           Text(
-            "Hỏi tôi cách bấm máy tính\nhoặc giải toán nhé!",
+            "Hãy cho tôi biết bài toán và dòng máy bạn muốn bấm nhé!",
             textAlign: TextAlign.center,
             style: TextStyle(color: Colors.grey[500], fontSize: 16),
           ),
