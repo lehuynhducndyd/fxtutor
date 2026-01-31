@@ -1,5 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fx_tutor/models/calculator_guide_model.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../common/enum/load_status.dart';
 import '../../../../services/guide_management_service.dart';
@@ -8,7 +9,7 @@ part 'guide_manage_state.dart';
 
 class GuideManageCubit extends Cubit<GuideManageState> {
   final GuideManagementService _service;
-
+  final SupabaseClient _supabase = Supabase.instance.client;
   GuideManageCubit(this._service) : super(GuideManageState(status: LoadStatus.Init, guides: []));
   Future<void> loadGuides(int topicId) async {
     emit(state.copyWith(status: LoadStatus.Loading));
@@ -25,9 +26,24 @@ class GuideManageCubit extends Cubit<GuideManageState> {
     }
   }
 
-  Future<void> addGuide(CalculatorGuideModel guide, int topicId) async {
+  Future<void> addGuide(
+    int? id,
+    int topicId,
+    String actionName,
+    List<String> compatibleModels,
+    List<GuideMethod> methods,
+  ) async {
     emit(state.copyWith(status: LoadStatus.Loading));
     try {
+      final guide = CalculatorGuideModel(
+        userId: _supabase.auth.currentUser!.id,
+        id: id,
+        topicId: topicId,
+        actionName: actionName,
+        compatibleModels: compatibleModels,
+        methods: methods,
+      );
+
       await _service.createGuide(guide);
       final newData = await _service.fetchAllGuides(topicId);
 
@@ -44,9 +60,23 @@ class GuideManageCubit extends Cubit<GuideManageState> {
   }
 
   // 3. Sửa hướng dẫn
-  Future<void> editGuide(CalculatorGuideModel guide, int topicId) async {
+  Future<void> editGuide(
+    int? id,
+    int topicId,
+    String actionName,
+    List<String> compatibleModels,
+    List<GuideMethod> methods,
+  ) async {
     emit(state.copyWith(status: LoadStatus.Loading));
     try {
+      final guide = CalculatorGuideModel(
+        userId: _supabase.auth.currentUser!.id,
+        id: id,
+        topicId: topicId,
+        actionName: actionName,
+        compatibleModels: compatibleModels,
+        methods: methods,
+      );
       await _service.updateGuide(guide);
 
       final newData = await _service.fetchAllGuides(topicId);

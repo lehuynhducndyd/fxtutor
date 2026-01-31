@@ -18,6 +18,9 @@ import 'package:fx_tutor/widgets/screens/content_manager/learning_content/learni
 import 'package:fx_tutor/widgets/screens/content_manager/learning_content/learning_detail_screen.dart';
 import 'package:fx_tutor/widgets/screens/content_manager/learning_content/topic_cubit.dart';
 import 'package:fx_tutor/widgets/screens/home/home_screen.dart';
+import 'package:fx_tutor/widgets/screens/home/learning_list_detail_screen.dart';
+import 'package:fx_tutor/widgets/screens/home/learning_list_screen.dart';
+import 'package:fx_tutor/widgets/screens/home/topic_list_screen.dart';
 import 'package:fx_tutor/widgets/screens/splash/splash_screen.dart';
 
 Route<dynamic>? mainRoute(RouteSettings settings) {
@@ -30,6 +33,8 @@ Route<dynamic>? mainRoute(RouteSettings settings) {
       return MaterialPageRoute(builder: (context) => RegisterScreen());
     case HomeScreen.route:
       return MaterialPageRoute(builder: (context) => HomeScreen());
+    case TopicListScreen.route:
+      return MaterialPageRoute(builder: (context) => const TopicListScreen());
     case ContentManagerScreen.route:
       return MaterialPageRoute(builder: (context) => ContentManagerScreen());
     case LearningContentManagerScreen.route:
@@ -70,7 +75,6 @@ Route<dynamic>? mainRoute(RouteSettings settings) {
           (settings.arguments as Map<String, dynamic>)['guideCubit'] as GuideManageCubit;
       var isAddMode = (settings.arguments as Map<String, dynamic>)['isAddMode'] as bool;
       var editIndex = (settings.arguments as Map<String, dynamic>)['editIndex'] as int?;
-
       return MaterialPageRoute(
         builder: (context) => MultiBlocProvider(
           providers: [
@@ -115,7 +119,19 @@ Route<dynamic>? mainRoute(RouteSettings settings) {
       return MaterialPageRoute(
         builder: (context) => LearningDetailScreen(content: content),
       );
-
+    case LearningListScreen.route:
+      var cubit = (settings.arguments as Map<String, dynamic>)['cubit'] as TopicCubit;
+      return MaterialPageRoute(
+        builder: (context) => BlocProvider.value(
+          value: cubit,
+          child: const LearningListScreen(),
+        ),
+      );
+    case LearningListDetailScreen.route:
+      var content = settings.arguments as LearningContent;
+      return MaterialPageRoute(
+        builder: (context) => LearningListDetailScreen(content: content),
+      );
     default:
       return MaterialPageRoute(builder: (context) => LoginScreen());
   }

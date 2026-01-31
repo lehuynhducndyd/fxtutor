@@ -89,6 +89,7 @@ class ContentBlock {
 }
 
 class LearningContent {
+  final String? userId;
   final int id;
   final int topicId;
   final String title;
@@ -102,6 +103,7 @@ class LearningContent {
         .toList();
 
     return LearningContent(
+      userId: json['user_id'] ?? "",
       id: json['id'],
       topicId: json['topic_id'] ?? 0,
       title: json['title'] ?? 'Không có tiêu đề',
@@ -112,6 +114,7 @@ class LearningContent {
 
   //<editor-fold desc="Data Methods">
   const LearningContent({
+    this.userId,
     required this.id,
     required this.topicId,
     required this.title,
@@ -124,6 +127,7 @@ class LearningContent {
       identical(this, other) ||
       (other is LearningContent &&
           runtimeType == other.runtimeType &&
+          userId == other.userId &&
           id == other.id &&
           topicId == other.topicId &&
           title == other.title &&
@@ -137,6 +141,7 @@ class LearningContent {
   @override
   String toString() {
     return 'LearningContent{' +
+        ' userId: $userId,' +
         ' id: $id,' +
         ' topicId: $topicId,' +
         ' title: $title,' +
@@ -146,6 +151,7 @@ class LearningContent {
   }
 
   LearningContent copyWith({
+    String? userId,
     int? id,
     int? topicId,
     String? title,
@@ -153,6 +159,7 @@ class LearningContent {
     DateTime? createdAt,
   }) {
     return LearningContent(
+      userId: userId,
       id: id ?? this.id,
       topicId: topicId ?? this.topicId,
       title: title ?? this.title,
@@ -163,6 +170,7 @@ class LearningContent {
 
   Map<String, dynamic> toMap() {
     return {
+      'userId': this.userId,
       'id': this.id,
       'topicId': this.topicId,
       'title': this.title,
@@ -173,6 +181,7 @@ class LearningContent {
 
   factory LearningContent.fromMap(Map<String, dynamic> map) {
     return LearningContent(
+      userId: map['userId'] as String,
       id: map['id'] as int,
       topicId: map['topicId'] as int,
       title: map['title'] as String,

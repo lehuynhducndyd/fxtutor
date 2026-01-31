@@ -85,31 +85,37 @@ class LearningDetailScreen extends StatelessWidget {
             children: [
               ClipRRect(
                 borderRadius: BorderRadius.circular(8),
-                child: Image.network(
-                  block.url ?? '',
-                  fit: BoxFit.cover,
-                  width: double.infinity,
-                  // Loading builder
-                  loadingBuilder: (context, child, loadingProgress) {
-                    if (loadingProgress == null) return child;
-                    return Container(
-                      height: 200,
+                child: Container(
+                  constraints: const BoxConstraints(
+                    maxHeight: 300,
+                    minWidth: double.infinity,
+                  ),
+                  color: Colors.grey[50],
+                  child: Image.network(
+                    block.url ?? '',
+                    fit: BoxFit.contain,
+                    // Loading builder
+                    loadingBuilder: (context, child, loadingProgress) {
+                      if (loadingProgress == null) return child;
+                      return Container(
+                        height: 200,
+                        width: double.infinity,
+                        color: Colors.grey[200],
+                        child: const Center(child: CircularProgressIndicator()),
+                      );
+                    },
+                    // Error builder
+                    errorBuilder: (context, error, stackTrace) => Container(
+                      height: 150,
                       width: double.infinity,
                       color: Colors.grey[200],
-                      child: const Center(child: CircularProgressIndicator()),
-                    );
-                  },
-                  // Error builder
-                  errorBuilder: (context, error, stackTrace) => Container(
-                    height: 150,
-                    width: double.infinity,
-                    color: Colors.grey[200],
-                    child: const Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.broken_image, size: 50, color: Colors.grey),
-                        Text("Không tải được ảnh", style: TextStyle(color: Colors.grey)),
-                      ],
+                      child: const Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.broken_image, size: 50, color: Colors.grey),
+                          Text("Không tải được ảnh", style: TextStyle(color: Colors.grey)),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -144,7 +150,20 @@ class LearningDetailScreen extends StatelessWidget {
             ],
           ),
         );
-
+      case '880keylog':
+        var text = KeyMapper.convert(block.data ?? '');
+        return RichText(
+          text: TextSpan(
+            style: const TextStyle(
+              fontFamily: 'Casio880',
+              fontSize: 24,
+              color: Colors.black,
+            ),
+            children: [
+              TextSpan(text: text),
+            ],
+          ),
+        );
       //case '880keylog':
       // Đã loại bỏ Video theo yêu cầu trước đó, nhưng nếu data cũ còn thì ẩn đi hoặc hiện placeholder
       default:

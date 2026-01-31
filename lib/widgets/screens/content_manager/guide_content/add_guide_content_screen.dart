@@ -196,24 +196,40 @@ class _BodyState extends State<Body> {
     final topicState = context.read<TopicCubit>().state;
     final topicId = topicState.listTopic[topicState.selectedIdx].id!;
 
-    final guide = CalculatorGuideModel(
-      id: widget.isAddMode
-          ? null
-          : context.read<GuideManageCubit>().state.guides[widget.editIndex!].id,
-      topicId: topicId,
-      actionName: _actionNameController.text,
-      compatibleModels: _modelsController.text
-          .split(',')
-          .map((e) => e.trim())
-          .where((e) => e.isNotEmpty)
-          .toList(),
-      methods: _methods,
-    );
+    // final guide = CalculatorGuideModel(
+    //   id: widget.isAddMode
+    //       ? null
+    //       : context.read<GuideManageCubit>().state.guides[widget.editIndex!].id,
+    //   topicId: topicId,
+    //   actionName: _actionNameController.text,
+    //   compatibleModels: _modelsController.text
+    //       .split(',')
+    //       .map((e) => e.trim())
+    //       .where((e) => e.isNotEmpty)
+    //       .toList(),
+    //   methods: _methods,
+    // );
 
     if (widget.isAddMode) {
-      context.read<GuideManageCubit>().addGuide(guide, topicId);
+      context.read<GuideManageCubit>().addGuide(
+        widget.isAddMode
+            ? null
+            : context.read<GuideManageCubit>().state.guides[widget.editIndex!].id,
+        topicId,
+        _actionNameController.text,
+        _modelsController.text.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList(),
+        _methods,
+      );
     } else {
-      context.read<GuideManageCubit>().editGuide(guide, topicId);
+      context.read<GuideManageCubit>().editGuide(
+        widget.isAddMode
+            ? null
+            : context.read<GuideManageCubit>().state.guides[widget.editIndex!].id,
+        topicId,
+        _actionNameController.text,
+        _modelsController.text.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList(),
+        _methods,
+      );
     }
     Navigator.pop(context);
   }

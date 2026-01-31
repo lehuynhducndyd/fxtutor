@@ -186,6 +186,143 @@ class _BodyState extends State<Body> {
 
     return Column(
       children: [
+        SizedBox(
+          height: 8,
+        ),
+        // Nút Save ở trên
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            spacing: 5,
+            children: [
+              ElevatedButton(
+                onPressed: _onSave,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue,
+                  foregroundColor: Colors.white,
+                ),
+                child: Text(
+                  widget.isAddMode ? "Tạo" : "Lưu",
+                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                ),
+              ),
+              Row(
+                spacing: 5,
+                children: [
+                  ElevatedButton(
+                    onPressed: () {},
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green,
+                      foregroundColor: Colors.white,
+                    ),
+                    child: Text(
+                      "Hướng dẫn",
+                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  ElevatedButton(
+                    onPressed: () {},
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green,
+                      foregroundColor: Colors.white,
+                    ),
+                    child: Text(
+                      "Lấy Keylog",
+                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  ElevatedButton(
+                    onPressed: () {},
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green,
+                      foregroundColor: Colors.white,
+                    ),
+                    child: Text(
+                      "Lấy Keylog khác",
+                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        SizedBox(
+          height: 8,
+        ),
+        PopupMenuButton<String>(
+          onSelected: _addBlock,
+          itemBuilder: (context) => [
+            const PopupMenuItem(
+              value: 'text',
+              child: Row(
+                children: [
+                  Icon(Icons.notes, color: Colors.blueGrey),
+                  SizedBox(width: 8),
+                  Text("Văn bản"),
+                ],
+              ),
+            ),
+            const PopupMenuItem(
+              value: 'latex',
+              child: Row(
+                children: [
+                  Icon(Icons.functions, color: Colors.teal),
+                  SizedBox(width: 8),
+                  Text("Công thức (LaTeX)"),
+                ],
+              ),
+            ),
+            const PopupMenuItem(
+              value: 'image',
+              child: Row(
+                children: [
+                  Icon(Icons.image, color: Colors.blue),
+                  SizedBox(width: 8),
+                  Text("Hình ảnh"),
+                ],
+              ),
+            ),
+            const PopupMenuItem(
+              value: '580keylog',
+              child: Row(
+                children: [
+                  Icon(Icons.calculate, color: Colors.deepPurple),
+                  SizedBox(width: 8),
+                  Text("Casio fx-580 Keylog"),
+                ],
+              ),
+            ),
+            const PopupMenuItem(
+              value: '880keylog',
+              child: Row(
+                children: [
+                  Icon(Icons.calculate_outlined, color: Colors.indigo),
+                  SizedBox(width: 8),
+                  Text("Casio fx-880 Keylog"),
+                ],
+              ),
+            ),
+          ],
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: Colors.blue.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: Colors.blue),
+            ),
+            child: const Row(
+              children: [
+                Icon(Icons.add, color: Colors.blue, size: 20),
+                SizedBox(width: 4),
+                Text(
+                  "Thêm khối",
+                  style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
+          ),
+        ),
         Expanded(
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(16.0),
@@ -302,30 +439,6 @@ class _BodyState extends State<Body> {
                   return _buildBlockItem(idx, block);
                 }).toList(),
               ],
-            ),
-          ),
-        ),
-
-        // Nút Save
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, -2))],
-          ),
-          child: SizedBox(
-            width: double.infinity,
-            height: 48,
-            child: ElevatedButton(
-              onPressed: _onSave,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue,
-                foregroundColor: Colors.white,
-              ),
-              child: Text(
-                widget.isAddMode ? "TẠO BÀI HỌC" : "LƯU THAY ĐỔI",
-                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              ),
             ),
           ),
         ),

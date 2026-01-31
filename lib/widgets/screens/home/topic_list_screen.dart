@@ -4,7 +4,7 @@ import 'package:fx_tutor/widgets/screens/content_manager/learning_content/topic_
 
 import '../../../../common/enum/load_status.dart';
 import '../../../../services/topic_service.dart';
-import '../content_manager/learning_content/learning_content_screen.dart';
+import 'learning_list_screen.dart';
 
 class TopicListScreen extends StatefulWidget {
   const TopicListScreen({super.key});
@@ -31,14 +31,7 @@ class _Page extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text("Chủ đề học tập"),
-        centerTitle: true,
-      ),
-      // KHÔNG CÓ FloatingActionButton vì user không được thêm mới
-      body: const _Body(),
-    );
+    return _Body();
   }
 }
 
@@ -88,7 +81,7 @@ class _Body extends StatelessWidget {
             context.read<TopicCubit>().loadTopics();
           },
           child: ListView.separated(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
             itemCount: state.listTopic.length,
             separatorBuilder: (context, index) => const SizedBox(height: 12),
             itemBuilder: (context, index) {
@@ -108,7 +101,7 @@ class _Body extends StatelessWidget {
                     // Chuyển sang màn hình danh sách bài học
                     Navigator.pushNamed(
                       context,
-                      LearningContentScreen.route,
+                      LearningListScreen.route,
                       // Truyền Cubit hiện tại sang màn hình con để dùng chung dữ liệu/state
                       arguments: {'cubit': context.read<TopicCubit>()},
                     );

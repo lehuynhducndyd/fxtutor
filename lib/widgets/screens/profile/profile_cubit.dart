@@ -22,9 +22,17 @@ class ProfileCubit extends Cubit<ProfileState> {
   }
 
   Future<void> updateProfile({String? fullName, String? avatarUrl}) async {
-    emit(state.copyWith(loadStatus: LoadStatus.Loading));
-    await profileService.updateProfile(fullName: fullName, avatarUrl: avatarUrl);
-    await loadUser();
-    emit(state.copyWith(loadStatus: LoadStatus.Done));
+    try {
+      emit(state.copyWith(loadStatus: LoadStatus.Loading));
+      await profileService.updateProfile(fullName: fullName, avatarUrl: avatarUrl);
+      await loadUser();
+      emit(state.copyWith(loadStatus: LoadStatus.Done));
+    } catch (e) {
+      emit(
+        state.copyWith(
+          loadStatus: LoadStatus.Error,
+        ),
+      );
+    }
   }
 }

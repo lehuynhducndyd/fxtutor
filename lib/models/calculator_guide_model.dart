@@ -1,4 +1,5 @@
 class CalculatorGuideModel {
+  final String? userId;
   final int? id;
   final int topicId;
   final String actionName;
@@ -7,6 +8,7 @@ class CalculatorGuideModel {
 
   factory CalculatorGuideModel.fromJson(Map<String, dynamic> json) {
     return CalculatorGuideModel(
+      userId: json['user_id'] ?? "",
       id: json['id'],
       topicId: json['topic_id'] ?? 0,
       actionName: json['action_name'] ?? '',
@@ -18,6 +20,8 @@ class CalculatorGuideModel {
 
   Map<String, dynamic> toJson() {
     return {
+      'user_id': userId,
+      'id': id,
       'topic_id': topicId,
       'action_name': actionName,
       'compatible_models': compatibleModels,
@@ -26,7 +30,9 @@ class CalculatorGuideModel {
   }
 
   //<editor-fold desc="Data Methods">
+
   const CalculatorGuideModel({
+    this.userId,
     this.id,
     required this.topicId,
     required this.actionName,
@@ -39,6 +45,7 @@ class CalculatorGuideModel {
       identical(this, other) ||
       (other is CalculatorGuideModel &&
           runtimeType == other.runtimeType &&
+          userId == other.userId &&
           id == other.id &&
           topicId == other.topicId &&
           actionName == other.actionName &&
@@ -47,6 +54,7 @@ class CalculatorGuideModel {
 
   @override
   int get hashCode =>
+      userId.hashCode ^
       id.hashCode ^
       topicId.hashCode ^
       actionName.hashCode ^
@@ -56,6 +64,7 @@ class CalculatorGuideModel {
   @override
   String toString() {
     return 'CalculatorGuideModel{' +
+        ' userId: $userId,' +
         ' id: $id,' +
         ' topicId: $topicId,' +
         ' actionName: $actionName,' +
@@ -65,6 +74,7 @@ class CalculatorGuideModel {
   }
 
   CalculatorGuideModel copyWith({
+    String? userId,
     int? id,
     int? topicId,
     String? actionName,
@@ -72,6 +82,7 @@ class CalculatorGuideModel {
     List<GuideMethod>? methods,
   }) {
     return CalculatorGuideModel(
+      userId: userId ?? this.userId,
       id: id ?? this.id,
       topicId: topicId ?? this.topicId,
       actionName: actionName ?? this.actionName,
@@ -82,6 +93,7 @@ class CalculatorGuideModel {
 
   Map<String, dynamic> toMap() {
     return {
+      'userId': this.userId,
       'id': this.id,
       'topicId': this.topicId,
       'actionName': this.actionName,
@@ -92,6 +104,7 @@ class CalculatorGuideModel {
 
   factory CalculatorGuideModel.fromMap(Map<String, dynamic> map) {
     return CalculatorGuideModel(
+      userId: map['userId'] as String,
       id: map['id'] as int,
       topicId: map['topicId'] as int,
       actionName: map['actionName'] as String,

@@ -27,10 +27,12 @@ class LearningService {
     required String title,
     required List<ContentBlock> blocks,
   }) async {
+    final userId = _supabase.auth.currentUser?.id;
     // Convert List Object -> List Map (JSON)
     final blocksJson = blocks.map((e) => e.toJson()).toList();
 
     await _supabase.from('learning_content').insert({
+      'user_id': userId, // Sử dụng ID của người dùng hiện tại'
       'topic_id': topicId,
       'title': title,
       'content': blocksJson, // Supabase tự hiểu đây là jsonb

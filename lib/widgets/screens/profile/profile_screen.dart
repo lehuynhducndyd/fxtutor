@@ -42,6 +42,8 @@ class _PageState extends State<Page> {
     return BlocBuilder<ProfileCubit, ProfileState>(
       builder: (context, state) {
         var user = state.user;
+        final nameController = TextEditingController();
+        nameController.text = user.fullName ?? "";
         print(user);
         if (user.id.isEmpty) {
           return Center(
@@ -52,6 +54,17 @@ class _PageState extends State<Page> {
           children: [
             Text("${user.email}"),
             Text("${user.role}"),
+            TextField(
+              controller: nameController,
+              decoration: InputDecoration(labelText: "Tên hiển thị"),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                context.read<ProfileCubit>().updateProfile(fullName: nameController.text);
+              },
+              child: Text("Cập nhật"),
+            ),
+
             ElevatedButton(
               onPressed: () {
                 context.read<AuthCubit>().logout();
