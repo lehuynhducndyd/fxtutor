@@ -19,14 +19,21 @@ class CalculatorGuideModel {
   }
 
   Map<String, dynamic> toJson() {
-    return {
+    final map = <String, dynamic>{
       'user_id': userId,
-      'id': id,
       'topic_id': topicId,
       'action_name': actionName,
       'compatible_models': compatibleModels,
       'methods': methods.map((e) => e.toJson()).toList(),
     };
+
+    // Chỉ thêm id vào map nếu nó khác null (dùng cho trường hợp Update)
+    // Còn khi Insert (id là null) thì map sẽ không có key 'id'
+    if (id != null) {
+      map['id'] = id;
+    }
+
+    return map;
   }
 
   //<editor-fold desc="Data Methods">

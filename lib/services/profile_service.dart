@@ -32,6 +32,16 @@ class ProfileService {
     }
   }
 
+  Future<UserModel?> getProfileById(String userId) async {
+    try {
+      final data = await _supabase.from('users').select().eq('id', userId).single();
+      return UserModel.fromJson(data);
+    } catch (e) {
+      print('Lỗi lấy profile theo ID: $e');
+      return null;
+    }
+  }
+
   /// 2. Cập nhật thông tin (Tên hiển thị, Avatar)
   /// Sử dụng optional parameter {} để bạn có thể update 1 trong 2 hoặc cả 2
   Future<void> updateProfile({String? fullName, String? avatarUrl}) async {

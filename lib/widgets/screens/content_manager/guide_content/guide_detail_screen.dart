@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fx_tutor/models/calculator_guide_model.dart';
+import 'package:fx_tutor/models/user_model.dart';
+import 'package:fx_tutor/services/profile_service.dart';
 import 'package:markdown_widget/markdown_widget.dart';
 
 class GuideDetailScreen extends StatelessWidget {
@@ -20,6 +23,8 @@ class GuideDetailScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            _buildCreatorInfo(context),
+            const SizedBox(height: 16),
             if (guide.compatibleModels.isNotEmpty) ...[
               const Text(
                 "Dòng máy tương thích:",
@@ -43,6 +48,41 @@ class GuideDetailScreen extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildCreatorInfo(BuildContext context) {
+    if (guide.userId == null || guide.userId!.isEmpty) return const SizedBox.shrink();
+
+    return FutureBuilder<UserModel?>(
+      future: context.read<ProfileService>().getProfileById(guide.userId!),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const SizedBox(
+            height: 20,
+            width: 20,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          );
+        }
+        if (snapshot.hasData && snapshot.data != null) {
+          final user = snapshot.data!;
+          return Row(
+            children: [
+              const Icon(Icons.person, size: 16, color: Colors.grey),
+              const SizedBox(width: 4),
+              Text(
+                "Người tạo: ${user.fullName ?? 'Ẩn danh'}",
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: Colors.grey,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ],
+          );
+        }
+        return const SizedBox.shrink();
+      },
     );
   }
 

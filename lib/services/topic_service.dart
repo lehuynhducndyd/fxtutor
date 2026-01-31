@@ -28,11 +28,13 @@ class TopicService {
   /// Trả về TopicModel vừa tạo để UI update ngay lập tức
   Future<TopicModel> addTopic(String title, String description) async {
     try {
+      final userId = _client.auth.currentUser?.id;
       final response = await _client
           .from(_table)
           .insert({
             'title': title,
             'description': description,
+            'user_id': userId,
           })
           .select() // Quan trọng: select() để Supabase trả về dòng vừa insert
           .single(); // Lấy 1 object

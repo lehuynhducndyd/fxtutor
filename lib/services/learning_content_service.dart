@@ -1,6 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/learning_content.dart';
+import '../models/user_model.dart';
 
 class LearningService {
   final SupabaseClient _supabase = Supabase.instance.client;
@@ -59,5 +60,24 @@ class LearningService {
   // 3. XÓA (Delete)
   Future<void> deleteContent(int id) async {
     await _supabase.from('learning_content').delete().eq('id', id);
+  }
+
+  Future<UserModel> getUserById(String userId) async {
+    try {
+      // 1. Truy vấn bảng 'users', lọc theo cột 'id'
+      final data = await _supabase
+          .from('users')
+          .select() // Lấy tất cả các cột
+          .eq('id', userId) // Điều kiện: id bằng userId truyền vào
+          .single(); // .single() trả về 1 Object (Map) thay vì 1 List.
+      // Nếu không tìm thấy hoặc tìm thấy > 1 dòng, nó sẽ báo lỗi.
+
+      // 2. Convert Map sang UserModel
+      return UserModel.fromJson(data);
+    } catch (e) {
+      // 3. Xử lý lỗi (ví dụ: in ra log hoặc ném tiếp ra ngoài)
+      print('Lỗi lấy thông tin user: $e');
+      throw Exception('Không tìm thấy người dùng hoặc lỗi mạng');
+    }
   }
 }

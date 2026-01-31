@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:fx_tutor/models/user_model.dart';
+import 'package:fx_tutor/services/learning_content_service.dart';
 import 'package:fx_tutor/widgets/screens/content_manager/learning_content/topic_cubit.dart';
 
 import '../../../../common/enum/load_status.dart';
@@ -142,6 +144,20 @@ class _Body extends StatelessWidget {
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
                               ),
+                              const SizedBox(height: 4),
+                              if (topic.userId != null && topic.userId!.isNotEmpty)
+                                FutureBuilder<UserModel?>(
+                                  future: context.read<LearningService>().getUserById(topic.userId!),
+                                  builder: (context, snapshot) {
+                                    if (snapshot.hasData && snapshot.data != null) {
+                                      return Text(
+                                        "Người tạo: ${snapshot.data!.fullName ?? snapshot.data!.email ?? 'Ẩn danh'}",
+                                        style: const TextStyle(fontSize: 12, color: Colors.blueGrey),
+                                      );
+                                    }
+                                    return const SizedBox.shrink();
+                                  },
+                                ),
                             ],
                           ),
                         ),
