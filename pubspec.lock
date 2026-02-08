@@ -9,6 +9,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.0.0"
+  animated_quiz_widget:
+    dependency: "direct main"
+    description:
+      name: animated_quiz_widget
+      sha256: "82941ca389c2695bd289544a3edf76c33a5a8dea8c8805395d90a8948dda8ab7"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.3"
   app_links:
     dependency: transitive
     description:
@@ -661,6 +669,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "6.1.5+1"
+  quick_quiz:
+    dependency: "direct main"
+    description:
+      name: quick_quiz
+      sha256: c4c9ae08fe9d1ac39697316ca8087cf7ba65ea48fac4cd0121b7e1ac0a6fdef1
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.0.1"
   realtime_client:
     dependency: transitive
     description:

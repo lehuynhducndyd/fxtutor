@@ -5,7 +5,9 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../models/ai_quiz_model.dart';
 import '../models/calculator_guide_model.dart';
+import '../models/learning_content.dart';
 
 class AiChatService {
   final SupabaseClient _supabase = Supabase.instance.client;
@@ -181,5 +183,42 @@ class AiChatService {
 
     final response = await _chatModel.generateContent([Content.text(buffer.toString())]);
     return response.text ?? "Xin lỗi, AI không thể tạo câu trả lời.";
+  }
+
+  Future<List<AiQuizModel>> generateQuiz(LearningContent content) async {
+    final prompt =
+        """
+    Dựa trên nội dung học tập dưới đây, hãy tạo 5 câu hỏi trắc nghiệm toán học.
+    Yêu cầu:
+    - Mỗi câu hỏi có 4 lựa chọn.
+    - Trả về kết quả dưới dạng một danh sách JSON thuần (không markdown).
+    - Mỗi đối tượng trong danh sách phải có các trường: 
+      "question": (String),
+      "options": (List of 4 Strings),
+      "correct_answer_index": (int, từ 0 đến 3),
+      "explanation": (String, giải thích ngắn gọn lý do chọn đáp án đó).
+
+    Nội dung học tập:
+    Tiêu đề: ${content.title}
+    Nội dung chi tiết: ${content.blocks.map((b) => b.data ?? "").join("\n")}
+    """;
+
+    try {
+      final response = await _chatModel.generateContent([Content.text(prompt)]);
+      String cleanJson = response.text!.replaceAll('```json', '').replaceAll('```', '').trim();
+
+      if (cleanJson.contains('[') && cleanJson.contains(']')) {
+        cleanJson = cleanJson.substring(
+          cleanJson.indexOf('['),
+          cleanJson.lastIndexOf(']') + 1,
+        );
+      }
+
+      final List<dynamic> data = jsonDecode(cleanJson);
+      return data.map((item) => AiQuizModel.fromJson(item)).toList();
+    } catch (e) {
+      print("Lỗi generate quiz: $e");
+      return [];
+    }
   }
 }

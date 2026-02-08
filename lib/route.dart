@@ -20,33 +20,41 @@ import 'package:fx_tutor/widgets/screens/content_manager/learning_content/topic_
 import 'package:fx_tutor/widgets/screens/home/home_screen.dart';
 import 'package:fx_tutor/widgets/screens/home/learning_list_detail_screen.dart';
 import 'package:fx_tutor/widgets/screens/home/learning_list_screen.dart';
+import 'package:fx_tutor/widgets/screens/home/quiz_screen.dart';
 import 'package:fx_tutor/widgets/screens/home/topic_list_screen.dart';
 import 'package:fx_tutor/widgets/screens/splash/splash_screen.dart';
 
 Route<dynamic>? mainRoute(RouteSettings settings) {
   switch (settings.name) {
     case SplashScreen.route:
-      return MaterialPageRoute(builder: (context) => const SplashScreen());
+      return MaterialPageRoute(builder: (context) => const SplashScreen(), settings: settings);
     case LoginScreen.route:
-      return MaterialPageRoute(builder: (context) => LoginScreen());
+      return MaterialPageRoute(builder: (context) => LoginScreen(), settings: settings);
     case RegisterScreen.route:
-      return MaterialPageRoute(builder: (context) => RegisterScreen());
+      return MaterialPageRoute(builder: (context) => RegisterScreen(), settings: settings);
     case HomeScreen.route:
-      return MaterialPageRoute(builder: (context) => HomeScreen());
+      return MaterialPageRoute(builder: (context) => HomeScreen(), settings: settings);
     case TopicListScreen.route:
-      return MaterialPageRoute(builder: (context) => const TopicListScreen());
+      return MaterialPageRoute(builder: (context) => const TopicListScreen(), settings: settings);
     case ContentManagerScreen.route:
-      return MaterialPageRoute(builder: (context) => ContentManagerScreen());
+      return MaterialPageRoute(builder: (context) => ContentManagerScreen(), settings: settings);
     case LearningContentManagerScreen.route:
-      return MaterialPageRoute(builder: (context) => LearningContentManagerScreen());
+      return MaterialPageRoute(
+        builder: (context) => LearningContentManagerScreen(),
+        settings: settings,
+      );
 
     case GuideContentManagerScreen.route:
-      return MaterialPageRoute(builder: (context) => GuideContentManagerScreen());
+      return MaterialPageRoute(
+        builder: (context) => GuideContentManagerScreen(),
+        settings: settings,
+      );
 
     case AddTopicScreen.route:
       var cubit = (settings.arguments as Map<String, dynamic>)['cubit'] as TopicCubit;
       var isAddMode = (settings.arguments as Map<String, dynamic>)['isAddMode'] as bool;
       return MaterialPageRoute(
+        settings: settings,
         builder: (context) => BlocProvider.value(
           value: cubit,
           child: AddTopicScreen(isAddMode),
@@ -55,6 +63,7 @@ Route<dynamic>? mainRoute(RouteSettings settings) {
     case LearningContentScreen.route:
       var cubit = (settings.arguments as Map<String, dynamic>)['cubit'] as TopicCubit;
       return MaterialPageRoute(
+        settings: settings,
         builder: (context) => BlocProvider.value(
           value: cubit,
           child: const LearningContentScreen(),
@@ -64,6 +73,7 @@ Route<dynamic>? mainRoute(RouteSettings settings) {
     case GuideContentScreen.route:
       var cubit = (settings.arguments as Map<String, dynamic>)['cubit'] as TopicCubit;
       return MaterialPageRoute(
+        settings: settings,
         builder: (context) => BlocProvider.value(
           value: cubit,
           child: const GuideContentScreen(),
@@ -76,6 +86,7 @@ Route<dynamic>? mainRoute(RouteSettings settings) {
       var isAddMode = (settings.arguments as Map<String, dynamic>)['isAddMode'] as bool;
       var editIndex = (settings.arguments as Map<String, dynamic>)['editIndex'] as int?;
       return MaterialPageRoute(
+        settings: settings,
         builder: (context) => MultiBlocProvider(
           providers: [
             BlocProvider.value(value: topicCubit),
@@ -96,6 +107,7 @@ Route<dynamic>? mainRoute(RouteSettings settings) {
       var editIndex = (settings.arguments as Map<String, dynamic>)['editIndex'] as int?;
 
       return MaterialPageRoute(
+        settings: settings,
         builder: (context) => MultiBlocProvider(
           providers: [
             BlocProvider.value(value: topicCubit),
@@ -111,17 +123,20 @@ Route<dynamic>? mainRoute(RouteSettings settings) {
     case GuideDetailScreen.route:
       var guide = settings.arguments as CalculatorGuideModel;
       return MaterialPageRoute(
+        settings: settings,
         builder: (context) => GuideDetailScreen(guide: guide),
       );
 
     case LearningDetailScreen.route:
       var content = settings.arguments as LearningContent;
       return MaterialPageRoute(
+        settings: settings,
         builder: (context) => LearningDetailScreen(content: content),
       );
     case LearningListScreen.route:
       var cubit = (settings.arguments as Map<String, dynamic>)['cubit'] as TopicCubit;
       return MaterialPageRoute(
+        settings: settings,
         builder: (context) => BlocProvider.value(
           value: cubit,
           child: const LearningListScreen(),
@@ -130,9 +145,18 @@ Route<dynamic>? mainRoute(RouteSettings settings) {
     case LearningListDetailScreen.route:
       var content = settings.arguments as LearningContent;
       return MaterialPageRoute(
+        settings: settings,
         builder: (context) => LearningListDetailScreen(content: content),
       );
+    case QuizScreen.route:
+      var content = settings.arguments as LearningContent;
+      return MaterialPageRoute(
+        builder: (context) => QuizScreen(
+          content: content,
+        ),
+        settings: settings,
+      );
     default:
-      return MaterialPageRoute(builder: (context) => LoginScreen());
+      return MaterialPageRoute(builder: (context) => LoginScreen(), settings: settings);
   }
 }
