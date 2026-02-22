@@ -14,7 +14,7 @@ class MainCubit extends Cubit<MainState> {
   }
 
   void loadTheme() {
-    settingsStore.getIsLightTheme().then((value) {
+    settingsStore.getIsLightTheme().then((value) async {
       emit(state.copyWith(isLightTheme: value));
     });
   }

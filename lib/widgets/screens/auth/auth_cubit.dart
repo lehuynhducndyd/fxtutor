@@ -20,6 +20,17 @@ class AuthCubit extends Cubit<AuthState> {
     }
   }
 
+  Future<void> loginGoogle() async {
+    emit(state.copyWith(loadStatus: LoadStatus.Loading));
+    try {
+      await authService.loginWithGoogle();
+      emit(state.copyWith(loadStatus: LoadStatus.Done));
+    } catch (e) {
+      print("GOOGLE SIGN IN ERROR: $e");
+      emit(state.copyWith(loadStatus: LoadStatus.Error));
+    }
+  }
+
   Future<void> register(String email, String password, String confirmPassword) async {
     try {
       if (password != confirmPassword) {
@@ -30,6 +41,7 @@ class AuthCubit extends Cubit<AuthState> {
       await authService.signUpWithEmailPassword(email, password);
       emit(state.copyWith(loadStatus: LoadStatus.Done));
     } catch (e) {
+      print("REGISTER ERROR: $e");
       emit(state.copyWith(loadStatus: LoadStatus.Error));
     }
   }

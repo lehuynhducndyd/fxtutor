@@ -50,6 +50,7 @@ dependencies:
   go_router: ^17.0.1
   animated_quiz_widget: ^1.0.3
   quick_quiz: ^1.0.0
+  google_sign_in: ^6.1.0
 
 dev_dependencies:
   flutter_test:

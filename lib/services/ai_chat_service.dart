@@ -191,12 +191,13 @@ class AiChatService {
     Dựa trên nội dung học tập dưới đây, hãy tạo 5 câu hỏi trắc nghiệm toán học.
     Yêu cầu:
     - Mỗi câu hỏi có 4 lựa chọn.
+    - không dùng latex, dùng kí hiệu thông thường dễ hiểu
     - Trả về kết quả dưới dạng một danh sách JSON thuần (không markdown).
     - Mỗi đối tượng trong danh sách phải có các trường: 
       "question": (String),
       "options": (List of 4 Strings),
       "correct_answer_index": (int, từ 0 đến 3),
-      "explanation": (String, giải thích ngắn gọn lý do chọn đáp án đó).
+      "explanation": (String, giải thích ngắn gọn lý do chọn đáp án đó, gợi ý bấm máy nếu nội dung có đề cập, không thì thôi).
 
     Nội dung học tập:
     Tiêu đề: ${content.title}

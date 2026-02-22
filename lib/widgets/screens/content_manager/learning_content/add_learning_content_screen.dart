@@ -8,6 +8,8 @@ import 'package:fx_tutor/widgets/screens/content_manager/learning_content/learni
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../caculator/calculator_screen.dart';
+
 class AddLearningContentScreen extends StatefulWidget {
   final bool isAddMode;
   final int? editIndex;
@@ -221,7 +223,9 @@ class _BodyState extends State<Body> {
                     ),
                   ),
                   ElevatedButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      Navigator.pushNamed(context, CalculatorScreen.route);
+                    },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.green,
                       foregroundColor: Colors.white,

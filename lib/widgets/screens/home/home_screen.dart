@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fx_tutor/main_cubit.dart';
 import 'package:fx_tutor/route.dart';
+import 'package:fx_tutor/widgets/screens/guide/guide_screen.dart';
 import 'package:fx_tutor/widgets/screens/home/topic_list_screen.dart';
 import 'package:fx_tutor/widgets/screens/setting/setting_screen.dart';
 
@@ -11,8 +12,11 @@ import '../ai_chat/ai_chat_cubit.dart';
 import '../ai_chat/ai_chat_screen.dart';
 import '../caculator/caculator.dart';
 import '../content_manager/content_manager_screen.dart';
+import '../contribute/contribute_screen.dart';
+import '../info/info_screen.dart';
 import '../menu/menu_screen.dart';
 import '../profile/profile_screen.dart';
+import '../user_manager/user_manager_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -137,7 +141,19 @@ class Body extends StatelessWidget {
           return SafeArea(child: SettingScreen());
         }
         if (state.selected == DrawerItem.Profile) {
-          return const SafeArea(child: ProfileScreen());
+          return SafeArea(child: ProfileScreen());
+        }
+        if (state.selected == DrawerItem.UserManager) {
+          return SafeArea(child: UserManagerScreen());
+        }
+        if (state.selected == DrawerItem.Contribute) {
+          return SafeArea(child: ContributeScreen());
+        }
+        if (state.selected == DrawerItem.Info) {
+          return SafeArea(child: InfoScreen());
+        }
+        if (state.selected == DrawerItem.Guide) {
+          return SafeArea(child: GuideScreen());
         }
 
         return SafeArea(

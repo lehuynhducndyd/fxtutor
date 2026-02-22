@@ -5,7 +5,7 @@ enum DrawerItem {
   Calculate,
   Contribute,
   Info,
-  Manual,
+  Guide,
   ContentManager,
   UserManager,
 }

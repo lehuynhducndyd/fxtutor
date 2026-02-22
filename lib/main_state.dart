@@ -10,7 +10,10 @@ class MainState {
   });
 
   //<editor-fold desc="Data Methods">
-  const MainState({required this.isLightTheme, required this.selected});
+  const MainState({
+    required this.isLightTheme,
+    required this.selected,
+  });
 
   @override
   bool operator ==(Object other) =>
@@ -28,7 +31,10 @@ class MainState {
     return 'MainState{' + ' isLightTheme: $isLightTheme,' + ' selected: $selected,' + '}';
   }
 
-  MainState copyWith({bool? isLightTheme, DrawerItem? selected}) {
+  MainState copyWith({
+    bool? isLightTheme,
+    DrawerItem? selected,
+  }) {
     return MainState(
       isLightTheme: isLightTheme ?? this.isLightTheme,
       selected: selected ?? this.selected,
@@ -36,7 +42,10 @@ class MainState {
   }
 
   Map<String, dynamic> toMap() {
-    return {'isLightTheme': this.isLightTheme, 'selected': this.selected};
+    return {
+      'isLightTheme': this.isLightTheme,
+      'selected': this.selected,
+    };
   }
 
   factory MainState.fromMap(Map<String, dynamic> map) {

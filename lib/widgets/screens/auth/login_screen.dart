@@ -89,6 +89,19 @@ class Page extends StatelessWidget {
                       Navigator.pushReplacementNamed(context, RegisterScreen.route);
                     },
                   ),
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      context.read<AuthCubit>().loginGoogle();
+                    },
+                    icon: const Icon(Icons.g_mobiledata, size: 30), // Hoặc dùng ảnh logo Google
+                    label: const Text("Đăng nhập bằng Google"),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.white,
+                      foregroundColor: Colors.black, // Chữ màu đen theo chuẩn Google
+                      minimumSize: const Size(double.infinity, 50),
+                      side: const BorderSide(color: Colors.grey),
+                    ),
+                  ),
                 ],
               ),
             ),

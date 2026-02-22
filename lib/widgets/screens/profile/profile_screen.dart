@@ -42,6 +42,7 @@ class _PageState extends State<Page> {
     return BlocBuilder<ProfileCubit, ProfileState>(
       builder: (context, state) {
         var user = state.user;
+        final profileCubit = context.read<ProfileCubit>();
         final nameController = TextEditingController();
         nameController.text = user.fullName ?? "";
         print(user);
@@ -64,7 +65,14 @@ class _PageState extends State<Page> {
               },
               child: Text("Cập nhật"),
             ),
-
+            ElevatedButton(
+              onPressed: profileCubit.profileService.isEmailProvider()
+                  ? () {
+                      _showChangePasswordDialog(context, profileCubit);
+                    }
+                  : null,
+              child: const Text("Đổi mật khẩu"),
+            ),
             ElevatedButton(
               onPressed: () {
                 context.read<AuthCubit>().logout();
@@ -77,4 +85,89 @@ class _PageState extends State<Page> {
       },
     );
   }
+}
+
+void _showChangePasswordDialog(BuildContext context, ProfileCubit profileCubit) {
+  final newPasswordController = TextEditingController();
+  final confirmPasswordController = TextEditingController();
+
+  showDialog(
+    context: context,
+    builder: (context) {
+      String errorText = '';
+
+      return StatefulBuilder(
+        builder: (context, setState) {
+          return AlertDialog(
+            title: const Text('Đổi mật khẩu'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (errorText.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Text(
+                      errorText,
+                      style: const TextStyle(color: Colors.red),
+                    ),
+                  ),
+                TextField(
+                  controller: newPasswordController,
+                  obscureText: true,
+                  decoration: const InputDecoration(
+                    labelText: 'Mật khẩu mới (ít nhất 6 ký tự)',
+                  ),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: confirmPasswordController,
+                  obscureText: true,
+                  decoration: const InputDecoration(
+                    labelText: 'Xác nhận mật khẩu mới',
+                  ),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Hủy'),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  final newPass = newPasswordController.text.trim();
+                  final confirmPass = confirmPasswordController.text.trim();
+
+                  if (newPass.length < 6) {
+                    setState(() {
+                      errorText = 'Mật khẩu phải từ 6 ký tự trở lên';
+                    });
+                    return;
+                  }
+
+                  if (newPass != confirmPass) {
+                    setState(() {
+                      errorText = 'Mật khẩu xác nhận không khớp';
+                    });
+                    return;
+                  }
+
+                  profileCubit.changePassword(newPass);
+
+                  Navigator.pop(context);
+
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Đổi mật khẩu thành công!'),
+                    ),
+                  );
+                },
+                child: const Text('Lưu'),
+              ),
+            ],
+          );
+        },
+      );
+    },
+  );
 }

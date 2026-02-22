@@ -21,9 +21,13 @@ class ProfileService {
           .from('users')
           .select()
           .eq('id', userId) // Lọc theo ID
-          .single(); // Lấy 1 dòng duy nhất
+          .maybeSingle();
 
       // Convert dữ liệu JSON từ Supabase sang Object Dart (UserModel)
+      if (data == null) {
+        print("⚠️ User ID $userId chưa có trong bảng public.users");
+        return null;
+      }
       return UserModel.fromJson(data);
     } catch (e) {
       // In lỗi ra console để debug
@@ -68,5 +72,21 @@ class ProfileService {
       print('Lỗi cập nhật profile: $e');
       rethrow; // Ném lỗi ra ngoài để UI hiển thị thông báo (SnackBar)
     }
+  }
+
+  bool isEmailProvider() {
+    final user = _supabase.auth.currentUser;
+    if (user == null) return false;
+
+    // Supabase lưu thông tin provider trong app_metadata
+    final provider = user.appMetadata['provider'];
+    return provider == 'email';
+  }
+
+  Future<void> changePassword(String newPassword) async {
+    // Supabase chỉ cho phép đổi mật khẩu khi user đang đăng nhập hợp lệ
+    await _supabase.auth.updateUser(
+      UserAttributes(password: newPassword),
+    );
   }
 }
