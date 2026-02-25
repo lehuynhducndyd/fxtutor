@@ -40,7 +40,7 @@ dependencies:
   flutter_dotenv: ^5.1.0
   webview_flutter: ^4.10.10
   webview_flutter_android: ^4.10.10
-  google_generative_ai: ^0.4.0
+  google_generative_ai: ^0.4.7
   image_picker: ^1.1.0
   markdown_widget: ^2.3.2+8
   flutter_math_fork: ^0.7.4

@@ -20,7 +20,7 @@ class AiChatService {
         apiKey: dotenv.env['API_KEY'] ?? '',
       ),
       _embeddingModel = GenerativeModel(
-        model: 'text-embedding-004',
+        model: 'gemini-embedding-001',
         apiKey: dotenv.env['API_KEY'] ?? '',
       );
 
@@ -161,7 +161,7 @@ class AiChatService {
       }
 
       buffer.writeln(
-        "4. Các phím bấm BẮT BUỘC để trong ngoặc vuông [ ] giống như chi tiết cách bấm được cung cấp. Ví dụ: [MENU], [AC].",
+        "4. Các phím bấm BẮT BUỘC để trong ngoặc vuông [ ] giống như chi tiết cách bấm được cung cấp. Ví dụ: [MENU], [AC]. Trả lời ngắn gọn sát với hướng dẫn.",
       );
       buffer.writeln(
         '''5. QUY ĐỊNH TRÌNH BÀY:
@@ -188,7 +188,7 @@ class AiChatService {
   Future<List<AiQuizModel>> generateQuiz(LearningContent content) async {
     final prompt =
         """
-    Dựa trên nội dung học tập dưới đây, hãy tạo 5 câu hỏi trắc nghiệm toán học.
+    Dựa trên nội dung học tập dưới đây, hãy tạo 5 câu hỏi trắc nghiệm toán học, chủ yếu bấm máy tính.
     Yêu cầu:
     - Mỗi câu hỏi có 4 lựa chọn.
     - không dùng latex, dùng kí hiệu thông thường dễ hiểu

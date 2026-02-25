@@ -217,7 +217,7 @@ class _LearningDetailScreenState extends State<LearningDetailScreen> {
           ),
         );
       case '880keylog':
-        var text = KeyMapper.convert(block.data ?? '');
+        var text = KeyMapper.convert2(block.data ?? '');
         return RichText(
           text: TextSpan(
             style: const TextStyle(

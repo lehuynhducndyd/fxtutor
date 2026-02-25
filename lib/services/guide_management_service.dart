@@ -10,7 +10,7 @@ class GuideManagementService {
 
   GuideManagementService()
     : _embeddingModel = GenerativeModel(
-        model: 'text-embedding-004',
+        model: 'gemini-embedding-001',
         apiKey: dotenv.env['API_KEY'] ?? '',
       );
 
