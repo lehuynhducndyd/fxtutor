@@ -10,6 +10,8 @@ class ProfileState {
         id: '',
         createdAt: DateTime.now(),
         role: '',
+        email: '',
+        isActive: true,
       ),
       loadStatus: LoadStatus.Init,
     );

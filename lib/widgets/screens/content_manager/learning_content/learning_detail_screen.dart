@@ -67,25 +67,21 @@ class _LearningDetailScreenState extends State<LearningDetailScreen> {
                   );
                 }
                 final user = snapshot.data!;
-                return Row(
-                  children: [
-                    if (user.avatarUrl != null)
-                      CircleAvatar(
-                        radius: 12,
-                        backgroundImage: NetworkImage(user.avatarUrl!),
-                      )
-                    else
-                      const Icon(Icons.account_circle, size: 24, color: Colors.grey),
-                    const SizedBox(width: 8),
-                    Text(
-                      "Người tạo: ${user.fullName}  ${user.email}",
-                      style: const TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey,
-                        fontWeight: FontWeight.w500,
+                return SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      const SizedBox(width: 8),
+                      Text(
+                        "Người tạo: ${user.fullName}  ${user.email}",
+                        style: const TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 );
               },
             ),

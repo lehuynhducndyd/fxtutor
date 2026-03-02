@@ -8,6 +8,7 @@ import 'package:fx_tutor/route.dart';
 import 'package:fx_tutor/services/admin_contribute_service.dart';
 import 'package:fx_tutor/services/ai_chat_service.dart';
 import 'package:fx_tutor/services/auth_service.dart';
+import 'package:fx_tutor/services/collaborator_service.dart';
 import 'package:fx_tutor/services/contribute_service.dart';
 import 'package:fx_tutor/services/guide_management_service.dart';
 import 'package:fx_tutor/services/learning_content_service.dart';
@@ -128,6 +129,9 @@ class Repository extends StatelessWidget {
         RepositoryProvider<AdminContributeService>(
           create: (context) => AdminContributeService(),
         ),
+        RepositoryProvider<CollaboratorService>(
+          create: (context) => CollaboratorService(),
+        ),
         RepositoryProvider<SettingsStore>(
           create: (context) => SettingsStore(),
         ),
@@ -147,14 +151,27 @@ class Provider extends StatelessWidget {
   }
 }
 
+class AppTheme {
+  static ThemeData lightTheme = ThemeData(
+    brightness: Brightness.light,
+    colorSchemeSeed: Colors.blue,
+    useMaterial3: true,
+  );
+  static ThemeData darkTheme = ThemeData(
+    brightness: Brightness.dark,
+    colorSchemeSeed: Colors.blue,
+    useMaterial3: true,
+  );
+}
+
 class App extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<MainCubit, MainState>(
       builder: (context, state) {
         return MaterialApp(
-          darkTheme: ThemeData.dark(),
-          theme: ThemeData.light(),
+          darkTheme: AppTheme.darkTheme,
+          theme: AppTheme.lightTheme,
           themeMode: state.isLightTheme ? ThemeMode.light : ThemeMode.dark,
           debugShowCheckedModeBanner: false,
           onGenerateRoute: mainRoute,

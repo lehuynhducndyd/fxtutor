@@ -62,25 +62,21 @@ class _LearningListDetailScreenState extends State<LearningListDetailScreen> {
                   );
                 }
                 final user = snapshot.data!;
-                return Row(
-                  children: [
-                    if (user.avatarUrl != null)
-                      CircleAvatar(
-                        radius: 12,
-                        backgroundImage: NetworkImage(user.avatarUrl!),
-                      )
-                    else
-                      const Icon(Icons.account_circle, size: 24, color: Colors.grey),
-                    const SizedBox(width: 8),
-                    Text(
-                      "Người tạo: ${user.fullName}  ${user.email}",
-                      style: const TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey,
-                        fontWeight: FontWeight.w500,
+                return SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      const SizedBox(width: 8),
+                      Text(
+                        "Người tạo: ${user.fullName}  ${user.email}",
+                        style: const TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 );
               },
             ),
@@ -155,7 +151,7 @@ class _LearningListDetailScreenState extends State<LearningListDetailScreen> {
                 borderRadius: BorderRadius.circular(8),
                 child: Container(
                   constraints: const BoxConstraints(
-                    maxHeight: 300,
+                    maxHeight: 200,
                     minWidth: double.infinity,
                   ),
                   color: Colors.grey[50],
@@ -232,8 +228,6 @@ class _LearningListDetailScreenState extends State<LearningListDetailScreen> {
             ],
           ),
         );
-      //case '880keylog':
-      // Đã loại bỏ Video theo yêu cầu trước đó, nhưng nếu data cũ còn thì ẩn đi hoặc hiện placeholder
       default:
         return const SizedBox.shrink();
     }

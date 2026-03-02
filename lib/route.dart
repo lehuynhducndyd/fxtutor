@@ -28,6 +28,8 @@ import 'package:fx_tutor/widgets/screens/home/quiz_screen.dart';
 import 'package:fx_tutor/widgets/screens/home/topic_list_screen.dart';
 import 'package:fx_tutor/widgets/screens/info/info_screen.dart';
 import 'package:fx_tutor/widgets/screens/splash/splash_screen.dart';
+import 'package:fx_tutor/widgets/screens/user_manager/admin_collaborator_screen.dart';
+import 'package:fx_tutor/widgets/screens/user_manager/user_management_screen.dart';
 import 'package:fx_tutor/widgets/screens/user_manager/user_manager_screen.dart';
 
 Route<dynamic>? mainRoute(RouteSettings settings) {
@@ -49,7 +51,11 @@ Route<dynamic>? mainRoute(RouteSettings settings) {
         builder: (context) => LearningContentManagerScreen(),
         settings: settings,
       );
-
+    case AdminCollaboratorScreen.route:
+      return MaterialPageRoute(
+        builder: (context) => AdminCollaboratorScreen(),
+        settings: settings,
+      );
     case GuideContentManagerScreen.route:
       return MaterialPageRoute(
         builder: (context) => GuideContentManagerScreen(),
@@ -58,6 +64,11 @@ Route<dynamic>? mainRoute(RouteSettings settings) {
     case AdminContributeScreen.route:
       return MaterialPageRoute(
         builder: (context) => AdminContributeScreen(),
+        settings: settings,
+      );
+    case UserManagementScreen.route:
+      return MaterialPageRoute(
+        builder: (context) => UserManagementScreen(),
         settings: settings,
       );
     case AddTopicScreen.route:

@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fx_tutor/widgets/screens/content_manager/contribute_content/admin_contribute_screen.dart';
 import 'package:fx_tutor/widgets/screens/content_manager/guide_content/guide_content_manager_screen.dart';
 
-import '../../../common/enum/drawer_item.dart';
-import '../../../main_cubit.dart';
 import 'learning_content/learning_content_manager_screen.dart';
 
 class ContentManagerScreen extends StatelessWidget {
@@ -13,16 +10,6 @@ class ContentManagerScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Quản lý nội dung"),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () {
-            context.read<MainCubit>().setSelected(DrawerItem.Home);
-            Navigator.of(context).pop();
-          },
-        ),
-      ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: GridView(

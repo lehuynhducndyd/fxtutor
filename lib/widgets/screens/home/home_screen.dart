@@ -8,6 +8,7 @@ import 'package:fx_tutor/widgets/screens/setting/setting_screen.dart';
 
 import '../../../common/enum/drawer_item.dart';
 import '../../../services/ai_chat_service.dart';
+import '../../../services/profile_service.dart';
 import '../ai_chat/ai_chat_cubit.dart';
 import '../ai_chat/ai_chat_screen.dart';
 import '../caculator/caculator.dart';
@@ -15,6 +16,7 @@ import '../content_manager/content_manager_screen.dart';
 import '../contribute/contribute_screen.dart';
 import '../info/info_screen.dart';
 import '../menu/menu_screen.dart';
+import '../profile/profile_cubit.dart';
 import '../profile/profile_screen.dart';
 import '../user_manager/user_manager_screen.dart';
 
@@ -37,84 +39,92 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocConsumer<MainCubit, MainState>(
-      listener: (context, state) {
-        if (state.selected == DrawerItem.Home) {
-          setState(() {
-            _selectedIndex = 0;
-          });
-        }
-      },
-      builder: (context, state) {
-        final isHome = state.selected == DrawerItem.Home;
-        return PopScope(
-          canPop: false,
-          onPopInvoked: (didPop) async {
-            if (didPop) return;
-            final NavigatorState? currentNavigator = _navigatorKeys[_selectedIndex].currentState;
-            if (currentNavigator != null && currentNavigator.canPop()) {
-              currentNavigator.pop();
-            } else {
-              // Nếu không thể pop trong tab, có thể xử lý thoát app hoặc về tab đầu tiên
-              if (_selectedIndex != 0) {
-                setState(() => _selectedIndex = 0);
+    return BlocProvider(
+      create: (context) => ProfileCubit(context.read<ProfileService>())..loadUser(),
+      child: BlocConsumer<MainCubit, MainState>(
+        listener: (context, state) {
+          if (state.selected == DrawerItem.Home) {
+            setState(() {
+              _selectedIndex = 0;
+            });
+          }
+        },
+        builder: (context, state) {
+          final isHome = state.selected == DrawerItem.Home;
+          return PopScope(
+            canPop: false,
+            onPopInvoked: (didPop) async {
+              if (didPop) return;
+              final NavigatorState? currentNavigator = _navigatorKeys[_selectedIndex].currentState;
+              if (currentNavigator != null && currentNavigator.canPop()) {
+                currentNavigator.pop();
               } else {
-                // Thoát app (cần import services hoặc dùng SystemNavigator)
+                // Nếu không thể pop trong tab, có thể xử lý thoát app hoặc về tab đầu tiên
+                if (_selectedIndex != 0) {
+                  setState(() => _selectedIndex = 0);
+                } else {
+                  // Thoát app (cần import services hoặc dùng SystemNavigator)
+                }
               }
-            }
-          },
-          child: Scaffold(
-            appBar: isHome
-                ? AppBar(
-                    title: Text(_getTitle(state.selected)),
-                  )
-                : AppBar(
-                    title: Text(_getTitle(state.selected)),
-                  ),
-            body: Body(
-              selectedIndex: _selectedIndex,
-              navigatorKeys: _navigatorKeys,
+            },
+            child: Scaffold(
+              appBar: isHome
+                  ? AppBar(
+                      title: Text(_getTitle(state.selected)),
+                    )
+                  : AppBar(
+                      title: Text(_getTitle(state.selected)),
+                    ),
+              body: Body(
+                selectedIndex: _selectedIndex,
+                navigatorKeys: _navigatorKeys,
+              ),
+
+              bottomNavigationBar: isHome
+                  ? BottomNavigationBar(
+                      currentIndex: _selectedIndex,
+                      onTap: (index) {
+                        if (_selectedIndex == index) {
+                          // Nếu nhấn lại vào tab đang chọn, quay về trang đầu của tab đó
+                          _navigatorKeys[index].currentState?.popUntil(
+                            (route) => route.isFirst,
+                          );
+                        } else {
+                          setState(() => _selectedIndex = index);
+                        }
+                      },
+                      items: const [
+                        BottomNavigationBarItem(icon: Icon(Icons.grid_view), label: 'Học tập'),
+                        BottomNavigationBarItem(icon: Icon(Icons.calculate), label: 'Máy tính'),
+                        BottomNavigationBarItem(icon: Icon(Icons.chat), label: 'AI'),
+                      ],
+                    )
+                  : null,
+              drawer: const Drawer(
+                child: MenuScreen(),
+              ),
             ),
-            bottomNavigationBar: isHome
-                ? BottomNavigationBar(
-                    currentIndex: _selectedIndex,
-                    onTap: (index) {
-                      if (_selectedIndex == index) {
-                        // Nếu nhấn lại vào tab đang chọn, quay về trang đầu của tab đó
-                        _navigatorKeys[index].currentState?.popUntil((route) => route.isFirst);
-                      } else {
-                        setState(() => _selectedIndex = index);
-                      }
-                    },
-                    items: const [
-                      BottomNavigationBarItem(icon: Icon(Icons.grid_view), label: 'Học tập'),
-                      BottomNavigationBarItem(icon: Icon(Icons.calculate), label: 'Máy tính'),
-                      BottomNavigationBarItem(icon: Icon(Icons.chat), label: 'AI'),
-                    ],
-                  )
-                : null,
-            drawer: const Drawer(
-              child: MenuScreen(),
-            ),
-          ),
-        );
-      },
+          );
+        },
+      ),
     );
   }
+}
 
-  String _getTitle(DrawerItem selected) {
-    switch (selected) {
-      case DrawerItem.Home:
-        return 'FX Tutor';
-      case DrawerItem.Profile:
-        return 'Profile';
-      case DrawerItem.Setting:
-        return 'Setting';
-      case DrawerItem.ContentManager:
-        return 'Content Manager';
-      default:
-        return '';
-    }
+String _getTitle(DrawerItem selected) {
+  switch (selected) {
+    case DrawerItem.Home:
+      return 'FX Tutor';
+    case DrawerItem.Profile:
+      return 'Hồ sơ';
+    case DrawerItem.Setting:
+      return 'Cài đặt';
+    case DrawerItem.ContentManager:
+      return 'Quản lý nội dung';
+    case DrawerItem.UserManager:
+      return 'Quản lý người dùng';
+    default:
+      return '';
   }
 }
 
@@ -132,13 +142,16 @@ class Body extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocConsumer<MainCubit, MainState>(
       listener: (context, state) {
-        if (state.selected == DrawerItem.ContentManager) {
-          Navigator.pushNamed(context, ContentManagerScreen.route);
-        }
+        // if (state.selected == DrawerItem.ContentManager) {
+        //   Navigator.pushNamed(context, ContentManagerScreen.route);
+        // }
       },
       builder: (context, state) {
         if (state.selected == DrawerItem.Setting) {
           return SafeArea(child: SettingScreen());
+        }
+        if (state.selected == DrawerItem.ContentManager) {
+          return SafeArea(child: ContentManagerScreen());
         }
         if (state.selected == DrawerItem.Profile) {
           return SafeArea(child: ProfileScreen());
