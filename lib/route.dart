@@ -6,6 +6,7 @@ import 'package:fx_tutor/widgets/screens/auth/login_screen.dart';
 import 'package:fx_tutor/widgets/screens/auth/register_screen.dart';
 import 'package:fx_tutor/widgets/screens/caculator/calculator_screen.dart';
 import 'package:fx_tutor/widgets/screens/content_manager/content_manager_screen.dart';
+import 'package:fx_tutor/widgets/screens/content_manager/contribute_content/admin_contribute_screen.dart';
 import 'package:fx_tutor/widgets/screens/content_manager/guide_content/add_guide_content_screen.dart';
 import 'package:fx_tutor/widgets/screens/content_manager/guide_content/guide_content_manager_screen.dart';
 import 'package:fx_tutor/widgets/screens/content_manager/guide_content/guide_content_screen.dart';
@@ -54,7 +55,11 @@ Route<dynamic>? mainRoute(RouteSettings settings) {
         builder: (context) => GuideContentManagerScreen(),
         settings: settings,
       );
-
+    case AdminContributeScreen.route:
+      return MaterialPageRoute(
+        builder: (context) => AdminContributeScreen(),
+        settings: settings,
+      );
     case AddTopicScreen.route:
       var cubit = (settings.arguments as Map<String, dynamic>)['cubit'] as TopicCubit;
       var isAddMode = (settings.arguments as Map<String, dynamic>)['isAddMode'] as bool;

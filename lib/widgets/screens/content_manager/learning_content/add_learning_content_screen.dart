@@ -344,86 +344,86 @@ class _BodyState extends State<Body> {
                 ),
                 const SizedBox(height: 24),
 
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    _buildLabel("Nội dung chi tiết"),
-                    // --- MENU CHỌN LOẠI KHỐI (3 LOẠI) ---
-                    PopupMenuButton<String>(
-                      onSelected: _addBlock,
-                      itemBuilder: (context) => [
-                        const PopupMenuItem(
-                          value: 'text',
-                          child: Row(
-                            children: [
-                              Icon(Icons.notes, color: Colors.blueGrey),
-                              SizedBox(width: 8),
-                              Text("Văn bản"),
-                            ],
-                          ),
-                        ),
-                        const PopupMenuItem(
-                          value: 'latex',
-                          child: Row(
-                            children: [
-                              Icon(Icons.functions, color: Colors.teal),
-                              SizedBox(width: 8),
-                              Text("Công thức (LaTeX)"),
-                            ],
-                          ),
-                        ),
-                        const PopupMenuItem(
-                          value: 'image',
-                          child: Row(
-                            children: [
-                              Icon(Icons.image, color: Colors.blue),
-                              SizedBox(width: 8),
-                              Text("Hình ảnh"),
-                            ],
-                          ),
-                        ),
-                        const PopupMenuItem(
-                          value: '580keylog',
-                          child: Row(
-                            children: [
-                              Icon(Icons.calculate, color: Colors.deepPurple),
-                              SizedBox(width: 8),
-                              Text("Casio fx-580 Keylog"),
-                            ],
-                          ),
-                        ),
-                        const PopupMenuItem(
-                          value: '880keylog',
-                          child: Row(
-                            children: [
-                              Icon(Icons.calculate_outlined, color: Colors.indigo),
-                              SizedBox(width: 8),
-                              Text("Casio fx-880 Keylog"),
-                            ],
-                          ),
-                        ),
-                      ],
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: Colors.blue.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: Colors.blue),
-                        ),
-                        child: const Row(
-                          children: [
-                            Icon(Icons.add, color: Colors.blue, size: 20),
-                            SizedBox(width: 4),
-                            Text(
-                              "Thêm khối",
-                              style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+                // Row(
+                //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                //   children: [
+                //     _buildLabel("Nội dung chi tiết"),
+                //     // --- MENU CHỌN LOẠI KHỐI (3 LOẠI) ---
+                //     PopupMenuButton<String>(
+                //       onSelected: _addBlock,
+                //       itemBuilder: (context) => [
+                //         const PopupMenuItem(
+                //           value: 'text',
+                //           child: Row(
+                //             children: [
+                //               Icon(Icons.notes, color: Colors.blueGrey),
+                //               SizedBox(width: 8),
+                //               Text("Văn bản"),
+                //             ],
+                //           ),
+                //         ),
+                //         const PopupMenuItem(
+                //           value: 'latex',
+                //           child: Row(
+                //             children: [
+                //               Icon(Icons.functions, color: Colors.teal),
+                //               SizedBox(width: 8),
+                //               Text("Công thức (LaTeX)"),
+                //             ],
+                //           ),
+                //         ),
+                //         const PopupMenuItem(
+                //           value: 'image',
+                //           child: Row(
+                //             children: [
+                //               Icon(Icons.image, color: Colors.blue),
+                //               SizedBox(width: 8),
+                //               Text("Hình ảnh"),
+                //             ],
+                //           ),
+                //         ),
+                //         const PopupMenuItem(
+                //           value: '580keylog',
+                //           child: Row(
+                //             children: [
+                //               Icon(Icons.calculate, color: Colors.deepPurple),
+                //               SizedBox(width: 8),
+                //               Text("Casio fx-580 Keylog"),
+                //             ],
+                //           ),
+                //         ),
+                //         const PopupMenuItem(
+                //           value: '880keylog',
+                //           child: Row(
+                //             children: [
+                //               Icon(Icons.calculate_outlined, color: Colors.indigo),
+                //               SizedBox(width: 8),
+                //               Text("Casio fx-880 Keylog"),
+                //             ],
+                //           ),
+                //         ),
+                //       ],
+                //       child: Container(
+                //         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                //         decoration: BoxDecoration(
+                //           color: Colors.blue.withOpacity(0.1),
+                //           borderRadius: BorderRadius.circular(20),
+                //           border: Border.all(color: Colors.blue),
+                //         ),
+                //         child: const Row(
+                //           children: [
+                //             Icon(Icons.add, color: Colors.blue, size: 20),
+                //             SizedBox(width: 4),
+                //             Text(
+                //               "Thêm khối",
+                //               style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold),
+                //             ),
+                //           ],
+                //         ),
+                //       ),
+                //     ),
+                //   ],
+                // ),
                 const SizedBox(height: 10),
 
                 if (_blocks.isEmpty)

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:fx_tutor/widgets/screens/content_manager/contribute_content/admin_contribute_screen.dart';
 import 'package:fx_tutor/widgets/screens/content_manager/guide_content/guide_content_manager_screen.dart';
 
 import '../../../common/enum/drawer_item.dart';
@@ -56,7 +57,7 @@ class ContentManagerScreen extends StatelessWidget {
               icon: Icons.verified_user_outlined,
               color: Colors.green,
               onTap: () {
-                // TODO: Điều hướng đến trang kiểm duyệt
+                Navigator.pushNamed(context, AdminContributeScreen.route);
               },
             ),
           ],

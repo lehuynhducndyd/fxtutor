@@ -5,8 +5,10 @@ import 'package:fx_tutor/repositories/log.dart';
 import 'package:fx_tutor/repositories/log_impl.dart';
 import 'package:fx_tutor/repositories/settings_store.dart';
 import 'package:fx_tutor/route.dart';
+import 'package:fx_tutor/services/admin_contribute_service.dart';
 import 'package:fx_tutor/services/ai_chat_service.dart';
 import 'package:fx_tutor/services/auth_service.dart';
+import 'package:fx_tutor/services/contribute_service.dart';
 import 'package:fx_tutor/services/guide_management_service.dart';
 import 'package:fx_tutor/services/learning_content_service.dart';
 import 'package:fx_tutor/services/profile_service.dart';
@@ -119,6 +121,12 @@ class Repository extends StatelessWidget {
         ),
         RepositoryProvider<LearningService>(
           create: (context) => LearningService(),
+        ),
+        RepositoryProvider<ContributeService>(
+          create: (context) => ContributeService(),
+        ),
+        RepositoryProvider<AdminContributeService>(
+          create: (context) => AdminContributeService(),
         ),
         RepositoryProvider<SettingsStore>(
           create: (context) => SettingsStore(),

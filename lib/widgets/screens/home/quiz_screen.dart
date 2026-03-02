@@ -25,13 +25,14 @@ class QuizScreen extends StatelessWidget {
         body: BlocBuilder<AiChatCubit, AiChatState>(
           builder: (context, state) {
             if (state.status == LoadStatus.Loading) {
-              return const Center(
+              return Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    CircularProgressIndicator(),
-                    SizedBox(height: 16),
-                    Text("AI đang tạo câu hỏi trắc nghiệm..."),
+                    const CircularProgressIndicator(),
+                    const SizedBox(height: 16),
+                    const Text("AI đang tạo câu hỏi trắc nghiệm..."),
+                    const Text("Hoàn thành 5 câu trong vòng 5 phút."),
                   ],
                 ),
               );
