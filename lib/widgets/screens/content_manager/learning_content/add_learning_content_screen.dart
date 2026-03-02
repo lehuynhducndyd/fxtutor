@@ -9,6 +9,8 @@ import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../caculator/calculator_screen.dart';
+import 'more_keylog_screen.dart';
+import 'more_keylog_screen2.dart';
 
 class AddLearningContentScreen extends StatefulWidget {
   final bool isAddMode;
@@ -50,6 +52,7 @@ class Body extends StatefulWidget {
 
 class _BodyState extends State<Body> {
   final _titleController = TextEditingController();
+
   // Khởi tạo mặc định 1 khối text
   List<ContentBlock> _blocks = [const ContentBlock(type: 'text', data: '')];
   final ImagePicker _picker = ImagePicker();
@@ -236,13 +239,28 @@ class _BodyState extends State<Body> {
                     ),
                   ),
                   ElevatedButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      Navigator.pushNamed(context, MoreKeylogScreen2.route);
+                    },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.green,
                       foregroundColor: Colors.white,
                     ),
                     child: Text(
-                      "Lấy Keylog khác",
+                      "2nd Keylog 580",
+                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.pushNamed(context, MoreKeylogScreen.route);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green,
+                      foregroundColor: Colors.white,
+                    ),
+                    child: Text(
+                      "2nd Keylog 880",
                       style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
                     ),
                   ),
@@ -344,86 +362,6 @@ class _BodyState extends State<Body> {
                 ),
                 const SizedBox(height: 24),
 
-                // Row(
-                //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                //   children: [
-                //     _buildLabel("Nội dung chi tiết"),
-                //     // --- MENU CHỌN LOẠI KHỐI (3 LOẠI) ---
-                //     PopupMenuButton<String>(
-                //       onSelected: _addBlock,
-                //       itemBuilder: (context) => [
-                //         const PopupMenuItem(
-                //           value: 'text',
-                //           child: Row(
-                //             children: [
-                //               Icon(Icons.notes, color: Colors.blueGrey),
-                //               SizedBox(width: 8),
-                //               Text("Văn bản"),
-                //             ],
-                //           ),
-                //         ),
-                //         const PopupMenuItem(
-                //           value: 'latex',
-                //           child: Row(
-                //             children: [
-                //               Icon(Icons.functions, color: Colors.teal),
-                //               SizedBox(width: 8),
-                //               Text("Công thức (LaTeX)"),
-                //             ],
-                //           ),
-                //         ),
-                //         const PopupMenuItem(
-                //           value: 'image',
-                //           child: Row(
-                //             children: [
-                //               Icon(Icons.image, color: Colors.blue),
-                //               SizedBox(width: 8),
-                //               Text("Hình ảnh"),
-                //             ],
-                //           ),
-                //         ),
-                //         const PopupMenuItem(
-                //           value: '580keylog',
-                //           child: Row(
-                //             children: [
-                //               Icon(Icons.calculate, color: Colors.deepPurple),
-                //               SizedBox(width: 8),
-                //               Text("Casio fx-580 Keylog"),
-                //             ],
-                //           ),
-                //         ),
-                //         const PopupMenuItem(
-                //           value: '880keylog',
-                //           child: Row(
-                //             children: [
-                //               Icon(Icons.calculate_outlined, color: Colors.indigo),
-                //               SizedBox(width: 8),
-                //               Text("Casio fx-880 Keylog"),
-                //             ],
-                //           ),
-                //         ),
-                //       ],
-                //       child: Container(
-                //         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                //         decoration: BoxDecoration(
-                //           color: Colors.blue.withOpacity(0.1),
-                //           borderRadius: BorderRadius.circular(20),
-                //           border: Border.all(color: Colors.blue),
-                //         ),
-                //         child: const Row(
-                //           children: [
-                //             Icon(Icons.add, color: Colors.blue, size: 20),
-                //             SizedBox(width: 4),
-                //             Text(
-                //               "Thêm khối",
-                //               style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold),
-                //             ),
-                //           ],
-                //         ),
-                //       ),
-                //     ),
-                //   ],
-                // ),
                 const SizedBox(height: 10),
 
                 if (_blocks.isEmpty)
@@ -588,14 +526,17 @@ class _BodyState extends State<Body> {
                 onChanged: (v) => _blocks[index] = block.copyWith(data: v),
                 maxLines: null,
                 minLines: 1,
-                style: const TextStyle(fontFamily: 'Courier', color: Colors.teal), // Font kiểu code
+                style: const TextStyle(fontFamily: 'Courier', color: Colors.teal),
+                // Font kiểu code
                 decoration: const InputDecoration(
                   hintText: "Nhập công thức (VD: x = \\frac{-b \\pm \\sqrt{\\Delta}}{2a})",
                   border: OutlineInputBorder(),
-                  prefixText: "\$\$ ", // Gợi ý trực quan
+                  prefixText: "\$\$ ",
+                  // Gợi ý trực quan
                   suffixText: " \$\$",
                   isDense: true,
-                  fillColor: Color(0xFFE0F2F1), // Màu nền nhẹ cho Latex
+                  fillColor: Color(0xFFE0F2F1),
+                  // Màu nền nhẹ cho Latex
                   filled: true,
                 ),
               ),
@@ -615,7 +556,6 @@ class _BodyState extends State<Body> {
                       fontSize: 15,
                     ),
                     decoration: InputDecoration(
-                      hintText: "[SHIFT][MENU][1][+][2]",
                       border: const OutlineInputBorder(),
                       isDense: true,
                       fillColor: Colors.black.withOpacity(0.03),

@@ -18,6 +18,8 @@ import 'package:fx_tutor/widgets/screens/content_manager/learning_content/learni
 import 'package:fx_tutor/widgets/screens/content_manager/learning_content/learning_content_manager_screen.dart';
 import 'package:fx_tutor/widgets/screens/content_manager/learning_content/learning_content_screen.dart';
 import 'package:fx_tutor/widgets/screens/content_manager/learning_content/learning_detail_screen.dart';
+import 'package:fx_tutor/widgets/screens/content_manager/learning_content/more_keylog_screen.dart';
+import 'package:fx_tutor/widgets/screens/content_manager/learning_content/more_keylog_screen2.dart';
 import 'package:fx_tutor/widgets/screens/content_manager/learning_content/topic_cubit.dart';
 import 'package:fx_tutor/widgets/screens/contribute/contribute_screen.dart';
 import 'package:fx_tutor/widgets/screens/guide/guide_screen.dart';
@@ -69,6 +71,16 @@ Route<dynamic>? mainRoute(RouteSettings settings) {
     case UserManagementScreen.route:
       return MaterialPageRoute(
         builder: (context) => UserManagementScreen(),
+        settings: settings,
+      );
+    case MoreKeylogScreen.route:
+      return MaterialPageRoute(
+        builder: (context) => MoreKeylogScreen(),
+        settings: settings,
+      );
+    case MoreKeylogScreen2.route:
+      return MaterialPageRoute(
+        builder: (context) => MoreKeylogScreen2(),
         settings: settings,
       );
     case AddTopicScreen.route:

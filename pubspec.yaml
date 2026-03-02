@@ -109,6 +109,8 @@ flutter:
     - assets/system_instruction.txt
     - assets/keymap/keymap580.json
     - assets/keymap/keymap880.json
+    - assets/keymap/other880.json
+    - assets/keymap/other580.json
   fonts:
     - family: Casio580
       fonts:

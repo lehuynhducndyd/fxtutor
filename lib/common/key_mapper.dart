@@ -22,16 +22,17 @@ class KeyMapper {
       throw Exception('KeyMapper not initialized');
     }
 
-    final regExp = RegExp(r'\[[^\]]+\]');
+    final regExp = RegExp(r'\[[^\]]+\]|\((?:[^()]+|\([^()]*\))*\)');
     return input.replaceAllMapped(regExp, (m) {
       return _map1[m.group(0)] ?? '';
     });
   }
+
   static String convert2(String input) {
     if (!_initialized) {
       throw Exception('KeyMapper not initialized');
     }
-    final regExp = RegExp(r'\[[^\]]+\]');
+    final regExp = RegExp(r'\[[^\]]+\]|\((?:[^()]+|\([^()]*\))*\)');
     return input.replaceAllMapped(regExp, (m) {
       return _map2[m.group(0)] ?? '';
     });
