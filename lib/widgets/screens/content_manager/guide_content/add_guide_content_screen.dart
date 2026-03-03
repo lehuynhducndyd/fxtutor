@@ -4,6 +4,8 @@ import 'package:fx_tutor/models/calculator_guide_model.dart';
 import 'package:fx_tutor/widgets/screens/content_manager/guide_content/guide_manage_cubit.dart';
 import 'package:fx_tutor/widgets/screens/content_manager/learning_content/topic_cubit.dart';
 
+import '../../caculator/calculator_screen.dart';
+
 class AddGuideContentScreen extends StatefulWidget {
   final bool isAddMode;
   final int? editIndex; // Index của guide trong list nếu ở chế độ sửa
@@ -113,7 +115,35 @@ class _BodyState extends State<Body> {
               ),
             ],
           ),
-
+          Row(
+            children: [
+              ElevatedButton(
+                onPressed: () {},
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green,
+                  foregroundColor: Colors.white,
+                ),
+                child: Text(
+                  "Hướng dẫn",
+                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                ),
+              ),
+              SizedBox(width: 5),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pushNamed(context, CalculatorScreen.route);
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green,
+                  foregroundColor: Colors.white,
+                ),
+                child: Text(
+                  "Lấy Keylog",
+                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                ),
+              ),
+            ],
+          ),
           // Danh sách các Method
           ..._methods.asMap().entries.map((entry) {
             int idx = entry.key;
@@ -193,28 +223,33 @@ class _BodyState extends State<Body> {
   }
 
   void _onSave() {
+    if (_actionNameController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Vui lòng nhập tên hành động')),
+      );
+      return;
+    }
+
+    if (_modelsController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Vui lòng nhập dòng máy hỗ trợ')),
+      );
+      return;
+    }
+
+    if (_methods.any((m) => m.methodName.trim().isEmpty || m.content.trim().isEmpty)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Vui lòng nhập đầy đủ tên và nội dung các phương thức')),
+      );
+      return;
+    }
+
     final topicState = context.read<TopicCubit>().state;
     final topicId = topicState.listTopic[topicState.selectedIdx].id!;
 
-    // final guide = CalculatorGuideModel(
-    //   id: widget.isAddMode
-    //       ? null
-    //       : context.read<GuideManageCubit>().state.guides[widget.editIndex!].id,
-    //   topicId: topicId,
-    //   actionName: _actionNameController.text,
-    //   compatibleModels: _modelsController.text
-    //       .split(',')
-    //       .map((e) => e.trim())
-    //       .where((e) => e.isNotEmpty)
-    //       .toList(),
-    //   methods: _methods,
-    // );
-
     if (widget.isAddMode) {
       context.read<GuideManageCubit>().addGuide(
-        widget.isAddMode
-            ? null
-            : context.read<GuideManageCubit>().state.guides[widget.editIndex!].id,
+        null,
         topicId,
         _actionNameController.text,
         _modelsController.text.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList(),
@@ -222,9 +257,7 @@ class _BodyState extends State<Body> {
       );
     } else {
       context.read<GuideManageCubit>().editGuide(
-        widget.isAddMode
-            ? null
-            : context.read<GuideManageCubit>().state.guides[widget.editIndex!].id,
+        context.read<GuideManageCubit>().state.guides[widget.editIndex!].id,
         topicId,
         _actionNameController.text,
         _modelsController.text.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList(),

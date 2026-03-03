@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:fx_tutor/models/topic_model.dart';
 import 'package:fx_tutor/widgets/screens/content_manager/learning_content/add_topic_screen.dart';
 import 'package:fx_tutor/widgets/screens/content_manager/learning_content/topic_cubit.dart';
 
@@ -22,7 +23,7 @@ class _LearningContentManagerScreenState extends State<LearningContentManagerScr
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (context) => TopicCubit(context.read<TopicService>())..loadTopics(),
-      child: Page(),
+      child: const Page(),
     );
   }
 }
@@ -36,7 +37,7 @@ class Page extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Các chủ đề học tập"),
+        title: const Text("Các chủ đề học tập"),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
@@ -49,9 +50,9 @@ class Page extends StatelessWidget {
             },
           );
         },
-        child: Icon(Icons.add),
+        child: const Icon(Icons.add),
       ),
-      body: Body(),
+      body: const Body(),
     );
   }
 }
@@ -65,80 +66,122 @@ class Body extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<TopicCubit, TopicState>(
       builder: (context, state) {
-        if (state.loadStatus == LoadStatus.Loading)
-          return Center(child: CircularProgressIndicator());
-        if (state.loadStatus == LoadStatus.Error) return Center(child: Text("Lỗi tải nội dung"));
-        return ListView.builder(
-          padding: EdgeInsets.fromLTRB(0, 0, 0, 100),
-          itemCount: state.listTopic.length,
-          itemBuilder: (context, index) {
-            return Card(
-              margin: EdgeInsets.fromLTRB(16, 16, 16, 0),
-              child: ListTile(
-                title: Text(state.listTopic[index].title),
-                subtitle: Text(state.listTopic[index].description),
-                trailing: PopupMenuButton<String>(
-                  onSelected: (value) {
-                    if (value == 'edit') {
-                      context.read<TopicCubit>().setSelectedIdx(index);
-                      Navigator.pushNamed(
-                        context,
-                        AddTopicScreen.route,
-                        arguments: {
-                          'cubit': context.read<TopicCubit>(),
-                          'isAddMode': false,
-                        },
-                      );
-                    } else if (value == 'delete') {
-                      _showDeleteDialog(context, state, index);
-                    }
-                  },
-                  itemBuilder: (context) => [
-                    const PopupMenuItem(
-                      value: 'edit',
-                      child: Row(
-                        children: [
-                          Icon(Icons.edit, size: 20),
-                          SizedBox(width: 8),
-                          Text("Sửa"),
-                        ],
-                      ),
-                    ),
-                    const PopupMenuItem(
-                      value: 'delete',
-                      child: Row(
-                        children: [
-                          Icon(Icons.delete, color: Colors.red, size: 20),
-                          SizedBox(width: 8),
-                          Text("Xóa", style: TextStyle(color: Colors.red)),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
+        if (state.loadStatus == LoadStatus.Loading) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (state.loadStatus == LoadStatus.Error) {
+          return const Center(child: Text("Lỗi tải nội dung"));
+        }
 
-                onTap: () {
-                  context.read<TopicCubit>().setSelectedIdx(index);
-                  Navigator.pushNamed(
-                    context,
-                    LearningContentScreen.route,
-                    arguments: {'cubit': context.read<TopicCubit>()},
-                  );
+        // LỌC DANH SÁCH THEO TỪ KHÓA TÌM KIẾM
+        final filteredTopics = state.listTopic.where((topic) {
+          final query = state.searchQuery.toLowerCase();
+          final titleMatch = topic.title.toLowerCase().contains(query);
+          final descMatch = topic.description.toLowerCase().contains(query);
+          return titleMatch || descMatch; // Tìm theo cả tiêu đề và mô tả
+        }).toList();
+
+        return Column(
+          children: [
+            // THANH TÌM KIẾM
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: TextField(
+                decoration: InputDecoration(
+                  hintText: 'Tìm kiếm chủ đề...',
+                  prefixIcon: const Icon(Icons.search),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 16),
+                ),
+                onChanged: (value) {
+                  context.read<TopicCubit>().searchTopic(value);
                 },
               ),
-            );
-          },
+            ),
+
+            // DANH SÁCH HIỂN THỊ
+            Expanded(
+              child: filteredTopics.isEmpty
+                  ? const Center(child: Text("Không tìm thấy chủ đề nào."))
+                  : ListView.builder(
+                      padding: const EdgeInsets.fromLTRB(0, 0, 0, 100),
+                      itemCount: filteredTopics.length,
+                      itemBuilder: (context, index) {
+                        final topic = filteredTopics[index];
+                        // QUAN TRỌNG: Tìm vị trí thực tế của topic trong danh sách gốc (listTopic)
+                        final originalIndex = state.listTopic.indexOf(topic);
+
+                        return Card(
+                          margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                          child: ListTile(
+                            title: Text(topic.title),
+                            subtitle: Text(topic.description),
+                            trailing: PopupMenuButton<String>(
+                              onSelected: (value) {
+                                if (value == 'edit') {
+                                  // Lưu ý truyền originalIndex thay vì index của list đã lọc
+                                  context.read<TopicCubit>().setSelectedIdx(originalIndex);
+                                  Navigator.pushNamed(
+                                    context,
+                                    AddTopicScreen.route,
+                                    arguments: {
+                                      'cubit': context.read<TopicCubit>(),
+                                      'isAddMode': false,
+                                    },
+                                  );
+                                } else if (value == 'delete') {
+                                  _showDeleteDialog(context, topic);
+                                }
+                              },
+                              itemBuilder: (context) => [
+                                const PopupMenuItem(
+                                  value: 'edit',
+                                  child: Row(
+                                    children: [
+                                      Icon(Icons.edit, size: 20),
+                                      SizedBox(width: 8),
+                                      Text("Sửa"),
+                                    ],
+                                  ),
+                                ),
+                                const PopupMenuItem(
+                                  value: 'delete',
+                                  child: Row(
+                                    children: [
+                                      Icon(Icons.delete, color: Colors.red, size: 20),
+                                      SizedBox(width: 8),
+                                      Text("Xóa", style: TextStyle(color: Colors.red)),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                            onTap: () {
+                              context.read<TopicCubit>().setSelectedIdx(originalIndex);
+                              Navigator.pushNamed(
+                                context,
+                                LearningContentScreen.route,
+                                arguments: {'cubit': context.read<TopicCubit>()},
+                              );
+                            },
+                          ),
+                        );
+                      },
+                    ),
+            ),
+          ],
         );
       },
     );
   }
 
-  void _showDeleteDialog(BuildContext context, TopicState state, int index) {
+  // Truyền thẳng đối tượng TopicModel vào hàm xóa thay vì index
+  void _showDeleteDialog(BuildContext context, TopicModel topic) {
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
         title: const Text("Xác nhận xóa"),
-        content: Text("Bạn có chắc chắn muốn xóa chủ đề '${state.listTopic[index].title}' không?"),
+        content: Text("Bạn có chắc chắn muốn xóa chủ đề '${topic.title}' không?"),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
@@ -146,7 +189,7 @@ class Body extends StatelessWidget {
           ),
           TextButton(
             onPressed: () {
-              context.read<TopicCubit>().deleteTopic(state.listTopic[index].id);
+              context.read<TopicCubit>().deleteTopic(topic.id);
               Navigator.pop(dialogContext);
               ScaffoldMessenger.of(context).showSnackBar(
                 notiBar("Xóa chủ đề thành công", false),

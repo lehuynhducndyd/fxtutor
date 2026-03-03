@@ -144,7 +144,9 @@ class _UserManagementViewState extends State<UserManagementView> {
                                           .changeRole(user.id, newValue);
                                       if (success && context.mounted) {
                                         ScaffoldMessenger.of(context).showSnackBar(
-                                          SnackBar(content: Text('Đã đổi quyền thành $newValue')),
+                                          SnackBar(
+                                            content: Text('Đã đổi quyền thành ${toRole(newValue)}'),
+                                          ),
                                         );
                                       }
                                     }
@@ -152,62 +154,6 @@ class _UserManagementViewState extends State<UserManagementView> {
                                 ),
 
                                 const SizedBox(width: 8), // Khoảng cách giữa 2 nút
-                                // 3.2 Nút Khóa / Mở khóa
-                                // IconButton(
-                                //   icon: Icon(
-                                //     user.isActive ? Icons.lock_open : Icons.lock,
-                                //     color: user.isActive ? Colors.green : Colors.red,
-                                //   ),
-                                //   tooltip: user.isActive
-                                //       ? 'Khóa tài khoản này'
-                                //       : 'Mở khóa tài khoản này',
-                                //   onPressed: () async {
-                                //     final action = user.isActive ? 'Khóa' : 'Mở khóa';
-                                //
-                                //     // Hiện hộp thoại xác nhận trước khi thực thi
-                                //     final confirm = await showDialog<bool>(
-                                //       context: context,
-                                //       builder: (ctx) => AlertDialog(
-                                //         title: Text('$action tài khoản?'),
-                                //         content: Text(
-                                //           'Bạn có chắc chắn muốn $action tài khoản ${user.email} không?',
-                                //         ),
-                                //         actions: [
-                                //           TextButton(
-                                //             onPressed: () => Navigator.pop(ctx, false),
-                                //             child: const Text('Hủy'),
-                                //           ),
-                                //           ElevatedButton(
-                                //             style: ElevatedButton.styleFrom(
-                                //               backgroundColor: user.isActive
-                                //                   ? Colors.red
-                                //                   : Colors.green,
-                                //               foregroundColor: Colors.white,
-                                //             ),
-                                //             onPressed: () => Navigator.pop(ctx, true),
-                                //             child: Text('Đồng ý $action'),
-                                //           ),
-                                //         ],
-                                //       ),
-                                //     );
-                                //
-                                //     // Nếu Admin xác nhận thì tiến hành gọi Cubit
-                                //     if (confirm == true && context.mounted) {
-                                //       final success = await context
-                                //           .read<UserManagementCubit>()
-                                //           .toggleActiveStatus(user.id, user.isActive);
-                                //       if (success && context.mounted) {
-                                //         ScaffoldMessenger.of(context).showSnackBar(
-                                //           SnackBar(
-                                //             content: Text(
-                                //               'Đã ${user.isActive ? 'khóa' : 'mở khóa'} tài khoản thành công!',
-                                //             ),
-                                //           ),
-                                //         );
-                                //       }
-                                //     }
-                                //   },
-                                // ),
                               ],
                             ),
                           ],
@@ -222,5 +168,18 @@ class _UserManagementViewState extends State<UserManagementView> {
         ],
       ),
     );
+  }
+}
+
+String toRole(String s) {
+  switch (s) {
+    case 'user':
+      return 'Người dùng';
+    case 'collaborator':
+      return 'CTV';
+    case 'admin':
+      return 'Admin';
+    default:
+      return 'Người dùng';
   }
 }

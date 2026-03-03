@@ -151,7 +151,7 @@ class _LearningDetailScreenState extends State<LearningDetailScreen> {
                 borderRadius: BorderRadius.circular(8),
                 child: Container(
                   constraints: const BoxConstraints(
-                    maxHeight: 300,
+                    maxHeight: 200,
                     minWidth: double.infinity,
                   ),
                   color: Colors.grey[50],

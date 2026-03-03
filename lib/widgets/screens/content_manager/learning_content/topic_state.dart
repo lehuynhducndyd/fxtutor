@@ -4,12 +4,14 @@ class TopicState {
   final List<TopicModel> listTopic;
   final int selectedIdx;
   final LoadStatus loadStatus;
+  final String searchQuery; // Thêm từ khóa tìm kiếm
 
   factory TopicState.initial() {
-    return TopicState(
+    return const TopicState(
       listTopic: [],
       selectedIdx: 0,
       loadStatus: LoadStatus.Init,
+      searchQuery: '', // Giá trị mặc định
     );
   }
 
@@ -18,6 +20,7 @@ class TopicState {
     required this.listTopic,
     required this.selectedIdx,
     required this.loadStatus,
+    required this.searchQuery,
   });
 
   @override
@@ -27,10 +30,12 @@ class TopicState {
           runtimeType == other.runtimeType &&
           listTopic == other.listTopic &&
           selectedIdx == other.selectedIdx &&
-          loadStatus == other.loadStatus);
+          loadStatus == other.loadStatus &&
+          searchQuery == other.searchQuery);
 
   @override
-  int get hashCode => listTopic.hashCode ^ selectedIdx.hashCode ^ loadStatus.hashCode;
+  int get hashCode =>
+      listTopic.hashCode ^ selectedIdx.hashCode ^ loadStatus.hashCode ^ searchQuery.hashCode;
 
   @override
   String toString() {
@@ -38,6 +43,7 @@ class TopicState {
         ' listTopic: $listTopic,' +
         ' selectedIdx: $selectedIdx,' +
         ' loadStatus: $loadStatus,' +
+        ' searchQuery: $searchQuery,' +
         '}';
   }
 
@@ -45,11 +51,13 @@ class TopicState {
     List<TopicModel>? listTopic,
     int? selectedIdx,
     LoadStatus? loadStatus,
+    String? searchQuery,
   }) {
     return TopicState(
       listTopic: listTopic ?? this.listTopic,
       selectedIdx: selectedIdx ?? this.selectedIdx,
       loadStatus: loadStatus ?? this.loadStatus,
+      searchQuery: searchQuery ?? this.searchQuery,
     );
   }
 
@@ -58,6 +66,7 @@ class TopicState {
       'listTopic': this.listTopic,
       'selectedIdx': this.selectedIdx,
       'loadStatus': this.loadStatus,
+      'searchQuery': this.searchQuery,
     };
   }
 
@@ -66,8 +75,8 @@ class TopicState {
       listTopic: map['listTopic'] as List<TopicModel>,
       selectedIdx: map['selectedIdx'] as int,
       loadStatus: map['loadStatus'] as LoadStatus,
+      searchQuery: map['searchQuery'] as String? ?? '',
     );
   }
-
   //</editor-fold>
 }

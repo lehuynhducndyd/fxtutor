@@ -24,6 +24,11 @@ class _GuideContentScreenState extends State<GuideContentScreen> {
   Widget build(BuildContext context) {
     return BlocBuilder<TopicCubit, TopicState>(
       builder: (topicContext, topicState) {
+        if (topicState.listTopic.isEmpty) {
+          return const Scaffold(
+            body: Center(child: Text("Không có chủ đề nào")),
+          );
+        }
         TopicModel currentTopic = topicState.listTopic[topicState.selectedIdx];
         return BlocProvider(
           create: (context) =>
@@ -38,6 +43,7 @@ class _GuideContentScreenState extends State<GuideContentScreen> {
 class Page extends StatelessWidget {
   const Page({super.key, required this.currentTopic});
   final TopicModel currentTopic;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -64,10 +70,18 @@ class Page extends StatelessWidget {
   }
 }
 
-class Body extends StatelessWidget {
+// Chuyển Body sang StatefulWidget để quản lý thanh tìm kiếm cục bộ
+class Body extends StatefulWidget {
   final TopicModel currentTopic;
 
   const Body({super.key, required this.currentTopic});
+
+  @override
+  State<Body> createState() => _BodyState();
+}
+
+class _BodyState extends State<Body> {
+  String _searchQuery = ''; // Biến lưu từ khóa tìm kiếm
 
   @override
   Widget build(BuildContext context) {
@@ -81,119 +95,156 @@ class Body extends StatelessWidget {
           return Center(child: Text(state.errorMessage ?? "Lỗi tải dữ liệu"));
         }
 
+        // ================= XỬ LÝ KHI DANH SÁCH RỖNG HOÀN TOÀN =================
         if (state.guides.isEmpty) {
           return Column(
             children: [
-              Text("${currentTopic.title}"),
-              const Center(child: Text("Chưa có hướng dẫn nào")),
+              _buildTopicHeader(widget.currentTopic),
+              const Expanded(child: Center(child: Text("Chưa có hướng dẫn nào"))),
             ],
           );
         }
 
+        // ================= LỌC DANH SÁCH THEO TỪ KHÓA =================
+        final filteredGuides = state.guides.where((guide) {
+          // Lọc theo tên hướng dẫn (actionName)
+          return guide.actionName.toLowerCase().contains(_searchQuery.toLowerCase());
+        }).toList();
+
         return Column(
           children: [
-            Container(
-              width: double.infinity,
+            _buildTopicHeader(widget.currentTopic),
+
+            // ================= THANH TÌM KIẾM =================
+            Padding(
               padding: const EdgeInsets.all(16.0),
-              decoration: BoxDecoration(
-                color: Colors.blue.withOpacity(0.1),
-                border: const Border(
-                  bottom: BorderSide(color: Colors.blue, width: 0.5),
+              child: TextField(
+                decoration: InputDecoration(
+                  hintText: 'Tìm kiếm hướng dẫn...',
+                  prefixIcon: const Icon(Icons.search),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 16),
                 ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    "Chủ đề hiện tại:",
-                    style: TextStyle(fontSize: 12, color: Colors.grey),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    currentTopic.title,
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.blueAccent,
-                    ),
-                  ),
-                ],
+                onChanged: (value) {
+                  setState(() {
+                    _searchQuery = value;
+                  });
+                },
               ),
             ),
+
+            // ================= DANH SÁCH HIỂN THỊ =================
             Expanded(
-              child: ListView.builder(
-                padding: const EdgeInsets.fromLTRB(0, 0, 0, 100),
-                itemCount: state.guides.length,
-                itemBuilder: (context, index) {
-                  final guide = state.guides[index];
-                  return Card(
-                    margin: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-                    child: ListTile(
-                      leading: const Icon(Icons.calculate, color: Colors.blue),
-                      title: Text(
-                        guide.actionName,
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      subtitle: Text(
-                        "Dòng máy: ${guide.compatibleModels.join(', ')}",
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      trailing: PopupMenuButton<String>(
-                        onSelected: (value) {
-                          if (value == 'edit') {
-                            Navigator.pushNamed(
-                              context,
-                              AddGuideContentScreen.route,
-                              arguments: {
-                                'topicCubit': context.read<TopicCubit>(),
-                                'guideCubit': context.read<GuideManageCubit>(),
-                                'isAddMode': false,
-                                'editIndex': index,
+              child: filteredGuides.isEmpty
+                  ? const Center(child: Text("Không tìm thấy hướng dẫn nào."))
+                  : ListView.builder(
+                      padding: const EdgeInsets.fromLTRB(0, 0, 0, 100),
+                      itemCount: filteredGuides.length,
+                      itemBuilder: (context, index) {
+                        final guide = filteredGuides[index];
+                        // QUAN TRỌNG: Tìm đúng index gốc để truyền qua màn hình Sửa
+                        final originalIndex = state.guides.indexOf(guide);
+
+                        return Card(
+                          margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                          child: ListTile(
+                            leading: const Icon(Icons.calculate, color: Colors.blue),
+                            title: Text(
+                              guide.actionName,
+                              style: const TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                            subtitle: Text(
+                              "Dòng máy: ${guide.compatibleModels.join(', ')}",
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            trailing: PopupMenuButton<String>(
+                              onSelected: (value) {
+                                if (value == 'edit') {
+                                  Navigator.pushNamed(
+                                    context,
+                                    AddGuideContentScreen.route,
+                                    arguments: {
+                                      'topicCubit': context.read<TopicCubit>(),
+                                      'guideCubit': context.read<GuideManageCubit>(),
+                                      'isAddMode': false,
+                                      'editIndex': originalIndex, // Truyền originalIndex
+                                    },
+                                  );
+                                } else if (value == 'delete') {
+                                  _showDeleteDialog(context, guide.id!, guide.actionName);
+                                }
                               },
-                            );
-                          } else if (value == 'delete') {
-                            _showDeleteDialog(context, guide.id!, guide.actionName);
-                          }
-                        },
-                        itemBuilder: (context) => [
-                          const PopupMenuItem(
-                            value: 'edit',
-                            child: Row(
-                              children: [
-                                Icon(Icons.edit, size: 20),
-                                SizedBox(width: 8),
-                                Text("Sửa"),
+                              itemBuilder: (context) => [
+                                const PopupMenuItem(
+                                  value: 'edit',
+                                  child: Row(
+                                    children: [
+                                      Icon(Icons.edit, size: 20),
+                                      SizedBox(width: 8),
+                                      Text("Sửa"),
+                                    ],
+                                  ),
+                                ),
+                                const PopupMenuItem(
+                                  value: 'delete',
+                                  child: Row(
+                                    children: [
+                                      Icon(Icons.delete, color: Colors.red, size: 20),
+                                      SizedBox(width: 8),
+                                      Text("Xóa", style: TextStyle(color: Colors.red)),
+                                    ],
+                                  ),
+                                ),
                               ],
                             ),
+                            onTap: () {
+                              Navigator.pushNamed(
+                                context,
+                                GuideDetailScreen.route,
+                                arguments: guide,
+                              );
+                            },
                           ),
-                          const PopupMenuItem(
-                            value: 'delete',
-                            child: Row(
-                              children: [
-                                Icon(Icons.delete, color: Colors.red, size: 20),
-                                SizedBox(width: 8),
-                                Text("Xóa", style: TextStyle(color: Colors.red)),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                      onTap: () {
-                        Navigator.pushNamed(
-                          context,
-                          GuideDetailScreen.route,
-                          arguments: guide,
                         );
                       },
                     ),
-                  );
-                },
-              ),
             ),
           ],
         );
       },
+    );
+  }
+
+  // Widget hiển thị tiêu đề chủ đề hiện tại
+  Widget _buildTopicHeader(TopicModel topic) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16.0),
+      decoration: BoxDecoration(
+        color: Colors.blue.withOpacity(0.1),
+        border: const Border(
+          bottom: BorderSide(color: Colors.blue, width: 0.5),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            "Chủ đề hiện tại:",
+            style: TextStyle(fontSize: 12, color: Colors.grey),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            topic.title,
+            style: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: Colors.blueAccent,
+            ),
+          ),
+        ],
+      ),
     );
   }
 

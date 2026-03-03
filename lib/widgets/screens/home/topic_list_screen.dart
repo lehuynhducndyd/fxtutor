@@ -33,12 +33,20 @@ class _Page extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return _Body();
+    return const _Body(); // Thêm const cho tối ưu
   }
 }
 
-class _Body extends StatelessWidget {
+// Chuyển _Body thành StatefulWidget để quản lý thanh tìm kiếm cục bộ
+class _Body extends StatefulWidget {
   const _Body();
+
+  @override
+  State<_Body> createState() => _BodyState();
+}
+
+class _BodyState extends State<_Body> {
+  String _searchQuery = ''; // Biến lưu từ khóa tìm kiếm
 
   @override
   Widget build(BuildContext context) {
@@ -67,7 +75,7 @@ class _Body extends StatelessWidget {
           );
         }
 
-        // 3. Trạng thái trống (Không có dữ liệu)
+        // 3. Trạng thái trống hoàn toàn (Chưa có dữ liệu nào trên Database)
         if (state.listTopic.isEmpty) {
           return const Center(
             child: Text(
@@ -77,99 +85,144 @@ class _Body extends StatelessWidget {
           );
         }
 
-        // 4. Hiển thị danh sách
-        return RefreshIndicator(
-          onRefresh: () async {
-            context.read<TopicCubit>().loadTopics();
-          },
-          child: ListView.separated(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-            itemCount: state.listTopic.length,
-            separatorBuilder: (context, index) => const SizedBox(height: 12),
-            itemBuilder: (context, index) {
-              final topic = state.listTopic[index];
+        // ================= LỌC DANH SÁCH THEO TỪ KHÓA =================
+        final filteredTopics = state.listTopic.where((topic) {
+          final query = _searchQuery.toLowerCase();
+          final titleMatch = topic.title.toLowerCase().contains(query);
+          final descMatch = topic.description.toLowerCase().contains(query);
+          return titleMatch || descMatch; // Tìm theo cả tiêu đề và mô tả
+        }).toList();
 
-              return Card(
-                elevation: 2,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+        return Column(
+          children: [
+            // ================= THANH TÌM KIẾM =================
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+              child: TextField(
+                decoration: InputDecoration(
+                  hintText: 'Tìm kiếm chủ đề...',
+                  prefixIcon: const Icon(Icons.search),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 16),
                 ),
-                child: InkWell(
-                  borderRadius: BorderRadius.circular(12),
-                  onTap: () {
-                    // Set chủ đề đang chọn vào Cubit (nếu logic bên trong LearningContentScreen cần)
-                    context.read<TopicCubit>().setSelectedIdx(index);
+                onChanged: (value) {
+                  setState(() {
+                    _searchQuery = value;
+                  });
+                },
+              ),
+            ),
 
-                    // Chuyển sang màn hình danh sách bài học
-                    Navigator.pushNamed(
-                      context,
-                      LearningListScreen.route,
-                      // Truyền Cubit hiện tại sang màn hình con để dùng chung dữ liệu/state
-                      arguments: {'cubit': context.read<TopicCubit>()},
-                    );
-                  },
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Row(
-                      children: [
-                        // Icon trang trí cho sinh động
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: Colors.blue.withOpacity(0.1),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(Icons.menu_book, color: Colors.blue),
-                        ),
-                        const SizedBox(width: 16),
-                        // Nội dung text
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                topic.title,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 16,
+            // ================= DANH SÁCH HIỂN THỊ =================
+            Expanded(
+              child: filteredTopics.isEmpty
+                  ? const Center(
+                      child: Text(
+                        "Không tìm thấy chủ đề nào phù hợp.",
+                        style: TextStyle(color: Colors.grey, fontSize: 16),
+                      ),
+                    )
+                  : RefreshIndicator(
+                      onRefresh: () async {
+                        context.read<TopicCubit>().loadTopics();
+                      },
+                      child: ListView.separated(
+                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                        itemCount: filteredTopics.length,
+                        separatorBuilder: (context, index) => const SizedBox(height: 12),
+                        itemBuilder: (context, index) {
+                          final topic = filteredTopics[index];
+                          // QUAN TRỌNG: Tìm đúng index gốc để truyền sang màn hình sau
+                          final originalIndex = state.listTopic.indexOf(topic);
+
+                          return Card(
+                            elevation: 2,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: InkWell(
+                              borderRadius: BorderRadius.circular(12),
+                              onTap: () {
+                                // Set chủ đề đang chọn (dùng originalIndex)
+                                context.read<TopicCubit>().setSelectedIdx(originalIndex);
+
+                                // Chuyển sang màn hình danh sách bài học
+                                Navigator.pushNamed(
+                                  context,
+                                  LearningListScreen.route,
+                                  arguments: {'cubit': context.read<TopicCubit>()},
+                                );
+                              },
+                              child: Padding(
+                                padding: const EdgeInsets.all(16.0),
+                                child: Row(
+                                  children: [
+                                    // Icon trang trí
+                                    Container(
+                                      padding: const EdgeInsets.all(12),
+                                      decoration: BoxDecoration(
+                                        color: Colors.blue.withOpacity(0.1),
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: const Icon(Icons.menu_book, color: Colors.blue),
+                                    ),
+                                    const SizedBox(width: 16),
+                                    // Nội dung text
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            topic.title,
+                                            style: const TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 16,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            topic.description,
+                                            style: TextStyle(
+                                              color: Colors.grey[600],
+                                              fontSize: 14,
+                                            ),
+                                            maxLines: 2,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                          const SizedBox(height: 4),
+                                          if (topic.userId != null && topic.userId!.isNotEmpty)
+                                            FutureBuilder<UserModel?>(
+                                              future: context.read<LearningService>().getUserById(
+                                                topic.userId!,
+                                              ),
+                                              builder: (context, snapshot) {
+                                                if (snapshot.hasData && snapshot.data != null) {
+                                                  return Text(
+                                                    "Người tạo: ${snapshot.data!.fullName ?? snapshot.data!.email ?? 'Ẩn danh'}",
+                                                    style: const TextStyle(
+                                                      fontSize: 12,
+                                                      color: Colors.blueGrey,
+                                                    ),
+                                                  );
+                                                }
+                                                return const SizedBox.shrink();
+                                              },
+                                            ),
+                                        ],
+                                      ),
+                                    ),
+                                    // Mũi tên chỉ hướng điều hướng
+                                    const Icon(Icons.chevron_right, color: Colors.grey),
+                                  ],
                                 ),
                               ),
-                              const SizedBox(height: 4),
-                              Text(
-                                topic.description,
-                                style: TextStyle(
-                                  color: Colors.grey[600],
-                                  fontSize: 14,
-                                ),
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              const SizedBox(height: 4),
-                              if (topic.userId != null && topic.userId!.isNotEmpty)
-                                FutureBuilder<UserModel?>(
-                                  future: context.read<LearningService>().getUserById(topic.userId!),
-                                  builder: (context, snapshot) {
-                                    if (snapshot.hasData && snapshot.data != null) {
-                                      return Text(
-                                        "Người tạo: ${snapshot.data!.fullName ?? snapshot.data!.email ?? 'Ẩn danh'}",
-                                        style: const TextStyle(fontSize: 12, color: Colors.blueGrey),
-                                      );
-                                    }
-                                    return const SizedBox.shrink();
-                                  },
-                                ),
-                            ],
-                          ),
-                        ),
-                        // Mũi tên chỉ hướng điều hướng
-                        const Icon(Icons.chevron_right, color: Colors.grey),
-                      ],
+                            ),
+                          );
+                        },
+                      ),
                     ),
-                  ),
-                ),
-              );
-            },
-          ),
+            ),
+          ],
         );
       },
     );

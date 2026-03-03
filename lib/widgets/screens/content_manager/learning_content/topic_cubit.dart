@@ -38,6 +38,11 @@ class TopicCubit extends Cubit<TopicState> {
     emit(state.copyWith(selectedIdx: idx));
   }
 
+  // HÀM MỚI: Cập nhật từ khóa tìm kiếm
+  void searchTopic(String query) {
+    emit(state.copyWith(searchQuery: query));
+  }
+
   Future<void> updateTopic(String title, String description) async {
     emit(state.copyWith(loadStatus: LoadStatus.Loading));
     try {
