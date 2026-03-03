@@ -166,7 +166,7 @@ class AiChatService {
       buffer.writeln(
         '''5. QUY ĐỊNH TRÌNH BÀY:
     - KHÔNG sử dụng định dạng danh sách Markdown (1. 2. 3. hoặc * + -).
-    - Thay vào đó, hãy viết các bước theo kiểu: Bước 1:, Bước 2:... hoặc gạch đầu dòng bằng ký tự '-' thủ công.
+    - Thay vào đó, hãy viết các bước theo kiểu: Bước 1:, Bước 2:... hoặc gạch đầu dòng bằng ký tự '-' thủ công. Hiển thị code latex khi cần
     - Giữ văn bản ở dạng đoạn văn (paragraph) đơn giản để đảm bảo hiển thị đồng nhất. Không gạch đầu dòng.''',
       );
     } else {

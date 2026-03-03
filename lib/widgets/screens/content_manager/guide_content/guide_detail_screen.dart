@@ -3,9 +3,11 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fx_tutor/models/calculator_guide_model.dart';
 import 'package:fx_tutor/models/user_model.dart';
 import 'package:fx_tutor/services/profile_service.dart';
-import 'package:markdown_widget/markdown_widget.dart';
+import 'package:markdown_widget/config/configs.dart';
+import 'package:markdown_widget/widget/blocks/leaf/paragraph.dart';
+import 'package:markdown_widget/widget/markdown.dart';
 
-class GuideDetailScreen extends StatelessWidget {
+class GuideDetailScreen extends StatefulWidget {
   final CalculatorGuideModel guide;
 
   const GuideDetailScreen({super.key, required this.guide});
@@ -13,109 +15,218 @@ class GuideDetailScreen extends StatelessWidget {
   static const String route = 'GuideDetailScreen';
 
   @override
+  State<GuideDetailScreen> createState() => _GuideDetailScreenState();
+}
+
+class _GuideDetailScreenState extends State<GuideDetailScreen> {
+  late Future<UserModel?> _userFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    // Khởi tạo Future 1 lần duy nhất để tối ưu hiệu năng
+    if (widget.guide.userId != null && widget.guide.userId!.isNotEmpty) {
+      _userFuture = context.read<ProfileService>().getProfileById(widget.guide.userId!);
+    } else {
+      _userFuture = Future.value(null);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
     return Scaffold(
+      backgroundColor: colorScheme.surface,
       appBar: AppBar(
-        title: Text(guide.actionName),
+        title: Text(widget.guide.actionName, style: const TextStyle(fontWeight: FontWeight.bold)),
+        centerTitle: true,
+        elevation: 0,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // ================= HEADER: THÔNG TIN TÁC GIẢ =================
             _buildCreatorInfo(context),
-            const SizedBox(height: 16),
-            if (guide.compatibleModels.isNotEmpty) ...[
-              const Text(
-                "Dòng máy tương thích:",
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            const SizedBox(height: 24),
+
+            // ================= DÒNG MÁY TƯƠNG THÍCH =================
+            if (widget.guide.compatibleModels.isNotEmpty) ...[
+              Row(
+                children: [
+                  Icon(Icons.devices_rounded, color: colorScheme.primary, size: 20),
+                  const SizedBox(width: 8),
+                  Text(
+                    "Dòng máy hỗ trợ",
+                    style: textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: colorScheme.primary,
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 12),
               Wrap(
                 spacing: 8,
-                children: guide.compatibleModels
-                    .map(
-                      (model) => Chip(
-                        label: Text(model),
-                        backgroundColor: Colors.blue.withOpacity(0.1),
+                runSpacing: 8,
+                children: widget.guide.compatibleModels.map((model) {
+                  return Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: colorScheme.surfaceContainerHighest.withOpacity(0.5),
+                      borderRadius: BorderRadius.circular(20), // Bo tròn dạng viên thuốc (Pill)
+                      border: Border.all(color: colorScheme.outlineVariant.withOpacity(0.5)),
+                    ),
+                    child: Text(
+                      model,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color: colorScheme.onSurfaceVariant,
                       ),
-                    )
-                    .toList(),
+                    ),
+                  );
+                }).toList(),
               ),
-              const Divider(height: 32),
+              const SizedBox(height: 24),
+              const Divider(height: 1),
+              const SizedBox(height: 24),
             ],
-            ...guide.methods.map((method) => _buildMethodSection(context, method)),
+
+            // ================= CÁC PHƯƠNG THỨC (CÁCH GIẢI) =================
+            ...widget.guide.methods.map((method) => _buildMethodSection(context, method)),
+
+            const SizedBox(height: 40), // Căn lề dưới đáy cho thoáng
           ],
         ),
       ),
     );
   }
 
+  // Widget Thẻ Tác giả M3
   Widget _buildCreatorInfo(BuildContext context) {
-    if (guide.userId == null || guide.userId!.isEmpty) return const SizedBox.shrink();
+    if (widget.guide.userId == null || widget.guide.userId!.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    final colorScheme = Theme.of(context).colorScheme;
 
     return FutureBuilder<UserModel?>(
-      future: context.read<ProfileService>().getProfileById(guide.userId!),
+      future: _userFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const SizedBox(
-            height: 20,
-            width: 20,
-            child: CircularProgressIndicator(strokeWidth: 2),
-          );
+          return const Center(child: LinearProgressIndicator());
         }
+
+        String authorName = "Ẩn danh";
+        String authorEmail = "Chưa rõ email";
+
         if (snapshot.hasData && snapshot.data != null) {
           final user = snapshot.data!;
-          return Row(
-            children: [
-              const Icon(Icons.person, size: 16, color: Colors.grey),
-              const SizedBox(width: 4),
-              Text(
-                "Người tạo: ${user.fullName ?? 'Ẩn danh'}",
-                style: const TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey,
-                  fontStyle: FontStyle.italic,
-                ),
-              ),
-            ],
-          );
+          authorName = user.fullName ?? "Người dùng";
+          authorEmail = user.email ?? "";
+        } else {
+          authorName = widget.guide.userId!; // Hiển thị ID nếu không tải được profile
         }
-        return const SizedBox.shrink();
+
+        return Card(
+          elevation: 0,
+          color: colorScheme.secondaryContainer.withOpacity(0.4),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4.0),
+            child: ListTile(
+              leading: CircleAvatar(
+                backgroundColor: colorScheme.secondary,
+                foregroundColor: colorScheme.onSecondary,
+                child: const Icon(Icons.support_agent_rounded, size: 20),
+              ),
+              title: Text(
+                "Tác giả: $authorName",
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+              ),
+              subtitle: authorEmail.isNotEmpty
+                  ? Text(authorEmail, style: const TextStyle(fontSize: 12))
+                  : null,
+            ),
+          ),
+        );
       },
     );
   }
 
+  // Widget hiển thị từng Phương thức (Cách giải)
   Widget _buildMethodSection(BuildContext context, GuideMethod method) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        if (method.methodName.isNotEmpty)
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 24),
+      decoration: BoxDecoration(
+        color: colorScheme.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: colorScheme.outlineVariant.withOpacity(0.5)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.02),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Tiêu đề Cách giải
+          if (method.methodName.isNotEmpty)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: colorScheme.secondaryContainer.withOpacity(0.5),
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.check_circle_outline_rounded, size: 20, color: colorScheme.secondary),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      method.methodName,
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: colorScheme.onSecondaryContainer,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+          // Nội dung Markdown
           Padding(
-            padding: const EdgeInsets.only(bottom: 8.0),
-            child: Text(
-              method.methodName,
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.blueAccent,
+            padding: const EdgeInsets.all(16.0),
+            child: MarkdownWidget(
+              data: method.content,
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              config: MarkdownConfig(
+                configs: [
+                  PConfig(
+                    textStyle: TextStyle(
+                      fontSize: 16,
+                      height: 1.6,
+                      color: Theme.of(context).textTheme.bodyLarge?.color, // Hỗ trợ Dark Mode
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
-        MarkdownWidget(
-          data: method.content,
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          config: MarkdownConfig(
-            configs: [
-              const PConfig(
-                textStyle: TextStyle(fontSize: 16, height: 1.5),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 24),
-      ],
+        ],
+      ),
     );
   }
 }

@@ -9,10 +9,6 @@ class GuideScreen extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Hướng dẫn sử dụng"),
-        centerTitle: true,
-      ),
       body: ListView(
         padding: const EdgeInsets.all(16.0),
         children: [

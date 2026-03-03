@@ -30,6 +30,7 @@ class _LearningContentScreenState extends State<LearningContentScreen> {
           );
         }
         TopicModel currentTopic = topicState.listTopic[topicState.selectedIdx];
+
         return BlocProvider(
           create: (context) =>
               LearningCubit(context.read<LearningService>())..loadContents(currentTopic.id),
@@ -46,11 +47,16 @@ class Page extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Scaffold(
+      backgroundColor: colorScheme.surface,
       appBar: AppBar(
-        title: const Text("Nội dung học tập"),
+        title: const Text("Quản lý Bài học", style: TextStyle(fontWeight: FontWeight.bold)),
+        centerTitle: true,
+        elevation: 0,
       ),
-      floatingActionButton: FloatingActionButton(
+      floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
           Navigator.pushNamed(
             context,
@@ -63,7 +69,8 @@ class Page extends StatelessWidget {
             },
           );
         },
-        child: const Icon(Icons.add),
+        icon: const Icon(Icons.add_rounded),
+        label: const Text("Thêm bài học", style: TextStyle(fontWeight: FontWeight.bold)),
       ),
       body: Body(currentTopic: currentTopic),
     );
@@ -85,6 +92,9 @@ class _BodyState extends State<Body> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
     return BlocBuilder<LearningCubit, LearningState>(
       builder: (context, state) {
         if (state.status == LoadStatus.Loading) {
@@ -92,16 +102,18 @@ class _BodyState extends State<Body> {
         }
 
         if (state.status == LoadStatus.Error) {
-          return Center(child: Text(state.errorMessage ?? "Lỗi tải dữ liệu"));
-        }
-
-        // Nếu hoàn toàn chưa có nội dung nào trong CSDL
-        if (state.contents.isEmpty) {
-          return Column(
-            children: [
-              _buildTopicHeader(widget.currentTopic),
-              const Expanded(child: Center(child: Text("Chưa có nội dung nào"))),
-            ],
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.error_outline_rounded, size: 64, color: colorScheme.error),
+                const SizedBox(height: 16),
+                Text(
+                  state.errorMessage ?? "Lỗi tải dữ liệu",
+                  style: textTheme.titleMedium?.copyWith(color: colorScheme.onSurfaceVariant),
+                ),
+              ],
+            ),
           );
         }
 
@@ -112,133 +124,263 @@ class _BodyState extends State<Body> {
 
         return Column(
           children: [
-            _buildTopicHeader(widget.currentTopic),
+            // HEADER CHỦ ĐỀ M3
+            _buildTopicHeader(context, widget.currentTopic),
 
-            // ================= THANH TÌM KIẾM =================
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: TextField(
-                decoration: InputDecoration(
-                  hintText: 'Tìm kiếm nội dung bài học...',
-                  prefixIcon: const Icon(Icons.search),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                  contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 16),
+            // NẾU HOÀN TOÀN CHƯA CÓ BÀI HỌC NÀO
+            if (state.contents.isEmpty)
+              Expanded(
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.menu_book_rounded, size: 64, color: colorScheme.outline),
+                      const SizedBox(height: 16),
+                      Text(
+                        "Chưa có bài học nào",
+                        style: textTheme.titleMedium?.copyWith(
+                          color: colorScheme.onSurfaceVariant,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        "Hãy nhấn 'Thêm bài học' để bắt đầu",
+                        style: TextStyle(color: colorScheme.outline),
+                      ),
+                    ],
+                  ),
                 ),
-                onChanged: (value) {
-                  setState(() {
-                    _searchQuery = value;
-                  });
-                },
-              ),
-            ),
-
-            // ================= DANH SÁCH HIỂN THỊ =================
-            Expanded(
-              child: filteredContents.isEmpty
-                  ? const Center(child: Text("Không tìm thấy nội dung nào."))
-                  : ListView.builder(
-                      padding: const EdgeInsets.fromLTRB(0, 0, 0, 100),
-                      itemCount: filteredContents.length,
-                      itemBuilder: (context, index) {
-                        final content = filteredContents[index];
-                        // QUAN TRỌNG: Tìm đúng index gốc để truyền qua màn hình Sửa (AddLearningContentScreen)
-                        final originalIndex = state.contents.indexOf(content);
-
-                        return Card(
-                          margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                          child: ListTile(
-                            leading: const Icon(Icons.book, color: Colors.blue),
-                            title: Text(
-                              content.title,
-                              style: const TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                            subtitle: Text(
-                              "Số khối nội dung: ${content.blocks.length}",
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            trailing: PopupMenuButton<String>(
-                              onSelected: (value) {
-                                if (value == 'edit') {
-                                  Navigator.pushNamed(
-                                    context,
-                                    AddLearningContentScreen.route,
-                                    arguments: {
-                                      'topicCubit': context.read<TopicCubit>(),
-                                      'learningCubit': context.read<LearningCubit>(),
-                                      'isAddMode': false,
-                                      'editIndex': originalIndex, // Truyền đúng originalIndex
-                                    },
-                                  );
-                                } else if (value == 'delete') {
-                                  _showDeleteDialog(context, content.id, content.title);
-                                }
-                              },
-                              itemBuilder: (context) => [
-                                const PopupMenuItem(
-                                  value: 'edit',
-                                  child: Row(
-                                    children: [
-                                      Icon(Icons.edit, size: 20),
-                                      SizedBox(width: 8),
-                                      Text("Sửa"),
-                                    ],
-                                  ),
-                                ),
-                                const PopupMenuItem(
-                                  value: 'delete',
-                                  child: Row(
-                                    children: [
-                                      Icon(Icons.delete, color: Colors.red, size: 20),
-                                      SizedBox(width: 8),
-                                      Text("Xóa", style: TextStyle(color: Colors.red)),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                            onTap: () {
-                              Navigator.pushNamed(
-                                context,
-                                LearningDetailScreen.route,
-                                arguments: content,
-                              );
-                            },
-                          ),
-                        );
-                      },
+              )
+            else ...[
+              // ================= THANH TÌM KIẾM M3 =================
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                child: TextField(
+                  decoration: InputDecoration(
+                    hintText: 'Tìm kiếm nội dung bài học...',
+                    prefixIcon: Icon(Icons.search_rounded, color: colorScheme.primary),
+                    filled: true,
+                    fillColor: colorScheme.surfaceContainerHighest.withOpacity(0.5),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: BorderSide.none,
                     ),
-            ),
+                    contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+                  ),
+                  onChanged: (value) {
+                    setState(() {
+                      _searchQuery = value;
+                    });
+                  },
+                ),
+              ),
+
+              // ================= DANH SÁCH HIỂN THỊ =================
+              Expanded(
+                child: filteredContents.isEmpty
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.search_off_rounded, size: 64, color: colorScheme.outline),
+                            const SizedBox(height: 16),
+                            Text(
+                              "Không tìm thấy bài học nào.",
+                              style: textTheme.titleMedium?.copyWith(
+                                color: colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    : ListView.separated(
+                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 100), // Padding đáy tránh FAB
+                        itemCount: filteredContents.length,
+                        separatorBuilder: (context, index) => const SizedBox(height: 12),
+                        itemBuilder: (context, index) {
+                          final content = filteredContents[index];
+                          // Tìm đúng index gốc để truyền qua màn hình Sửa
+                          final originalIndex = state.contents.indexOf(content);
+
+                          return Card(
+                            elevation: 0,
+                            color: colorScheme.surfaceContainerHighest.withOpacity(0.4),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                              side: BorderSide(color: colorScheme.outlineVariant.withOpacity(0.5)),
+                            ),
+                            child: InkWell(
+                              borderRadius: BorderRadius.circular(16),
+                              onTap: () {
+                                Navigator.pushNamed(
+                                  context,
+                                  LearningDetailScreen
+                                      .route, // Nếu có màn hình chi tiết quản lý thì dùng
+                                  arguments: content,
+                                );
+                              },
+                              child: Padding(
+                                padding: const EdgeInsets.all(12.0),
+                                child: Row(
+                                  children: [
+                                    // Icon bài học
+                                    Container(
+                                      padding: const EdgeInsets.all(12),
+                                      decoration: BoxDecoration(
+                                        color: colorScheme.primaryContainer,
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: Icon(
+                                        Icons.menu_book_rounded,
+                                        color: colorScheme.onPrimaryContainer,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 16),
+
+                                    // Chi tiết
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            content.title,
+                                            style: textTheme.titleMedium?.copyWith(
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            "Số khối nội dung: ${content.blocks.length}",
+                                            style: textTheme.bodyMedium?.copyWith(
+                                              color: colorScheme.onSurfaceVariant,
+                                            ),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+
+                                    // Menu Tùy chọn
+                                    PopupMenuButton<String>(
+                                      icon: Icon(
+                                        Icons.more_vert_rounded,
+                                        color: colorScheme.onSurfaceVariant,
+                                      ),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      onSelected: (value) {
+                                        if (value == 'edit') {
+                                          Navigator.pushNamed(
+                                            context,
+                                            AddLearningContentScreen.route,
+                                            arguments: {
+                                              'topicCubit': context.read<TopicCubit>(),
+                                              'learningCubit': context.read<LearningCubit>(),
+                                              'isAddMode': false,
+                                              'editIndex': originalIndex,
+                                            },
+                                          );
+                                        } else if (value == 'delete') {
+                                          _showDeleteDialog(context, content.id, content.title);
+                                        }
+                                      },
+                                      itemBuilder: (context) => [
+                                        PopupMenuItem(
+                                          value: 'edit',
+                                          child: Row(
+                                            children: [
+                                              Icon(
+                                                Icons.edit_rounded,
+                                                size: 20,
+                                                color: colorScheme.primary,
+                                              ),
+                                              const SizedBox(width: 12),
+                                              const Text("Sửa bài học"),
+                                            ],
+                                          ),
+                                        ),
+                                        PopupMenuItem(
+                                          value: 'delete',
+                                          child: Row(
+                                            children: [
+                                              Icon(
+                                                Icons.delete_rounded,
+                                                color: colorScheme.error,
+                                                size: 20,
+                                              ),
+                                              const SizedBox(width: 12),
+                                              Text(
+                                                "Xóa",
+                                                style: TextStyle(
+                                                  color: colorScheme.error,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+              ),
+            ],
           ],
         );
       },
     );
   }
 
-  Widget _buildTopicHeader(TopicModel topic) {
+  // Header bo góc hiện đại
+  Widget _buildTopicHeader(BuildContext context, TopicModel topic) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(16.0),
+      padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
       decoration: BoxDecoration(
-        color: Colors.blue.withOpacity(0.1),
-        border: const Border(
-          bottom: BorderSide(color: Colors.blue, width: 0.5),
+        color: colorScheme.primaryContainer,
+        borderRadius: const BorderRadius.only(
+          bottomLeft: Radius.circular(24),
+          bottomRight: Radius.circular(24),
         ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            "Chủ đề hiện tại:",
-            style: TextStyle(fontSize: 12, color: Colors.grey),
+          Row(
+            children: [
+              Icon(
+                Icons.folder_open_rounded,
+                size: 16,
+                color: colorScheme.onPrimaryContainer.withOpacity(0.7),
+              ),
+              const SizedBox(width: 6),
+              Text(
+                "Đang quản lý Chủ đề:",
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                  color: colorScheme.onPrimaryContainer.withOpacity(0.7),
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 6),
           Text(
             topic.title,
-            style: const TextStyle(
-              fontSize: 18,
+            style: TextStyle(
+              fontSize: 20,
               fontWeight: FontWeight.bold,
-              color: Colors.blueAccent,
+              color: colorScheme.onPrimaryContainer,
             ),
           ),
         ],
@@ -246,26 +388,43 @@ class _BodyState extends State<Body> {
     );
   }
 
+  // Dialog Xóa M3
   void _showDeleteDialog(BuildContext context, int id, String title) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text("Xác nhận xóa"),
-        content: Text("Bạn có chắc muốn xóa nội dung '$title' không?"),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          children: [
+            Icon(Icons.warning_amber_rounded, color: colorScheme.error),
+            const SizedBox(width: 8),
+            const Text("Xác nhận xóa"),
+          ],
+        ),
+        content: Text(
+          "Bạn có chắc muốn xóa bài học '$title' không? Hành động này không thể hoàn tác.",
+          style: TextStyle(height: 1.5, color: colorScheme.onSurfaceVariant),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child: const Text("HỦY"),
+            child: Text("HỦY", style: TextStyle(color: colorScheme.outline)),
           ),
-          TextButton(
+          FilledButton(
             onPressed: () {
               context.read<LearningCubit>().deleteLesson(id);
               Navigator.pop(dialogContext);
               ScaffoldMessenger.of(context).showSnackBar(
-                notiBar("Đã xóa nội dung", false),
+                notiBar("Đã xóa bài học thành công", false),
               );
             },
-            child: const Text("XÓA", style: TextStyle(color: Colors.red)),
+            style: FilledButton.styleFrom(
+              backgroundColor: colorScheme.error,
+              foregroundColor: colorScheme.onError,
+            ),
+            child: const Text("XÓA"),
           ),
         ],
       ),

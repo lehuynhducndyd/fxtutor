@@ -20,7 +20,6 @@ class TopicListScreen extends StatefulWidget {
 class _TopicListScreenState extends State<TopicListScreen> {
   @override
   Widget build(BuildContext context) {
-    // Vẫn dùng TopicCubit để load dữ liệu, nhưng chỉ để xem
     return BlocProvider(
       create: (context) => TopicCubit(context.read<TopicService>())..loadTopics(),
       child: const _Page(),
@@ -33,11 +32,10 @@ class _Page extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const _Body(); // Thêm const cho tối ưu
+    return const _Body();
   }
 }
 
-// Chuyển _Body thành StatefulWidget để quản lý thanh tìm kiếm cục bộ
 class _Body extends StatefulWidget {
   const _Body();
 
@@ -46,10 +44,13 @@ class _Body extends StatefulWidget {
 }
 
 class _BodyState extends State<_Body> {
-  String _searchQuery = ''; // Biến lưu từ khóa tìm kiếm
+  String _searchQuery = '';
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
     return BlocBuilder<TopicCubit, TopicState>(
       builder: (context, state) {
         // 1. Trạng thái đang tải
@@ -63,10 +64,14 @@ class _BodyState extends State<_Body> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.error_outline, size: 48, color: Colors.red),
+                Icon(Icons.error_outline, size: 64, color: colorScheme.error),
                 const SizedBox(height: 16),
-                const Text("Không thể tải danh sách chủ đề"),
-                TextButton(
+                Text(
+                  "Không thể tải danh sách chủ đề",
+                  style: textTheme.titleMedium?.copyWith(color: colorScheme.onSurfaceVariant),
+                ),
+                const SizedBox(height: 12),
+                FilledButton.tonal(
                   onPressed: () => context.read<TopicCubit>().loadTopics(),
                   child: const Text("Thử lại"),
                 ),
@@ -75,35 +80,47 @@ class _BodyState extends State<_Body> {
           );
         }
 
-        // 3. Trạng thái trống hoàn toàn (Chưa có dữ liệu nào trên Database)
+        // 3. Trạng thái trống (Database chưa có dữ liệu)
         if (state.listTopic.isEmpty) {
-          return const Center(
-            child: Text(
-              "Chưa có chủ đề nào được cập nhật.",
-              style: TextStyle(color: Colors.grey, fontSize: 16),
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.inbox_outlined, size: 64, color: colorScheme.outline),
+                const SizedBox(height: 16),
+                Text(
+                  "Chưa có chủ đề nào được cập nhật.",
+                  style: textTheme.titleMedium?.copyWith(color: colorScheme.onSurfaceVariant),
+                ),
+              ],
             ),
           );
         }
 
-        // ================= LỌC DANH SÁCH THEO TỪ KHÓA =================
+        // ================= LỌC DANH SÁCH =================
         final filteredTopics = state.listTopic.where((topic) {
           final query = _searchQuery.toLowerCase();
           final titleMatch = topic.title.toLowerCase().contains(query);
           final descMatch = topic.description.toLowerCase().contains(query);
-          return titleMatch || descMatch; // Tìm theo cả tiêu đề và mô tả
+          return titleMatch || descMatch;
         }).toList();
 
         return Column(
           children: [
-            // ================= THANH TÌM KIẾM =================
+            // ================= THANH TÌM KIẾM M3 =================
             Padding(
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
               child: TextField(
                 decoration: InputDecoration(
                   hintText: 'Tìm kiếm chủ đề...',
-                  prefixIcon: const Icon(Icons.search),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                  contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 16),
+                  prefixIcon: Icon(Icons.search, color: colorScheme.primary),
+                  filled: true,
+                  fillColor: colorScheme.surfaceContainerHighest.withOpacity(0.5),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: BorderSide.none, // Ẩn viền để nhìn hiện đại hơn
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
                 ),
                 onChanged: (value) {
                   setState(() {
@@ -116,10 +133,19 @@ class _BodyState extends State<_Body> {
             // ================= DANH SÁCH HIỂN THỊ =================
             Expanded(
               child: filteredTopics.isEmpty
-                  ? const Center(
-                      child: Text(
-                        "Không tìm thấy chủ đề nào phù hợp.",
-                        style: TextStyle(color: Colors.grey, fontSize: 16),
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.search_off_rounded, size: 64, color: colorScheme.outline),
+                          const SizedBox(height: 16),
+                          Text(
+                            "Không tìm thấy chủ đề nào phù hợp.",
+                            style: textTheme.titleMedium?.copyWith(
+                              color: colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
                       ),
                     )
                   : RefreshIndicator(
@@ -127,26 +153,26 @@ class _BodyState extends State<_Body> {
                         context.read<TopicCubit>().loadTopics();
                       },
                       child: ListView.separated(
-                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                        physics:
+                            const AlwaysScrollableScrollPhysics(), // Đảm bảo luôn kéo refresh được kể cả khi list ngắn
+                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
                         itemCount: filteredTopics.length,
                         separatorBuilder: (context, index) => const SizedBox(height: 12),
                         itemBuilder: (context, index) {
                           final topic = filteredTopics[index];
-                          // QUAN TRỌNG: Tìm đúng index gốc để truyền sang màn hình sau
                           final originalIndex = state.listTopic.indexOf(topic);
 
                           return Card(
-                            elevation: 2,
+                            elevation: 0, // M3 style
+                            color: colorScheme.surfaceContainerHighest.withOpacity(0.4),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: BorderRadius.circular(16),
+                              side: BorderSide(color: colorScheme.outlineVariant.withOpacity(0.5)),
                             ),
                             child: InkWell(
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: BorderRadius.circular(16),
                               onTap: () {
-                                // Set chủ đề đang chọn (dùng originalIndex)
                                 context.read<TopicCubit>().setSelectedIdx(originalIndex);
-
-                                // Chuyển sang màn hình danh sách bài học
                                 Navigator.pushNamed(
                                   context,
                                   LearningListScreen.route,
@@ -156,15 +182,20 @@ class _BodyState extends State<_Body> {
                               child: Padding(
                                 padding: const EdgeInsets.all(16.0),
                                 child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    // Icon trang trí
+                                    // Icon trang trí hiện đại
                                     Container(
                                       padding: const EdgeInsets.all(12),
                                       decoration: BoxDecoration(
-                                        color: Colors.blue.withOpacity(0.1),
-                                        shape: BoxShape.circle,
+                                        color: colorScheme.primaryContainer,
+                                        borderRadius: BorderRadius.circular(12),
                                       ),
-                                      child: const Icon(Icons.menu_book, color: Colors.blue),
+                                      child: Icon(
+                                        Icons.menu_book_rounded,
+                                        color: colorScheme.onPrimaryContainer,
+                                        size: 24,
+                                      ),
                                     ),
                                     const SizedBox(width: 16),
                                     // Nội dung text
@@ -174,22 +205,22 @@ class _BodyState extends State<_Body> {
                                         children: [
                                           Text(
                                             topic.title,
-                                            style: const TextStyle(
+                                            style: textTheme.titleMedium?.copyWith(
                                               fontWeight: FontWeight.bold,
-                                              fontSize: 16,
                                             ),
                                           ),
-                                          const SizedBox(height: 4),
+                                          const SizedBox(height: 6),
                                           Text(
                                             topic.description,
-                                            style: TextStyle(
-                                              color: Colors.grey[600],
-                                              fontSize: 14,
+                                            style: textTheme.bodyMedium?.copyWith(
+                                              color: colorScheme.onSurfaceVariant,
                                             ),
                                             maxLines: 2,
                                             overflow: TextOverflow.ellipsis,
                                           ),
-                                          const SizedBox(height: 4),
+                                          const SizedBox(height: 10),
+
+                                          // Người tạo
                                           if (topic.userId != null && topic.userId!.isNotEmpty)
                                             FutureBuilder<UserModel?>(
                                               future: context.read<LearningService>().getUserById(
@@ -197,12 +228,24 @@ class _BodyState extends State<_Body> {
                                               ),
                                               builder: (context, snapshot) {
                                                 if (snapshot.hasData && snapshot.data != null) {
-                                                  return Text(
-                                                    "Người tạo: ${snapshot.data!.fullName ?? snapshot.data!.email ?? 'Ẩn danh'}",
-                                                    style: const TextStyle(
-                                                      fontSize: 12,
-                                                      color: Colors.blueGrey,
-                                                    ),
+                                                  return Row(
+                                                    children: [
+                                                      Icon(
+                                                        Icons.edit_square,
+                                                        size: 14,
+                                                        color: colorScheme.primary,
+                                                      ),
+                                                      const SizedBox(width: 4),
+                                                      Text(
+                                                        snapshot.data!.fullName ??
+                                                            snapshot.data!.email ??
+                                                            'Ẩn danh',
+                                                        style: textTheme.labelMedium?.copyWith(
+                                                          color: colorScheme.primary,
+                                                          fontWeight: FontWeight.w500,
+                                                        ),
+                                                      ),
+                                                    ],
                                                   );
                                                 }
                                                 return const SizedBox.shrink();
@@ -211,8 +254,11 @@ class _BodyState extends State<_Body> {
                                         ],
                                       ),
                                     ),
-                                    // Mũi tên chỉ hướng điều hướng
-                                    const Icon(Icons.chevron_right, color: Colors.grey),
+                                    // Mũi tên điều hướng (canh giữa chiều dọc)
+                                    const Padding(
+                                      padding: EdgeInsets.only(top: 12.0),
+                                      child: Icon(Icons.chevron_right, color: Colors.grey),
+                                    ),
                                   ],
                                 ),
                               ),

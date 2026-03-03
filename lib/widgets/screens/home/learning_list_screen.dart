@@ -26,6 +26,7 @@ class LearningListScreen extends StatelessWidget {
           child: Scaffold(
             appBar: AppBar(
               title: Text(currentTopic.title),
+              centerTitle: true,
               elevation: 0,
             ),
             body: const LearningListBody(),
@@ -49,10 +50,31 @@ class _LearningListBodyState extends State<LearningListBody> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
     return BlocBuilder<LearningCubit, LearningState>(
       builder: (context, state) {
+        // ================= TRẠNG THÁI LOADING =================
         if (state.status == LoadStatus.Loading) {
           return const Center(child: CircularProgressIndicator());
+        }
+
+        // ================= TRẠNG THÁI LỖI =================
+        if (state.status == LoadStatus.Error) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.error_outline, size: 64, color: colorScheme.error),
+                const SizedBox(height: 16),
+                Text(
+                  "Lỗi tải danh sách bài học",
+                  style: textTheme.titleMedium?.copyWith(color: colorScheme.onSurfaceVariant),
+                ),
+              ],
+            ),
+          );
         }
 
         // ================= LỌC DANH SÁCH THEO TỪ KHÓA =================
@@ -62,15 +84,21 @@ class _LearningListBodyState extends State<LearningListBody> {
 
         return Column(
           children: [
-            // ================= THANH TÌM KIẾM =================
+            // ================= THANH TÌM KIẾM M3 =================
             Padding(
-              padding: const EdgeInsets.all(16.0),
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
               child: TextField(
                 decoration: InputDecoration(
                   hintText: 'Tìm kiếm bài học...',
-                  prefixIcon: const Icon(Icons.search),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                  contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 16),
+                  prefixIcon: Icon(Icons.search, color: colorScheme.primary),
+                  filled: true,
+                  fillColor: colorScheme.surfaceContainerHighest.withOpacity(0.5),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide:
+                        BorderSide.none, // Ẩn viền để thanh tìm kiếm trông phẳng và hiện đại
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
                 ),
                 onChanged: (value) {
                   // Cập nhật lại UI mỗi khi gõ phím
@@ -84,64 +112,97 @@ class _LearningListBodyState extends State<LearningListBody> {
             // ================= DANH SÁCH HIỂN THỊ =================
             Expanded(
               child: state.contents.isEmpty
-                  ? const Center(child: Text("Chưa có bài học nào trong chủ đề này"))
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.menu_book_outlined, size: 64, color: colorScheme.outline),
+                          const SizedBox(height: 16),
+                          Text(
+                            "Chưa có bài học nào trong chủ đề này",
+                            style: textTheme.titleMedium?.copyWith(
+                              color: colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
                   : filteredContents.isEmpty
-                  ? const Center(child: Text("Không tìm thấy bài học nào."))
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.search_off_rounded, size: 64, color: colorScheme.outline),
+                          const SizedBox(height: 16),
+                          Text(
+                            "Không tìm thấy bài học nào.",
+                            style: textTheme.titleMedium?.copyWith(
+                              color: colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
                   : ListView.separated(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
                       itemCount: filteredContents.length,
                       separatorBuilder: (context, index) => const SizedBox(height: 12),
                       itemBuilder: (context, index) {
                         // Dùng danh sách đã lọc (filteredContents) thay vì danh sách gốc
                         final content = filteredContents[index];
-                        return InkWell(
-                          onTap: () {
-                            Navigator.pushNamed(
-                              context,
-                              LearningListDetailScreen.route,
-                              arguments: content,
-                            );
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(12),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.05),
-                                  blurRadius: 10,
-                                  offset: const Offset(0, 4),
-                                ),
-                              ],
-                            ),
-                            child: Row(
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.all(10),
-                                  decoration: BoxDecoration(
-                                    color: Colors.blue.withOpacity(0.1),
-                                    shape: BoxShape.circle,
+
+                        return Card(
+                          elevation: 0,
+                          color: colorScheme.surfaceContainerHighest.withOpacity(0.4),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            side: BorderSide(color: colorScheme.outlineVariant.withOpacity(0.5)),
+                          ),
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(16),
+                            onTap: () {
+                              Navigator.pushNamed(
+                                context,
+                                LearningListDetailScreen.route,
+                                arguments: content,
+                              );
+                            },
+                            child: Padding(
+                              padding: const EdgeInsets.all(16),
+                              child: Row(
+                                children: [
+                                  // Icon trang trí hiện đại
+                                  Container(
+                                    padding: const EdgeInsets.all(12),
+                                    decoration: BoxDecoration(
+                                      color: colorScheme.primaryContainer,
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: Icon(
+                                      Icons.menu_book_rounded,
+                                      color: colorScheme.onPrimaryContainer,
+                                      size: 24,
+                                    ),
                                   ),
-                                  child: const Icon(Icons.menu_book_rounded, color: Colors.blue),
-                                ),
-                                const SizedBox(width: 16),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        content.title,
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 16,
+                                  const SizedBox(width: 16),
+                                  // Tiêu đề bài học
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          content.title,
+                                          style: textTheme.titleMedium?.copyWith(
+                                            fontWeight: FontWeight.bold,
+                                          ),
                                         ),
-                                      ),
-                                    ],
+                                      ],
+                                    ),
                                   ),
-                                ),
-                                const Icon(Icons.chevron_right, color: Colors.grey),
-                              ],
+                                  // Mũi tên điều hướng
+                                  Icon(Icons.chevron_right, color: colorScheme.outline),
+                                ],
+                              ),
                             ),
                           ),
                         );

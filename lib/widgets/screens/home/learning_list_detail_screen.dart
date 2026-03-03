@@ -37,64 +37,111 @@ class _LearningListDetailScreenState extends State<LearningListDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.content.title),
+        title: Text(widget.content.title, style: const TextStyle(fontWeight: FontWeight.bold)),
+        centerTitle: true,
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            FutureBuilder<UserModel?>(
-              future: _userFuture,
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Text(
-                    "Người tạo: Đang tải...",
-                    style: TextStyle(fontSize: 14, color: Colors.grey),
-                  );
-                }
-                if (snapshot.hasError || snapshot.data == null) {
-                  return Text(
-                    widget.content.userId == null ? "" : "Người tạo: ${widget.content.userId}",
-                    style: const TextStyle(fontSize: 14, color: Colors.grey),
-                  );
-                }
-                final user = snapshot.data!;
-                return SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: [
-                      const SizedBox(width: 8),
-                      Text(
-                        "Người tạo: ${user.fullName}  ${user.email}",
-                        style: const TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey,
-                          fontWeight: FontWeight.w500,
+      body: Column(
+        children: [
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // ================= HEADER: THÔNG TIN TÁC GIẢ =================
+                  FutureBuilder<UserModel?>(
+                    future: _userFuture,
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const Center(child: LinearProgressIndicator());
+                      }
+
+                      String authorName = "Ẩn danh";
+                      String authorEmail = "Chưa rõ email";
+
+                      if (snapshot.hasData && snapshot.data != null) {
+                        authorName = snapshot.data!.fullName ?? "Người dùng";
+                        authorEmail = snapshot.data!.email ?? "";
+                      } else if (widget.content.userId != null) {
+                        authorName = widget.content.userId!;
+                      }
+
+                      return Card(
+                        elevation: 0,
+                        color: colorScheme.secondaryContainer.withOpacity(0.4),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 4.0),
+                          child: ListTile(
+                            leading: CircleAvatar(
+                              backgroundColor: colorScheme.primary,
+                              foregroundColor: colorScheme.onPrimary,
+                              child: const Icon(Icons.edit_square, size: 20),
+                            ),
+                            title: Text(
+                              "Tác giả: $authorName",
+                              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                            ),
+                            subtitle: authorEmail.isNotEmpty
+                                ? Text(authorEmail, style: const TextStyle(fontSize: 12))
+                                : null,
+                          ),
                         ),
-                      ),
-                    ],
+                      );
+                    },
                   ),
-                );
-              },
+                  const SizedBox(height: 24),
+
+                  // ================= NỘI DUNG BÀI HỌC (BLOCKS) =================
+                  ...widget.content.blocks.map((block) => _buildBlock(context, block)),
+                  const SizedBox(height: 24), // Khoảng trống dưới cùng cho thoáng
+                ],
+              ),
             ),
-            const SizedBox(height: 16),
-            ...widget.content.blocks.map((block) => _buildBlock(context, block)).toList(),
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pushNamed(context, QuizScreen.route, arguments: widget.content);
-              },
-              child: Text("làm trắc nghiệm"),
+          ),
+
+          // ================= FOOTER: NÚT LÀM TRẮC NGHIỆM =================
+          Container(
+            padding: const EdgeInsets.all(16.0),
+            decoration: BoxDecoration(
+              color: Theme.of(context).scaffoldBackgroundColor,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  offset: const Offset(0, -4),
+                  blurRadius: 10,
+                ),
+              ],
             ),
-          ],
-        ),
+            child: SafeArea(
+              child: FilledButton.icon(
+                onPressed: () {
+                  Navigator.pushNamed(context, QuizScreen.route, arguments: widget.content);
+                },
+                icon: const Icon(Icons.quiz_rounded),
+                label: const Text(
+                  "Làm bài Trắc nghiệm",
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+                style: FilledButton.styleFrom(
+                  minimumSize: const Size.fromHeight(54), // Nút full chiều ngang
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildBlock(BuildContext context, ContentBlock block) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     // Cấu hình chung cho Markdown (Text & Latex)
     final markdownConfig = MarkdownGenerator(
       generators: [latexGenerator], // Kích hoạt Latex generator
@@ -104,7 +151,7 @@ class _LearningListDetailScreenState extends State<LearningListDetailScreen> {
     switch (block.type) {
       case 'text':
         return Padding(
-          padding: const EdgeInsets.only(bottom: 12.0),
+          padding: const EdgeInsets.only(bottom: 16.0),
           child: MarkdownWidget(
             data: block.data ?? '',
             shrinkWrap: true,
@@ -112,8 +159,12 @@ class _LearningListDetailScreenState extends State<LearningListDetailScreen> {
             markdownGenerator: markdownConfig,
             config: MarkdownConfig(
               configs: [
-                const PConfig(
-                  textStyle: TextStyle(fontSize: 16, height: 1.5, color: Colors.black87),
+                PConfig(
+                  textStyle: TextStyle(
+                    fontSize: 16,
+                    height: 1.6,
+                    color: Theme.of(context).textTheme.bodyLarge?.color,
+                  ),
                 ),
               ],
             ),
@@ -121,22 +172,21 @@ class _LearningListDetailScreenState extends State<LearningListDetailScreen> {
         );
 
       case 'latex':
-        // Với khối Latex riêng biệt, ta bao quanh bởi $$ để nó hiển thị căn giữa và to
         return Container(
           width: double.infinity,
           margin: const EdgeInsets.only(bottom: 16.0),
-          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
           decoration: BoxDecoration(
-            color: Colors.grey[50], // Nền nhẹ cho công thức
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: Colors.grey.shade200),
+            color: colorScheme.surfaceContainerHighest.withOpacity(0.5),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: colorScheme.outlineVariant.withOpacity(0.5)),
           ),
           child: MarkdownWidget(
             data: "\$\$${block.data}\$\$", // Ép kiểu Block Math
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             markdownGenerator: MarkdownGenerator(
-              generators: [latexGenerator], // Kích hoạt Latex (file common/latex.dart)
+              generators: [latexGenerator],
               inlineSyntaxList: [LatexSyntax()],
             ),
           ),
@@ -144,40 +194,46 @@ class _LearningListDetailScreenState extends State<LearningListDetailScreen> {
 
       case 'image':
         return Padding(
-          padding: const EdgeInsets.only(bottom: 16.0),
+          padding: const EdgeInsets.only(bottom: 24.0),
           child: Column(
             children: [
               ClipRRect(
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(16),
                 child: Container(
                   constraints: const BoxConstraints(
-                    maxHeight: 200,
+                    maxHeight: 250,
                     minWidth: double.infinity,
                   ),
-                  color: Colors.grey[50],
+                  color: colorScheme.surfaceContainerHighest,
                   child: Image.network(
                     block.url ?? '',
                     fit: BoxFit.contain,
-                    // Loading builder
                     loadingBuilder: (context, child, loadingProgress) {
                       if (loadingProgress == null) return child;
                       return Container(
                         height: 200,
                         width: double.infinity,
-                        color: Colors.grey[200],
-                        child: const Center(child: CircularProgressIndicator()),
+                        color: colorScheme.surfaceContainerHighest,
+                        child: Center(
+                          child: CircularProgressIndicator(
+                            value: loadingProgress.expectedTotalBytes != null
+                                ? loadingProgress.cumulativeBytesLoaded /
+                                      loadingProgress.expectedTotalBytes!
+                                : null,
+                          ),
+                        ),
                       );
                     },
-                    // Error builder
                     errorBuilder: (context, error, stackTrace) => Container(
                       height: 150,
                       width: double.infinity,
-                      color: Colors.grey[200],
-                      child: const Column(
+                      color: colorScheme.errorContainer.withOpacity(0.5),
+                      child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.broken_image, size: 50, color: Colors.grey),
-                          Text("Không tải được ảnh", style: TextStyle(color: Colors.grey)),
+                          Icon(Icons.broken_image_rounded, size: 50, color: colorScheme.error),
+                          const SizedBox(height: 8),
+                          Text("Không tải được ảnh", style: TextStyle(color: colorScheme.error)),
                         ],
                       ),
                     ),
@@ -186,12 +242,12 @@ class _LearningListDetailScreenState extends State<LearningListDetailScreen> {
               ),
               if (block.caption != null && block.caption!.isNotEmpty)
                 Padding(
-                  padding: const EdgeInsets.only(top: 8.0),
+                  padding: const EdgeInsets.only(top: 12.0),
                   child: Text(
                     block.caption!,
                     style: TextStyle(
                       fontStyle: FontStyle.italic,
-                      color: Colors.grey[600],
+                      color: colorScheme.onSurfaceVariant,
                       fontSize: 14,
                     ),
                     textAlign: TextAlign.center,
@@ -200,34 +256,39 @@ class _LearningListDetailScreenState extends State<LearningListDetailScreen> {
             ],
           ),
         );
+
       case '580keylog':
-        var text = KeyMapper.convert(block.data ?? '');
-        return RichText(
-          text: TextSpan(
-            style: const TextStyle(
-              fontFamily: 'Casio580',
-              fontSize: 24,
-              color: Colors.black,
-            ),
-            children: [
-              TextSpan(text: text),
-            ],
-          ),
-        );
       case '880keylog':
-        var text = KeyMapper.convert2(block.data ?? '');
-        return RichText(
-          text: TextSpan(
-            style: const TextStyle(
-              fontFamily: 'Casio880',
-              fontSize: 24,
-              color: Colors.black,
+        final is580 = block.type == '580keylog';
+        final text = is580
+            ? KeyMapper.convert(block.data ?? '')
+            : KeyMapper.convert2(block.data ?? '');
+
+        return Container(
+          width: double.infinity,
+          margin: const EdgeInsets.only(bottom: 16.0),
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: colorScheme.primaryContainer.withOpacity(0.3),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: colorScheme.primary.withOpacity(0.2)),
+          ),
+          child: RichText(
+            textAlign: TextAlign.center,
+            text: TextSpan(
+              style: TextStyle(
+                fontFamily: is580 ? 'Casio580' : 'Casio880',
+                fontSize: 28, // Phóng to font nút bấm cho dễ nhìn
+                color: colorScheme.onSurface,
+                height: 1.5,
+              ),
+              children: [
+                TextSpan(text: text),
+              ],
             ),
-            children: [
-              TextSpan(text: text),
-            ],
           ),
         );
+
       default:
         return const SizedBox.shrink();
     }

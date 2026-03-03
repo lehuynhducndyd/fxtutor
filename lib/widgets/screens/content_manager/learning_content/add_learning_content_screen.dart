@@ -1,8 +1,7 @@
-import 'dart:typed_data'; // Cần thêm import này để dùng Uint8List
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-// Đảm bảo import đúng đường dẫn đến model và cubit của bạn
 import 'package:fx_tutor/models/learning_content.dart';
 import 'package:fx_tutor/widgets/screens/content_manager/learning_content/learning_content_cubit.dart';
 import 'package:image_picker/image_picker.dart';
@@ -32,11 +31,20 @@ class AddLearningContentScreen extends StatefulWidget {
 class _AddLearningContentScreenState extends State<AddLearningContentScreen> {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.isAddMode ? "Thêm nội dung bài học" : "Sửa nội dung"),
+    return GestureDetector(
+      onTap: () => FocusScope.of(context).unfocus(), // Ẩn bàn phím khi chạm ra ngoài
+      child: Scaffold(
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        appBar: AppBar(
+          title: Text(
+            widget.isAddMode ? "Thêm nội dung bài học" : "Sửa nội dung",
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+          centerTitle: true,
+          elevation: 0,
+        ),
+        body: Body(isAddMode: widget.isAddMode, editIndex: widget.editIndex),
       ),
-      body: Body(isAddMode: widget.isAddMode, editIndex: widget.editIndex),
     );
   }
 }
@@ -54,7 +62,6 @@ class Body extends StatefulWidget {
 class _BodyState extends State<Body> {
   final _titleController = TextEditingController();
 
-  // Khởi tạo mặc định 1 khối text
   List<ContentBlock> _blocks = [const ContentBlock(type: 'text', data: '')];
   final ImagePicker _picker = ImagePicker();
   bool _isUploading = false;
@@ -73,7 +80,6 @@ class _BodyState extends State<Body> {
   }
 
   // --- LOGIC XỬ LÝ KHỐI ---
-
   void _addBlock(String type) {
     setState(() {
       _blocks.add(ContentBlock(type: type, data: '', url: '', caption: ''));
@@ -86,8 +92,7 @@ class _BodyState extends State<Body> {
     });
   }
 
-  // --- LOGIC UPLOAD ẢNH SUPABASE (Đã fix lỗi Windows/Web) ---
-
+  // --- LOGIC UPLOAD ẢNH ---
   Future<void> _pickAndUploadImage(int index) async {
     try {
       final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
@@ -95,12 +100,10 @@ class _BodyState extends State<Body> {
 
       setState(() => _isUploading = true);
 
-      // Đọc bytes thay vì File path để chạy tốt trên mọi nền tảng
       final Uint8List imageBytes = await image.readAsBytes();
       final String fileName = '${DateTime.now().millisecondsSinceEpoch}_${image.name}';
       final String pathName = 'lesson_images/$fileName';
 
-      // Xác định ContentType sơ bộ
       final String fileExt = image.name.split('.').last.toLowerCase();
       final String contentType = fileExt == 'png' ? 'image/png' : 'image/jpeg';
 
@@ -130,32 +133,37 @@ class _BodyState extends State<Body> {
   }
 
   // --- LOGIC SAVE ---
-
   void _onSave() {
+    FocusScope.of(context).unfocus();
+
     if (_titleController.text.trim().isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("Vui lòng nhập tiêu đề")));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text("Vui lòng nhập tiêu đề bài học"),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
+      );
       return;
     }
 
     bool hasError = false;
     for (var block in _blocks) {
-      // Validate Text & Latex (dùng field data)
       if ((block.type == 'text' || block.type == 'latex') &&
           (block.data == null || block.data!.isEmpty)) {
         hasError = true;
       }
-      // Validate Image (dùng field url)
       if (block.type == 'image' && (block.url == null || block.url!.isEmpty)) {
         hasError = true;
       }
     }
 
     if (hasError) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("Vui lòng điền đầy đủ nội dung các khối")));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text("Vui lòng điền đầy đủ nội dung các khối"),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
+      );
       return;
     }
 
@@ -174,17 +182,21 @@ class _BodyState extends State<Body> {
   }
 
   // --- GIAO DIỆN ---
-
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     if (_isUploading) {
-      return const Center(
+      return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            CircularProgressIndicator(),
-            SizedBox(height: 16),
-            Text("Đang tải ảnh lên..."),
+            const CircularProgressIndicator(),
+            const SizedBox(height: 16),
+            Text(
+              "Đang tải ảnh lên...",
+              style: TextStyle(color: colorScheme.primary, fontWeight: FontWeight.bold),
+            ),
           ],
         ),
       );
@@ -192,198 +204,202 @@ class _BodyState extends State<Body> {
 
     return Column(
       children: [
-        SizedBox(
-          height: 8,
+        // ================= THANH CÔNG CỤ (TOOL BAR) =================
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          color: colorScheme.surface,
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Row(
+              spacing: 8,
+              children: [
+                FilledButton.tonalIcon(
+                  onPressed: () => Navigator.pushNamed(context, GuideScreen.route),
+                  label: const Text("Hướng dẫn"),
+                  style: FilledButton.styleFrom(visualDensity: VisualDensity.compact),
+                ),
+                FilledButton.tonalIcon(
+                  onPressed: () => Navigator.pushNamed(context, CalculatorScreen.route),
+                  label: const Text("Lấy Keylog"),
+                  style: FilledButton.styleFrom(visualDensity: VisualDensity.compact),
+                ),
+                FilledButton.tonalIcon(
+                  onPressed: () => Navigator.pushNamed(context, MoreKeylogScreen2.route),
+                  label: const Text("2nd Keylog 580"),
+                  style: FilledButton.styleFrom(visualDensity: VisualDensity.compact),
+                ),
+                FilledButton.tonalIcon(
+                  onPressed: () => Navigator.pushNamed(context, MoreKeylogScreen.route),
+                  label: const Text("2nd Keylog 880"),
+                  style: FilledButton.styleFrom(visualDensity: VisualDensity.compact),
+                ),
+              ],
+            ),
+          ),
         ),
-        // Nút Save ở trên
-        SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: Row(
-            spacing: 5,
-            children: [
-              ElevatedButton(
-                onPressed: _onSave,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue,
-                  foregroundColor: Colors.white,
-                ),
-                child: Text(
-                  widget.isAddMode ? "Tạo" : "Lưu",
-                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
-                ),
-              ),
-              Row(
-                spacing: 5,
-                children: [
-                  ElevatedButton(
-                    onPressed: () {
-                      Navigator.pushNamed(context, GuideScreen.route);
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green,
-                      foregroundColor: Colors.white,
-                    ),
-                    child: Text(
-                      "Hướng dẫn",
-                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                  ElevatedButton(
-                    onPressed: () {
-                      Navigator.pushNamed(context, CalculatorScreen.route);
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green,
-                      foregroundColor: Colors.white,
-                    ),
-                    child: Text(
-                      "Lấy Keylog",
-                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                  ElevatedButton(
-                    onPressed: () {
-                      Navigator.pushNamed(context, MoreKeylogScreen2.route);
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green,
-                      foregroundColor: Colors.white,
-                    ),
-                    child: Text(
-                      "2nd Keylog 580",
-                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                  ElevatedButton(
-                    onPressed: () {
-                      Navigator.pushNamed(context, MoreKeylogScreen.route);
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green,
-                      foregroundColor: Colors.white,
-                    ),
-                    child: Text(
-                      "2nd Keylog 880",
-                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                ],
+
+        // ================= THANH CỐ ĐỊNH: THÊM KHỐI MỚI =================
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: colorScheme.surface,
+            border: Border(
+              bottom: BorderSide(color: colorScheme.outlineVariant.withOpacity(0.5)),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.02),
+                offset: const Offset(0, 4),
+                blurRadius: 8,
               ),
             ],
           ),
-        ),
-        SizedBox(
-          height: 8,
-        ),
-        PopupMenuButton<String>(
-          onSelected: _addBlock,
-          itemBuilder: (context) => [
-            const PopupMenuItem(
-              value: 'text',
-              child: Row(
-                children: [
-                  Icon(Icons.notes, color: Colors.blueGrey),
-                  SizedBox(width: 8),
-                  Text("Văn bản"),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 800),
+              child: PopupMenuButton<String>(
+                onSelected: _addBlock,
+                position: PopupMenuPosition.under,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                itemBuilder: (context) => [
+                  _buildPopupItem('text', Icons.notes_rounded, "Văn bản", Colors.blueGrey),
+                  _buildPopupItem(
+                    'latex',
+                    Icons.functions_rounded,
+                    "Công thức (LaTeX)",
+                    Colors.teal,
+                  ),
+                  _buildPopupItem('image', Icons.image_rounded, "Hình ảnh", Colors.blue),
+                  _buildPopupItem(
+                    '580keylog',
+                    Icons.calculate_rounded,
+                    "Casio fx-580 Keylog",
+                    Colors.deepPurple,
+                  ),
+                  _buildPopupItem(
+                    '880keylog',
+                    Icons.calculate_outlined,
+                    "Casio fx-880 Keylog",
+                    Colors.indigo,
+                  ),
                 ],
-              ),
-            ),
-            const PopupMenuItem(
-              value: 'latex',
-              child: Row(
-                children: [
-                  Icon(Icons.functions, color: Colors.teal),
-                  SizedBox(width: 8),
-                  Text("Công thức (LaTeX)"),
-                ],
-              ),
-            ),
-            const PopupMenuItem(
-              value: 'image',
-              child: Row(
-                children: [
-                  Icon(Icons.image, color: Colors.blue),
-                  SizedBox(width: 8),
-                  Text("Hình ảnh"),
-                ],
-              ),
-            ),
-            const PopupMenuItem(
-              value: '580keylog',
-              child: Row(
-                children: [
-                  Icon(Icons.calculate, color: Colors.deepPurple),
-                  SizedBox(width: 8),
-                  Text("Casio fx-580 Keylog"),
-                ],
-              ),
-            ),
-            const PopupMenuItem(
-              value: '880keylog',
-              child: Row(
-                children: [
-                  Icon(Icons.calculate_outlined, color: Colors.indigo),
-                  SizedBox(width: 8),
-                  Text("Casio fx-880 Keylog"),
-                ],
-              ),
-            ),
-          ],
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: Colors.blue.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: Colors.blue),
-            ),
-            child: const Row(
-              children: [
-                Icon(Icons.add, color: Colors.blue, size: 20),
-                SizedBox(width: 4),
-                Text(
-                  "Thêm khối",
-                  style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold),
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  decoration: BoxDecoration(
+                    color: colorScheme.primaryContainer.withOpacity(0.3),
+                    border: Border.all(color: colorScheme.primary.withOpacity(0.5), width: 1.5),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.add_circle_outline_rounded, color: colorScheme.primary),
+                      const SizedBox(width: 8),
+                      Text(
+                        "Thêm khối nội dung",
+                        style: TextStyle(color: colorScheme.primary, fontWeight: FontWeight.bold),
+                      ),
+                    ],
+                  ),
                 ),
-              ],
+              ),
             ),
           ),
         ),
+
+        // ================= KHU VỰC SOẠN THẢO CHÍNH (TỐI ƯU TABLET - SCROLLABLE) =================
         Expanded(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildLabel("Tiêu đề bài học"),
-                TextField(
-                  controller: _titleController,
-                  decoration: const InputDecoration(
-                    hintText: "VD: Phương trình bậc 2",
-                    border: OutlineInputBorder(),
-                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-                  ),
-                ),
-                const SizedBox(height: 24),
-
-                const SizedBox(height: 10),
-
-                if (_blocks.isEmpty)
-                  const Center(
-                    child: Padding(
-                      padding: EdgeInsets.all(20.0),
-                      child: Text(
-                        "Chưa có nội dung. Hãy thêm khối mới.",
-                        style: TextStyle(color: Colors.grey),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 800),
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // TIÊU ĐỀ BÀI HỌC
+                    Text(
+                      "Tiêu đề bài học",
+                      style: Theme.of(
+                        context,
+                      ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: _titleController,
+                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                      decoration: InputDecoration(
+                        hintText: "VD: Phương trình bậc 2",
+                        filled: true,
+                        fillColor: colorScheme.surfaceContainerHighest.withOpacity(0.5),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: BorderSide.none,
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                       ),
                     ),
-                  ),
+                    const SizedBox(height: 24),
 
-                ..._blocks.asMap().entries.map((entry) {
-                  int idx = entry.key;
-                  ContentBlock block = entry.value;
-                  return _buildBlockItem(idx, block);
-                }).toList(),
-              ],
+                    // DANH SÁCH CÁC KHỐI ĐÃ THÊM
+                    if (_blocks.isEmpty)
+                      Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(32.0),
+                          child: Text(
+                            "Chưa có nội dung. Hãy nhấp 'Thêm khối nội dung' ở trên.",
+                            style: TextStyle(color: colorScheme.outline, fontSize: 16),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      ),
+
+                    ..._blocks.asMap().entries.map((entry) {
+                      int idx = entry.key;
+                      ContentBlock block = entry.value;
+                      return _buildBlockItem(idx, block, colorScheme);
+                    }).toList(),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+
+        // ================= NÚT LƯU CỐ ĐỊNH Ở ĐÁY =================
+        Container(
+          padding: const EdgeInsets.all(16.0),
+          decoration: BoxDecoration(
+            color: Theme.of(context).scaffoldBackgroundColor,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                offset: const Offset(0, -4),
+                blurRadius: 10,
+              ),
+            ],
+          ),
+          child: SafeArea(
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 800),
+                child: FilledButton.icon(
+                  onPressed: _onSave,
+                  icon: const Icon(Icons.save_rounded),
+                  label: Text(
+                    widget.isAddMode ? "Tạo bài học" : "Lưu thay đổi",
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                  style: FilledButton.styleFrom(
+                    minimumSize: const Size.fromHeight(54),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  ),
+                ),
+              ),
             ),
           ),
         ),
@@ -391,11 +407,21 @@ class _BodyState extends State<Body> {
     );
   }
 
-  Widget _buildLabel(String text) {
-    return Text(text, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16));
+  // --- CÁC HÀM HELPER VẼ UI ---
+
+  PopupMenuItem<String> _buildPopupItem(String value, IconData icon, String text, Color color) {
+    return PopupMenuItem(
+      value: value,
+      child: Row(
+        children: [
+          Icon(icon, color: color),
+          const SizedBox(width: 12),
+          Text(text),
+        ],
+      ),
+    );
   }
 
-  // Helper chọn màu sắc tiêu đề khối
   Color _getBlockColor(String type) {
     switch (type) {
       case 'text':
@@ -413,7 +439,6 @@ class _BodyState extends State<Body> {
     }
   }
 
-  // Helper hiển thị tên khối
   String _getBlockTitle(String type) {
     switch (type) {
       case 'text':
@@ -426,40 +451,41 @@ class _BodyState extends State<Body> {
         return "FX-580 KEYLOG";
       case '880keylog':
         return "FX-880 KEYLOG";
-
       default:
         return type.toUpperCase();
     }
   }
 
-  // Helper chọn Icon
   IconData _getBlockIcon(String type) {
     switch (type) {
       case 'text':
-        return Icons.notes;
+        return Icons.notes_rounded;
       case 'latex':
-        return Icons.functions;
+        return Icons.functions_rounded;
       case 'image':
-        return Icons.image;
+        return Icons.image_rounded;
       case '580keylog':
-        return Icons.calculate;
+        return Icons.calculate_rounded;
       case '880keylog':
         return Icons.calculate_outlined;
-
       default:
         return Icons.block;
     }
   }
 
-  Widget _buildBlockItem(int index, ContentBlock block) {
+  Widget _buildBlockItem(int index, ContentBlock block, ColorScheme colorScheme) {
     final Color colorTheme = _getBlockColor(block.type);
 
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      elevation: 0,
+      color: colorScheme.surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: colorScheme.outlineVariant),
+      ),
       child: Padding(
-        padding: const EdgeInsets.all(12.0),
+        padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -468,20 +494,15 @@ class _BodyState extends State<Body> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                   decoration: BoxDecoration(
                     color: colorTheme.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(6),
-                    border: Border.all(color: colorTheme.withOpacity(0.5)),
+                    borderRadius: BorderRadius.circular(8),
                   ),
                   child: Row(
                     children: [
-                      Icon(
-                        _getBlockIcon(block.type),
-                        size: 16,
-                        color: colorTheme,
-                      ),
-                      const SizedBox(width: 4),
+                      Icon(_getBlockIcon(block.type), size: 16, color: colorTheme),
+                      const SizedBox(width: 6),
                       Text(
                         _getBlockTitle(block.type),
                         style: TextStyle(
@@ -494,15 +515,14 @@ class _BodyState extends State<Body> {
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.close, color: Colors.red, size: 20),
+                  icon: Icon(Icons.close_rounded, color: colorScheme.error, size: 20),
                   onPressed: () => _removeBlock(index),
                   tooltip: "Xóa khối này",
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
+                  visualDensity: VisualDensity.compact,
                 ),
               ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 16),
 
             // --- NỘI DUNG TÙY THEO LOẠI ---
 
@@ -513,11 +533,15 @@ class _BodyState extends State<Body> {
                   ..selection = TextSelection.collapsed(offset: block.data?.length ?? 0),
                 onChanged: (v) => _blocks[index] = block.copyWith(data: v),
                 maxLines: null,
-                minLines: 2,
-                decoration: const InputDecoration(
+                minLines: 3,
+                decoration: InputDecoration(
                   hintText: "Nhập văn bản thông thường...",
-                  border: OutlineInputBorder(),
-                  isDense: true,
+                  filled: true,
+                  fillColor: colorScheme.surfaceContainerHighest.withOpacity(0.3),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
                 ),
               ),
 
@@ -528,22 +552,26 @@ class _BodyState extends State<Body> {
                   ..selection = TextSelection.collapsed(offset: block.data?.length ?? 0),
                 onChanged: (v) => _blocks[index] = block.copyWith(data: v),
                 maxLines: null,
-                minLines: 1,
-                style: const TextStyle(fontFamily: 'Courier', color: Colors.teal),
-                // Font kiểu code
-                decoration: const InputDecoration(
+                minLines: 2,
+                style: const TextStyle(
+                  fontFamily: 'Courier',
+                  color: Colors.teal,
+                  fontWeight: FontWeight.w600,
+                ),
+                decoration: InputDecoration(
                   hintText: "Nhập công thức (VD: x = \\frac{-b \\pm \\sqrt{\\Delta}}{2a})",
-                  border: OutlineInputBorder(),
                   prefixText: "\$\$ ",
-                  // Gợi ý trực quan
                   suffixText: " \$\$",
-                  isDense: true,
-                  fillColor: Color(0xFFE0F2F1),
-                  // Màu nền nhẹ cho Latex
                   filled: true,
+                  fillColor: Colors.teal.withOpacity(0.05),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: Colors.teal.withOpacity(0.3)),
+                  ),
                 ),
               ),
-            // 4. FX-580 / FX-880 KEYLOG
+
+            // 3. FX-580 / FX-880 KEYLOG
             if (block.type == '580keylog' || block.type == '880keylog')
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -556,57 +584,65 @@ class _BodyState extends State<Body> {
                     minLines: 1,
                     style: const TextStyle(
                       fontFamily: 'Courier',
-                      fontSize: 15,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
                     ),
                     decoration: InputDecoration(
-                      border: const OutlineInputBorder(),
-                      isDense: true,
-                      fillColor: Colors.black.withOpacity(0.03),
+                      prefixIcon: const Icon(Icons.keyboard_rounded),
                       filled: true,
-                      prefixIcon: const Icon(Icons.keyboard),
+                      fillColor: colorTheme.withOpacity(0.05),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: colorTheme.withOpacity(0.3)),
+                      ),
                     ),
                   ),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 8),
                   Text(
                     "Nhập chuỗi phím theo dạng [SHIFT][MENU]...",
-                    style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                    style: TextStyle(fontSize: 12, color: colorScheme.outline),
                   ),
                 ],
               ),
 
-            // 3. HÌNH ẢNH
+            // 4. HÌNH ẢNH
             if (block.type == 'image') ...[
               Container(
                 width: double.infinity,
-                height: 180,
+                height: 200,
                 decoration: BoxDecoration(
-                  color: Colors.grey[100],
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.grey[300]!),
+                  color: colorScheme.surfaceContainerHighest.withOpacity(0.5),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: colorScheme.outlineVariant),
                 ),
                 child: block.url != null && block.url!.isNotEmpty
                     ? Stack(
                         fit: StackFit.expand,
                         children: [
                           ClipRRect(
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(12),
                             child: Image.network(
                               block.url!,
                               fit: BoxFit.cover,
-                              errorBuilder: (c, o, s) =>
-                                  const Center(child: Icon(Icons.broken_image)),
+                              errorBuilder: (c, o, s) => Center(
+                                child: Icon(
+                                  Icons.broken_image_rounded,
+                                  color: colorScheme.error,
+                                  size: 40,
+                                ),
+                              ),
                             ),
                           ),
                           Positioned(
                             bottom: 8,
                             right: 8,
-                            child: ElevatedButton.icon(
+                            child: FilledButton.icon(
                               onPressed: () => _pickAndUploadImage(index),
-                              icon: const Icon(Icons.edit, size: 16),
+                              icon: const Icon(Icons.edit_rounded, size: 16),
                               label: const Text("Đổi ảnh"),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.white,
-                                foregroundColor: Colors.black,
+                              style: FilledButton.styleFrom(
+                                backgroundColor: colorScheme.surface.withOpacity(0.9),
+                                foregroundColor: colorScheme.onSurface,
                               ),
                             ),
                           ),
@@ -616,9 +652,13 @@ class _BodyState extends State<Body> {
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const Icon(Icons.add_photo_alternate, size: 40, color: Colors.grey),
-                            const SizedBox(height: 8),
-                            TextButton(
+                            Icon(
+                              Icons.add_photo_alternate_rounded,
+                              size: 48,
+                              color: colorScheme.outline,
+                            ),
+                            const SizedBox(height: 12),
+                            FilledButton.tonal(
                               onPressed: () => _pickAndUploadImage(index),
                               child: const Text("Chọn & Upload Ảnh"),
                             ),
@@ -631,11 +671,15 @@ class _BodyState extends State<Body> {
                 controller: TextEditingController(text: block.caption)
                   ..selection = TextSelection.collapsed(offset: block.caption?.length ?? 0),
                 onChanged: (v) => _blocks[index] = block.copyWith(caption: v),
-                decoration: const InputDecoration(
-                  labelText: "Chú thích ảnh (Caption)",
-                  prefixIcon: Icon(Icons.description, size: 18),
-                  border: OutlineInputBorder(),
-                  isDense: true,
+                decoration: InputDecoration(
+                  hintText: "Chú thích ảnh (tùy chọn)",
+                  prefixIcon: const Icon(Icons.description_outlined, size: 20),
+                  filled: true,
+                  fillColor: colorScheme.surfaceContainerHighest.withOpacity(0.3),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
                 ),
               ),
             ],

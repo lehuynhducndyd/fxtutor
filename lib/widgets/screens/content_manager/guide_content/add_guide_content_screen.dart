@@ -9,7 +9,7 @@ import '../../caculator/calculator_screen.dart';
 
 class AddGuideContentScreen extends StatefulWidget {
   final bool isAddMode;
-  final int? editIndex; // Index của guide trong list nếu ở chế độ sửa
+  final int? editIndex;
 
   const AddGuideContentScreen({
     super.key,
@@ -26,11 +26,20 @@ class AddGuideContentScreen extends StatefulWidget {
 class _AddGuideContentScreenState extends State<AddGuideContentScreen> {
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.isAddMode ? "Thêm hướng dẫn máy tính" : "Sửa hướng dẫn"),
+    return GestureDetector(
+      onTap: () => FocusScope.of(context).unfocus(), // Chạm ra ngoài để hạ bàn phím
+      child: Scaffold(
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        appBar: AppBar(
+          title: Text(
+            widget.isAddMode ? "Thêm hướng dẫn" : "Sửa hướng dẫn",
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+          centerTitle: true,
+          elevation: 0,
+        ),
+        body: Body(isAddMode: widget.isAddMode, editIndex: widget.editIndex),
       ),
-      body: Body(isAddMode: widget.isAddMode, editIndex: widget.editIndex),
     );
   }
 }
@@ -49,7 +58,6 @@ class _BodyState extends State<Body> {
   final _actionNameController = TextEditingController();
   final _modelsController = TextEditingController();
 
-  // Danh sách các phương thức (Method)
   List<GuideMethod> _methods = [GuideMethod(methodName: "Cách 1", content: "")];
 
   @override
@@ -78,171 +86,37 @@ class _BodyState extends State<Body> {
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildLabel("Tên hành động"),
-          TextField(
-            controller: _actionNameController,
-            decoration: const InputDecoration(
-              hintText: "VD: Giải phương trình bậc 2",
-              border: OutlineInputBorder(),
-            ),
-          ),
-          const SizedBox(height: 20),
-
-          _buildLabel("Dòng máy hỗ trợ (cách nhau bởi dấu phẩy)"),
-          TextField(
-            controller: _modelsController,
-            decoration: const InputDecoration(
-              hintText: "VD: Casio 580VNX, Vinacal 680EX",
-              border: OutlineInputBorder(),
-            ),
-          ),
-          const SizedBox(height: 20),
-
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              _buildLabel("Các bước thực hiện"),
-              TextButton.icon(
-                onPressed: _addMethod,
-                icon: const Icon(Icons.add),
-                label: const Text("Thêm cách"),
-              ),
-            ],
-          ),
-          Row(
-            children: [
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.pushNamed(context, GuideScreen.route);
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green,
-                  foregroundColor: Colors.white,
-                ),
-                child: Text(
-                  "Hướng dẫn",
-                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
-                ),
-              ),
-              SizedBox(width: 5),
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.pushNamed(context, CalculatorScreen.route);
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green,
-                  foregroundColor: Colors.white,
-                ),
-                child: Text(
-                  "Lấy Keylog",
-                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
-                ),
-              ),
-            ],
-          ),
-          // Danh sách các Method
-          ..._methods.asMap().entries.map((entry) {
-            int idx = entry.key;
-            return Card(
-              margin: const EdgeInsets.only(bottom: 16),
-              color: Colors.grey[50],
-              child: Padding(
-                padding: const EdgeInsets.all(12.0),
-                child: Column(
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: TextField(
-                            onChanged: (v) => _methods[idx] = GuideMethod(
-                              methodName: v,
-                              content: _methods[idx].content,
-                            ),
-                            decoration: InputDecoration(
-                              hintText: "Tên phương thức",
-                              labelText: "Phương thức ${idx + 1}",
-                            ),
-                            controller: TextEditingController(text: _methods[idx].methodName)
-                              ..selection = TextSelection.collapsed(
-                                offset: _methods[idx].methodName.length,
-                              ),
-                          ),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.delete_outline, color: Colors.red),
-                          onPressed: () => _removeMethod(idx),
-                        ),
-                      ],
-                    ),
-                    TextField(
-                      onChanged: (v) => _methods[idx] = GuideMethod(
-                        methodName: _methods[idx].methodName,
-                        content: v,
-                      ),
-                      maxLines: 8,
-                      decoration: const InputDecoration(
-                        hintText: "Nhập nội dung (Dùng [PHÍM] để hiển thị icon phím)",
-                      ),
-                      controller: TextEditingController(text: _methods[idx].content)
-                        ..selection = TextSelection.collapsed(offset: _methods[idx].content.length),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          }).toList(),
-
-          const SizedBox(height: 32),
-
-          SizedBox(
-            width: double.infinity,
-            height: 50,
-            child: ElevatedButton(
-              onPressed: _onSave,
-              child: Text(
-                widget.isAddMode ? "TẠO HƯỚNG DẪN" : "CẬP NHẬT",
-                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-              ),
-            ),
-          ),
-          const SizedBox(height: 50),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildLabel(String text) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8.0),
-      child: Text(text, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-    );
-  }
-
   void _onSave() {
+    FocusScope.of(context).unfocus(); // Ẩn bàn phím khi lưu
+
+    final colorScheme = Theme.of(context).colorScheme;
+
     if (_actionNameController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Vui lòng nhập tên hành động')),
+        SnackBar(
+          content: const Text('Vui lòng nhập tên hành động'),
+          backgroundColor: colorScheme.error,
+        ),
       );
       return;
     }
 
     if (_modelsController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Vui lòng nhập dòng máy hỗ trợ')),
+        SnackBar(
+          content: const Text('Vui lòng nhập dòng máy hỗ trợ'),
+          backgroundColor: colorScheme.error,
+        ),
       );
       return;
     }
 
     if (_methods.any((m) => m.methodName.trim().isEmpty || m.content.trim().isEmpty)) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Vui lòng nhập đầy đủ tên và nội dung các phương thức')),
+        SnackBar(
+          content: const Text('Vui lòng nhập đầy đủ tên và nội dung các phương thức'),
+          backgroundColor: colorScheme.error,
+        ),
       );
       return;
     }
@@ -268,5 +142,259 @@ class _BodyState extends State<Body> {
       );
     }
     Navigator.pop(context);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
+    return Column(
+      children: [
+        // ================= THANH CÔNG CỤ TÍCH HỢP (TOOLBAR) =================
+        Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          decoration: BoxDecoration(
+            color: colorScheme.surface,
+            border: Border(bottom: BorderSide(color: colorScheme.outlineVariant.withOpacity(0.5))),
+          ),
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Row(
+              spacing: 8,
+              children: [
+                // Nút Thêm Cách (Nổi bật nhất)
+                FilledButton.icon(
+                  onPressed: _addMethod,
+                  label: const Text("Thêm Cách giải"),
+                  style: FilledButton.styleFrom(
+                    visualDensity: VisualDensity.compact,
+                    backgroundColor: colorScheme.primary,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                // Các nút công cụ phụ trợ
+                FilledButton.tonalIcon(
+                  onPressed: () => Navigator.pushNamed(context, GuideScreen.route),
+                  label: const Text("Xem Hướng dẫn"),
+                  style: FilledButton.styleFrom(visualDensity: VisualDensity.compact),
+                ),
+                FilledButton.tonalIcon(
+                  onPressed: () => Navigator.pushNamed(context, CalculatorScreen.route),
+                  label: const Text("Lấy Keylog"),
+                  style: FilledButton.styleFrom(visualDensity: VisualDensity.compact),
+                ),
+              ],
+            ),
+          ),
+        ),
+
+        // ================= KHU VỰC SOẠN THẢO (TỐI ƯU TABLET) =================
+        Expanded(
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 800), // Giới hạn 800px giống Word
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // --- TÊN HÀNH ĐỘNG ---
+                    Text(
+                      "Tên hành động",
+                      style: textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: _actionNameController,
+                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      decoration: InputDecoration(
+                        hintText: "VD: Giải phương trình bậc 2",
+                        filled: true,
+                        fillColor: colorScheme.surfaceContainerHighest.withOpacity(0.5),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: BorderSide.none,
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+
+                    // --- DÒNG MÁY HỖ TRỢ ---
+                    Text(
+                      "Dòng máy hỗ trợ (cách nhau bởi dấu phẩy)",
+                      style: textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: _modelsController,
+                      decoration: InputDecoration(
+                        hintText: "VD: Casio 580VNX, Vinacal 680EX",
+                        prefixIcon: Icon(Icons.devices_rounded, color: colorScheme.outline),
+                        filled: true,
+                        fillColor: colorScheme.surfaceContainerHighest.withOpacity(0.5),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: BorderSide.none,
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                      ),
+                    ),
+                    const SizedBox(height: 32),
+
+                    // --- TIÊU ĐỀ PHẦN PHƯƠNG THỨC ---
+                    Row(
+                      children: [
+                        Icon(Icons.list_alt_rounded, color: colorScheme.primary),
+                        const SizedBox(width: 8),
+                        Text(
+                          "Các bước thực hiện",
+                          style: textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: colorScheme.primary,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+
+                    // --- DANH SÁCH CÁC PHƯƠNG THỨC (CÁCH GIẢI) ---
+                    ..._methods.asMap().entries.map((entry) {
+                      int idx = entry.key;
+                      return Card(
+                        margin: const EdgeInsets.only(bottom: 20),
+                        elevation: 0,
+                        color: colorScheme.surface,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          side: BorderSide(color: colorScheme.outlineVariant),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Tiêu đề Cách X & Nút xóa
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: TextField(
+                                      onChanged: (v) => _methods[idx] = GuideMethod(
+                                        methodName: v,
+                                        content: _methods[idx].content,
+                                      ),
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        color: colorScheme.primary,
+                                        fontSize: 16,
+                                      ),
+                                      decoration: InputDecoration(
+                                        hintText: "VD: Cách 1 (Dùng Mode)",
+                                        labelText: "Tên phương thức ${idx + 1}",
+                                        border: OutlineInputBorder(
+                                          borderRadius: BorderRadius.circular(12),
+                                          borderSide: BorderSide(color: colorScheme.outlineVariant),
+                                        ),
+                                        isDense: true,
+                                      ),
+                                      controller:
+                                          TextEditingController(text: _methods[idx].methodName)
+                                            ..selection = TextSelection.collapsed(
+                                              offset: _methods[idx].methodName.length,
+                                            ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  IconButton(
+                                    icon: Icon(
+                                      Icons.delete_outline_rounded,
+                                      color: colorScheme.error,
+                                    ),
+                                    visualDensity: VisualDensity.compact,
+                                    onPressed: () => _removeMethod(idx),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 16),
+
+                              // Nội dung chi tiết các bước bấm
+                              TextField(
+                                onChanged: (v) => _methods[idx] = GuideMethod(
+                                  methodName: _methods[idx].methodName,
+                                  content: v,
+                                ),
+                                maxLines: 6,
+                                minLines: 3,
+                                style: const TextStyle(
+                                  fontFamily: 'Courier',
+                                  height: 1.5,
+                                ), // Dùng font mono để dễ nhìn phím bấm
+                                decoration: InputDecoration(
+                                  hintText:
+                                      "Nhập nội dung các bước. Dùng [PHÍM] để hiển thị icon phím bấm trên giao diện.",
+                                  filled: true,
+                                  fillColor: colorScheme.surfaceContainerHighest.withOpacity(0.3),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: BorderSide.none,
+                                  ),
+                                ),
+                                controller: TextEditingController(text: _methods[idx].content)
+                                  ..selection = TextSelection.collapsed(
+                                    offset: _methods[idx].content.length,
+                                  ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+
+        // ================= NÚT LƯU CỐ ĐỊNH Ở ĐÁY =================
+        Container(
+          padding: const EdgeInsets.all(16.0),
+          decoration: BoxDecoration(
+            color: Theme.of(context).scaffoldBackgroundColor,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                offset: const Offset(0, -4),
+                blurRadius: 10,
+              ),
+            ],
+          ),
+          child: SafeArea(
+            child: Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(
+                  maxWidth: 800,
+                ), // Căn cùng chiều rộng với khung soạn thảo
+                child: FilledButton.icon(
+                  onPressed: _onSave,
+                  icon: const Icon(Icons.save_rounded),
+                  label: Text(
+                    widget.isAddMode ? "Tạo Hướng dẫn" : "Lưu Thay đổi",
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  ),
+                  style: FilledButton.styleFrom(
+                    minimumSize: const Size.fromHeight(54),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
   }
 }
