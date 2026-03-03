@@ -106,86 +106,181 @@ class _PageState extends State<Page> {
           return const Center(child: CircularProgressIndicator());
         }
 
+        final colorScheme = Theme.of(context).colorScheme;
+
         return ListView(
-          // Đổi thành ListView để tránh lỗi tràn màn hình nếu nội dung dài
           padding: const EdgeInsets.all(16.0),
           children: [
-            Text("Email: ${user.email}", style: const TextStyle(fontWeight: FontWeight.bold)),
-            const SizedBox(height: 8),
-            Text("Vai trò: ${user.role?.toUpperCase()}"),
-            const SizedBox(height: 16),
+            // ================= KHU VỰC THÔNG TIN CÁ NHÂN =================
+            Card(
+              elevation: 0,
+              color: colorScheme.secondaryContainer.withOpacity(0.5),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8.0),
+                child: ListTile(
+                  leading: CircleAvatar(
+                    backgroundColor: colorScheme.primary,
+                    foregroundColor: colorScheme.onPrimary,
+                    child: const Icon(Icons.person),
+                  ),
+                  title: Text(
+                    user.email ?? "Chưa có email",
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  subtitle: Text("Vai trò: ${user.role?.toUpperCase()}"),
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
+
+            // ================= CẬP NHẬT TÊN =================
             Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(
-                  flex: 1,
                   child: TextField(
                     controller: nameController,
-                    decoration: const InputDecoration(labelText: "Tên hiển thị"),
+                    decoration: InputDecoration(
+                      labelText: "Tên hiển thị",
+                      prefixIcon: const Icon(Icons.badge_outlined),
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    ),
                   ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(width: 12),
+                Padding(
+                  padding: const EdgeInsets.only(top: 4.0),
+                  child: FilledButton(
+                    // M3 Standard
+                    onPressed: () {
+                      context.read<ProfileCubit>().updateProfile(fullName: nameController.text);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Đổi tên thành công!')),
+                      );
+                    },
+                    style: FilledButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    child: const Text("Cập nhật"),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
 
-                ElevatedButton(
+            // ================= CÁC NÚT CHỨC NĂNG =================
+            Row(
+              children: [
+                FilledButton.icon(
+                  icon: const Icon(Icons.password),
+                  label: const Text("Đổi mật khẩu"),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
+                  onPressed: profileCubit.profileService.isEmailProvider()
+                      ? () => _showChangePasswordDialog(context, profileCubit)
+                      : null,
+                ),
+                const SizedBox(width: 12),
+
+                FilledButton.icon(
+                  icon: const Icon(Icons.logout),
+                  label: const Text("Đăng xuất"),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: colorScheme.error,
+                    foregroundColor: colorScheme.onError,
+                    padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
                   onPressed: () {
-                    context.read<ProfileCubit>().updateProfile(fullName: nameController.text);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Đổi tên thành công!')),
-                    );
+                    context.read<AuthCubit>().logout();
+                    Navigator.pushReplacementNamed(context, LoginScreen.route);
                   },
-                  child: const Text("Cập nhật tên"),
                 ),
               ],
             ),
 
-            ElevatedButton(
-              onPressed: profileCubit.profileService.isEmailProvider()
-                  ? () => _showChangePasswordDialog(context, profileCubit)
-                  : null,
-              child: const Text("Đổi mật khẩu"),
-            ),
-
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red,
-                foregroundColor: Colors.white,
-              ),
-              onPressed: () {
-                context.read<AuthCubit>().logout();
-                Navigator.pushReplacementNamed(context, LoginScreen.route);
-              },
-              child: const Text("Đăng xuất"),
-            ),
-
+            const SizedBox(height: 16),
             const Divider(height: 32),
 
             // ================= KHU VỰC CỘNG TÁC VIÊN =================
             // Chỉ hiển thị khu vực này nếu người dùng đang là "user" bình thường
             if (user.role == 'user') ...[
-              const Text(
-                "Đăng ký Cộng tác viên",
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-              ),
-              const SizedBox(height: 8),
+              Card(
+                elevation: 0,
+                color: colorScheme.surfaceContainerHighest,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(Icons.handshake_outlined, color: colorScheme.primary),
+                          const SizedBox(width: 8),
+                          const Text(
+                            "Đăng ký Cộng tác viên",
+                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
 
-              if (isLoadingCollab)
-                const Center(child: CircularProgressIndicator())
-              else if (collabStatus == 'pending')
-                const Text(
-                  'Yêu cầu của bạn đang chờ Admin phê duyệt...',
-                  style: TextStyle(color: Colors.orange, fontStyle: FontStyle.italic),
-                )
-              else ...[
-                if (collabStatus == 'rejected')
-                  const Text(
-                    'Yêu cầu trước đó đã bị từ chối. Bạn có thể thử lại.',
-                    style: TextStyle(color: Colors.red),
+                      if (isLoadingCollab)
+                        const Center(child: CircularProgressIndicator())
+                      else if (collabStatus == 'pending')
+                        Row(
+                          children: [
+                            const Icon(Icons.pending_actions, color: Colors.orange, size: 20),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                'Yêu cầu của bạn đang chờ Admin phê duyệt...',
+                                style: TextStyle(
+                                  color: Colors.orange.shade800,
+                                  fontStyle: FontStyle.italic,
+                                ),
+                              ),
+                            ),
+                          ],
+                        )
+                      else ...[
+                        if (collabStatus == 'rejected')
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 12.0),
+                            child: Row(
+                              children: [
+                                Icon(Icons.error_outline, color: colorScheme.error, size: 20),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    'Yêu cầu trước đó đã bị từ chối. Bạn có thể thử lại.',
+                                    style: TextStyle(color: colorScheme.error),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+
+                        FilledButton.tonal(
+                          // M3 Secondary action button
+                          onPressed: _sendCollabRequest,
+                          style: FilledButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          ),
+                          child: const Text('Gửi yêu cầu làm Cộng tác viên'),
+                        ),
+                      ],
+                    ],
                   ),
-
-                ElevatedButton(
-                  onPressed: _sendCollabRequest,
-                  child: const Text('Gửi yêu cầu làm Cộng tác viên'),
                 ),
-              ],
+              ),
             ],
           ],
         );
@@ -206,28 +301,49 @@ void _showChangePasswordDialog(BuildContext context, ProfileCubit profileCubit) 
       return StatefulBuilder(
         builder: (context, setState) {
           return AlertDialog(
-            title: const Text('Đổi mật khẩu'),
+            // Thiết lập hình dáng bo góc chuẩn M3
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+            title: const Row(
+              children: [
+                Icon(Icons.lock_reset),
+                SizedBox(width: 8),
+                Text('Đổi mật khẩu'),
+              ],
+            ),
             content: Column(
               mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 if (errorText.isNotEmpty)
                   Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
+                    padding: const EdgeInsets.only(bottom: 12),
                     child: Text(
                       errorText,
-                      style: const TextStyle(color: Colors.red),
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.error,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                   ),
                 TextField(
                   controller: newPasswordController,
                   obscureText: true,
-                  decoration: const InputDecoration(labelText: 'Mật khẩu mới (ít nhất 6 ký tự)'),
+                  decoration: InputDecoration(
+                    labelText: 'Mật khẩu mới',
+                    helperText: 'Ít nhất 6 ký tự',
+                    prefixIcon: const Icon(Icons.password),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
                 ),
                 const SizedBox(height: 16),
                 TextField(
                   controller: confirmPasswordController,
                   obscureText: true,
-                  decoration: const InputDecoration(labelText: 'Xác nhận mật khẩu mới'),
+                  decoration: InputDecoration(
+                    labelText: 'Xác nhận mật khẩu',
+                    prefixIcon: const Icon(Icons.check_circle_outline),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  ),
                 ),
               ],
             ),
@@ -236,7 +352,7 @@ void _showChangePasswordDialog(BuildContext context, ProfileCubit profileCubit) 
                 onPressed: () => Navigator.pop(context),
                 child: const Text('Hủy'),
               ),
-              ElevatedButton(
+              FilledButton(
                 onPressed: () {
                   final newPass = newPasswordController.text.trim();
                   final confirmPass = confirmPasswordController.text.trim();

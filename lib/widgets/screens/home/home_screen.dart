@@ -123,6 +123,13 @@ String _getTitle(DrawerItem selected) {
       return 'Quản lý nội dung';
     case DrawerItem.UserManager:
       return 'Quản lý người dùng';
+    case DrawerItem.Contribute:
+      return 'Đóng góp';
+    case DrawerItem.Info:
+      return 'Thông tin';
+    case DrawerItem.Guide:
+      return 'Hướng dẫn';
+
     default:
       return '';
   }

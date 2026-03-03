@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fx_tutor/models/calculator_guide_model.dart';
 import 'package:fx_tutor/widgets/screens/content_manager/guide_content/guide_manage_cubit.dart';
 import 'package:fx_tutor/widgets/screens/content_manager/learning_content/topic_cubit.dart';
+import 'package:fx_tutor/widgets/screens/guide/guide_screen.dart';
 
 import '../../caculator/calculator_screen.dart';
 
@@ -118,7 +119,9 @@ class _BodyState extends State<Body> {
           Row(
             children: [
               ElevatedButton(
-                onPressed: () {},
+                onPressed: () {
+                  Navigator.pushNamed(context, GuideScreen.route);
+                },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.green,
                   foregroundColor: Colors.white,

@@ -222,7 +222,9 @@ class _AiChatScreenState extends State<AiChatScreen> {
           Row(
             children: [
               IconButton(
-                icon: const Icon(Icons.image_outlined, color: Colors.blue),
+                icon: const Icon(
+                  Icons.image_outlined,
+                ),
                 onPressed: isLoading
                     ? null
                     : () async {
@@ -231,7 +233,9 @@ class _AiChatScreenState extends State<AiChatScreen> {
                       },
               ),
               IconButton(
-                icon: const Icon(Icons.camera_alt_outlined, color: Colors.blue),
+                icon: const Icon(
+                  Icons.camera_alt_outlined,
+                ),
                 onPressed: isLoading
                     ? null
                     : () async {

@@ -28,7 +28,7 @@ class ContributeView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Lịch sử đóng góp')),
+      appBar: AppBar(title: const Text('Lịch sử đóng góp', style: TextStyle(fontSize: 18))),
       body: BlocBuilder<ContributeCubit, ContributeState>(
         builder: (context, state) {
           if (state.loadStatus == ContributeLoadStatus.loading) {

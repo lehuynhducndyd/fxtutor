@@ -9,6 +9,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../caculator/calculator_screen.dart';
+import '../../guide/guide_screen.dart';
 import 'more_keylog_screen.dart';
 import 'more_keylog_screen2.dart';
 
@@ -215,7 +216,9 @@ class _BodyState extends State<Body> {
                 spacing: 5,
                 children: [
                   ElevatedButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      Navigator.pushNamed(context, GuideScreen.route);
+                    },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.green,
                       foregroundColor: Colors.white,
