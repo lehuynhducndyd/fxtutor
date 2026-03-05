@@ -47,7 +47,9 @@ class _LearningDetailScreenState extends State<LearningDetailScreen> {
     return Scaffold(
       backgroundColor: colorScheme.surface,
       appBar: AppBar(
-        title: Text(widget.content.title, style: const TextStyle(fontWeight: FontWeight.bold)),
+        title: Text(
+          widget.content.title,
+        ),
         centerTitle: true,
         elevation: 0,
       ),

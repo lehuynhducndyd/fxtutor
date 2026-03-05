@@ -14,6 +14,7 @@ import 'package:fx_tutor/widgets/screens/content_manager/guide_content/guide_det
 import 'package:fx_tutor/widgets/screens/content_manager/guide_content/guide_manage_cubit.dart';
 import 'package:fx_tutor/widgets/screens/content_manager/learning_content/add_learning_content_screen.dart';
 import 'package:fx_tutor/widgets/screens/content_manager/learning_content/add_topic_screen.dart';
+import 'package:fx_tutor/widgets/screens/content_manager/learning_content/latex_generation_screen.dart';
 import 'package:fx_tutor/widgets/screens/content_manager/learning_content/learning_content_cubit.dart';
 import 'package:fx_tutor/widgets/screens/content_manager/learning_content/learning_content_manager_screen.dart';
 import 'package:fx_tutor/widgets/screens/content_manager/learning_content/learning_content_screen.dart';
@@ -66,6 +67,11 @@ Route<dynamic>? mainRoute(RouteSettings settings) {
     case AdminContributeScreen.route:
       return MaterialPageRoute(
         builder: (context) => AdminContributeScreen(),
+        settings: settings,
+      );
+    case LatexGeneratorScreen.route:
+      return MaterialPageRoute(
+        builder: (context) => LatexGeneratorScreen(),
         settings: settings,
       );
     case UserManagementScreen.route:

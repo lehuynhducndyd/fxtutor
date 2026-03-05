@@ -28,7 +28,9 @@ class AdminCollaboratorView extends StatelessWidget {
     return Scaffold(
       backgroundColor: colorScheme.surface,
       appBar: AppBar(
-        title: const Text('Duyệt Yêu cầu Cộng tác', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text(
+          'Duyệt Yêu cầu Cộng tác',
+        ),
         centerTitle: true,
         elevation: 0,
       ),

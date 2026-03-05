@@ -52,19 +52,6 @@ class _AiChatScreenState extends State<AiChatScreen> {
 
     return Scaffold(
       backgroundColor: colorScheme.surface,
-      appBar: AppBar(
-        title: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.auto_awesome, color: colorScheme.primary),
-            const SizedBox(width: 8),
-            const Text("Trợ lý AI", style: TextStyle(fontWeight: FontWeight.bold)),
-          ],
-        ),
-        centerTitle: true,
-        elevation: 0,
-        scrolledUnderElevation: 1, // Hiệu ứng đổ bóng nhẹ khi cuộn nội dung lên
-      ),
       body: Column(
         children: [
           // ================= KHU VỰC HIỂN THỊ TIN NHẮN =================
@@ -124,6 +111,16 @@ class _AiChatScreenState extends State<AiChatScreen> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.auto_awesome, color: colorScheme.primary),
+                  const SizedBox(width: 8),
+                  const Text(
+                    "Trợ lý AI",
+                  ),
+                ],
+              ),
               const SizedBox(height: 24),
               Text(
                 "Xin chào! Tôi có thể giúp gì cho bạn?",
@@ -135,7 +132,7 @@ class _AiChatScreenState extends State<AiChatScreen> {
               ),
               const SizedBox(height: 8),
               Text(
-                "Hãy gửi cho tôi một bài toán hoặc chụp ảnh phương trình, tôi sẽ hướng dẫn bạn cách giải và bấm máy tính chi tiết.",
+                "Hãy gửi cho tôi một bài toán hoặc thắc mắc về máy tính, tôi sẽ hướng dẫn bạn.",
                 textAlign: TextAlign.center,
                 style: TextStyle(color: colorScheme.onSurfaceVariant, height: 1.5),
               ),
@@ -382,7 +379,7 @@ class _AiChatScreenState extends State<AiChatScreen> {
                   minLines: 1,
                   textInputAction: TextInputAction.send, // Nút Enter trên bàn phím biến thành Send
                   decoration: InputDecoration(
-                    hintText: "Nhắn tin cho trợ lý AI...",
+                    hintText: "Nhập nội dung...",
                     hintStyle: TextStyle(color: colorScheme.outline),
                     filled: true,
                     fillColor: colorScheme.surfaceContainerHighest,

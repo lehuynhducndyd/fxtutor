@@ -31,7 +31,9 @@ class ContributeView extends StatelessWidget {
     return Scaffold(
       backgroundColor: colorScheme.surface,
       appBar: AppBar(
-        title: const Text('Lịch sử đóng góp', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text(
+          'Lịch sử đóng góp',
+        ),
         centerTitle: true,
         elevation: 0,
       ),

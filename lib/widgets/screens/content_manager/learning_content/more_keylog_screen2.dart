@@ -36,7 +36,9 @@ class _MoreKeylogScreen2State extends State<MoreKeylogScreen2> {
     return Scaffold(
       backgroundColor: colorScheme.surface,
       appBar: AppBar(
-        title: const Text('Casio fx-580VNX Keylog', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text(
+          'Casio fx-580VNX Keylog',
+        ),
         centerTitle: true,
         elevation: 0,
       ),
@@ -168,7 +170,7 @@ class _MoreKeylogScreen2State extends State<MoreKeylogScreen2> {
                                         text: TextSpan(
                                           style: TextStyle(
                                             fontFamily: 'Casio580', // Đúng font 580
-                                            fontSize: 32, // Phóng to font phím bấm
+                                            fontSize: 20, // Phóng to font phím bấm
                                             color: colorScheme.onSurface,
                                           ),
                                           children: [

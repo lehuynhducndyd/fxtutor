@@ -179,7 +179,12 @@ class Page extends StatelessWidget {
                               context.read<AuthCubit>().loginGoogle();
                             },
                       // Icon Google có thể thay bằng thư viện FontAwesome hoặc Asset image
-                      icon: const Icon(Icons.g_mobiledata, size: 28),
+                      icon: Image.asset(
+                        "assets/img/googleLogo.png",
+                        width: 24,
+                        height: 24,
+                        fit: BoxFit.cover,
+                      ),
                       label: const Text("Đăng nhập bằng Google", style: TextStyle(fontSize: 15)),
                       style: OutlinedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 14),

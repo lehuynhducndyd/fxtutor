@@ -40,7 +40,9 @@ class _GuideDetailScreenState extends State<GuideDetailScreen> {
     return Scaffold(
       backgroundColor: colorScheme.surface,
       appBar: AppBar(
-        title: Text(widget.guide.actionName, style: const TextStyle(fontWeight: FontWeight.bold)),
+        title: Text(
+          widget.guide.actionName,
+        ),
         centerTitle: true,
         elevation: 0,
       ),
@@ -139,9 +141,9 @@ class _GuideDetailScreenState extends State<GuideDetailScreen> {
             padding: const EdgeInsets.symmetric(vertical: 4.0),
             child: ListTile(
               leading: CircleAvatar(
-                backgroundColor: colorScheme.secondary,
-                foregroundColor: colorScheme.onSecondary,
-                child: const Icon(Icons.support_agent_rounded, size: 20),
+                backgroundColor: colorScheme.primary,
+                foregroundColor: colorScheme.onPrimary,
+                child: const Icon(Icons.edit_square, size: 20),
               ),
               title: Text(
                 "Tác giả: $authorName",

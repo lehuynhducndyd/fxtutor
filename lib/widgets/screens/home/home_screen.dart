@@ -11,7 +11,7 @@ import '../../../services/ai_chat_service.dart';
 import '../../../services/profile_service.dart';
 import '../ai_chat/ai_chat_cubit.dart';
 import '../ai_chat/ai_chat_screen.dart';
-import '../caculator/caculator.dart';
+import '../caculator/calculator_screen.dart';
 import '../content_manager/content_manager_screen.dart';
 import '../contribute/contribute_screen.dart';
 import '../info/info_screen.dart';

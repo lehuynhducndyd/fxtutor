@@ -41,7 +41,9 @@ class _LearningListDetailScreenState extends State<LearningListDetailScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.content.title, style: const TextStyle(fontWeight: FontWeight.bold)),
+        title: Text(
+          widget.content.title,
+        ),
         centerTitle: true,
       ),
       body: Column(

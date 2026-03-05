@@ -165,8 +165,8 @@ class AiChatService {
       );
       buffer.writeln(
         '''5. QUY ĐỊNH TRÌNH BÀY:
-    - KHÔNG sử dụng định dạng danh sách Markdown (1. 2. 3. hoặc * + -).
-    - Thay vào đó, hãy viết các bước theo kiểu: Bước 1:, Bước 2:... hoặc gạch đầu dòng bằng ký tự '-' thủ công. Hiển thị code latex khi cần
+    - KHÔNG sử dụng định dạng danh sách Markdown (1. 2. 3. hoặc * + - ).
+    - Thay vào đó, hãy viết các bước theo kiểu: Bước 1:, Bước 2:... a) b) c) ..... Hiển thị code latex khi cần
     - Giữ văn bản ở dạng đoạn văn (paragraph) đơn giản để đảm bảo hiển thị đồng nhất. Không gạch đầu dòng.''',
       );
     } else {
@@ -176,7 +176,7 @@ class AiChatService {
       buffer.writeln(
         '''QUY ĐỊNH TRÌNH BÀY:
     - KHÔNG sử dụng định dạng danh sách Markdown (1. 2. 3. hoặc * + -).
-    - Thay vào đó, hãy viết các bước theo kiểu: Bước 1:, Bước 2:... hoặc gạch đầu dòng bằng ký tự '-' thủ công.
+     - Thay vào đó, hãy viết các bước theo kiểu: Bước 1:, Bước 2:... a) b) c) ..... Hiển thị code latex khi cần
     - Giữ văn bản ở dạng đoạn văn (paragraph) đơn giản để đảm bảo hiển thị đồng nhất. Không gạch đầu dòng''',
       );
     }
@@ -220,6 +220,36 @@ class AiChatService {
     } catch (e) {
       print("Lỗi generate quiz: $e");
       return [];
+    }
+  }
+
+  // --- HÀM MỚI: TẠO MÃ LATEX ---
+  Future<String> convertToLatex(String input) async {
+    final prompt =
+        """
+    Bạn là một trình biên dịch sang LaTeX.
+    Nhiệm vụ: Chuyển đổi biểu thức toán học hoặc mô tả bằng lời văn dưới đây thành mã LaTeX chuẩn xác.
+    
+    YÊU CẦU NGHIÊM NGẶT:
+    - CHỈ trả về đúng đoạn mã LaTeX.
+    - KHÔNG bọc trong block code markdown (tức là không dùng ```latex và ```).
+    - KHÔNG thêm bất kỳ câu chào hỏi, giải thích hay văn bản thừa nào.
+    - KHÔNG sử dụng dấu \$ ở đầu và cuối (chỉ trả về phần lõi công thức).
+    
+    Đầu vào: "$input"
+    """;
+
+    try {
+      final response = await _chatModel.generateContent([Content.text(prompt)]);
+      String latexCode = response.text ?? "";
+
+      // Cleanup phòng hờ trường hợp AI vẫn ngoan cố bọc markdown
+      latexCode = latexCode.replaceAll('```latex', '').replaceAll('```', '').trim();
+
+      return latexCode;
+    } catch (e) {
+      print("Lỗi chuyển đổi LaTeX: $e");
+      return "Lỗi hệ thống khi tạo LaTeX.";
     }
   }
 }

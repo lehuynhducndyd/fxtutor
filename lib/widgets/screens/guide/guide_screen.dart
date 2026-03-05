@@ -12,10 +12,11 @@ class GuideScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(16.0),
         children: [
+          const SizedBox(height: 24),
           // ================= LỜI CHÀO =================
           Card(
             elevation: 0,
-            color: colorScheme.primaryContainer,
+            color: colorScheme.primaryContainer.withValues(alpha: 0.5),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             child: Padding(
               padding: const EdgeInsets.all(20.0),
@@ -37,7 +38,7 @@ class GuideScreen extends StatelessWidget {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          "Dưới đây là cẩm nang giúp bạn sử dụng FX Tutor một cách hiệu quả nhất.",
+                          "Dưới đây là hướng dẫn giúp bạn sử dụng FX Tutor một cách hiệu quả nhất.",
                           style: TextStyle(color: colorScheme.onPrimaryContainer.withOpacity(0.8)),
                         ),
                       ],
@@ -52,59 +53,60 @@ class GuideScreen extends StatelessWidget {
           // ================= CÁC MỤC HƯỚNG DẪN =================
           _buildGuideSection(
             context: context,
-            icon: Icons.calculate_outlined,
-            title: "1. Sử dụng Máy tính giả lập (Emulator)",
+            title: "1. Đăng ký làm Cộng tác viên",
             content:
-                "• Mở tab 'Giả lập' để sử dụng máy tính trực tiếp trên điện thoại.\n"
-                "• Giao diện và các nút bấm được thiết kế giống hệt máy tính Casio thật.\n"
-                "• Bạn có thể dùng nó để thực hành ngay các bài học hoặc công thức mà không cần mang theo máy tính vật lý.",
-          ),
-          _buildGuideSection(
-            context: context,
-            icon: Icons.calculate_outlined,
-            title: "1. Lấy KeyLog Máy tính giả lập (Emulator)",
-            content:
-                "• Mở tab 'Giả lập' để sử dụng máy tính trực tiếp trên điện thoại.\n"
-                "• Giao diện và các nút bấm được thiết kế giống hệt máy tính Casio thật.\n"
-                "• Bạn có thể dùng nó để thực hành ngay các bài học hoặc công thức mà không cần mang theo máy tính vật lý.",
-          ),
-
-          _buildGuideSection(
-            context: context,
-            icon: Icons.menu_book_rounded,
-            title: "2. Học tập & Xem Hướng dẫn",
-            content:
-                "• Tại trang chủ, bạn có thể duyệt qua các 'Chủ đề học tập' hoặc 'Hướng dẫn máy tính'.\n"
-                "• Sử dụng thanh tìm kiếm ở trên cùng để tìm nhanh bài học hoặc thủ thuật bấm máy bạn cần (ví dụ: 'Giải phương trình bậc 2', 'Số phức').\n"
-                "• Bấm vào từng bài học để xem chi tiết lý thuyết và các khối nội dung.",
-          ),
-
-          _buildGuideSection(
-            context: context,
-            icon: Icons.handshake_outlined,
-            title: "3. Đăng ký làm Cộng tác viên",
-            content:
-                "• Nếu bạn muốn chia sẻ kiến thức, hãy vào mục 'Hồ sơ' (Profile) và bấm 'Gửi yêu cầu làm Cộng tác viên'.\n"
+                "• Nếu bạn muốn chia sẻ kiến thức, hãy vào mục 'Hồ sơ' và bấm 'Gửi yêu cầu làm Cộng tác viên'.\n"
                 "• Sau khi Admin phê duyệt, bạn sẽ có quyền truy cập vào khu vực Quản lý nội dung để tự do thêm/sửa/xóa các bài giảng và hướng dẫn bấm máy của riêng mình.",
           ),
-
           _buildGuideSection(
             context: context,
-            icon: Icons.manage_accounts_outlined,
-            title: "4. Quản lý Tài khoản",
+            title: "2. Thêm bài học và hướng dẫn bấm máy",
             content:
-                "• Vào tab 'Hồ sơ' để cập nhật Tên hiển thị của bạn.\n"
-                "• Bạn có thể Đổi mật khẩu bất cứ lúc nào (chỉ áp dụng cho tài khoản đăng ký bằng Email, không áp dụng cho tài khoản Google).\n"
-                "• Trạng thái Cộng tác viên của bạn cũng sẽ được hiển thị và cập nhật liên tục tại đây.",
+                "• Bài học sẽ được hiển thị cho người học ở trang chủ và hướng dẫn bấm máy dùng để cung cấp dữ liệu cho AI, do đó bạn nên cung cấp hướng dẫn bấm máy cho bài học nữa nhé.\n"
+                "• Hãy cố gắng thêm mô tả cho ảnh nếu có thể.\n"
+                "• Bạn có thể tự thêm dữ liệu cho các khôi nội dung hoặc sử dụng các công cụ hỗ trợ lấy LateX, Keylog và Screenshoot ở trên cùng",
           ),
-
+          Card(
+            elevation: 0,
+            margin: const EdgeInsets.only(bottom: 12),
+            color: colorScheme.surfaceContainerHighest.withOpacity(0.5),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+              side: BorderSide(color: colorScheme.outlineVariant),
+            ),
+            child: ExpansionTile(
+              title: Text(
+                "3. Lấy Keylog và ảnh chụp màn hình",
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              shape: const Border(), // Xóa hai cái gạch viền mặc định của ExpansionTile khi mở ra
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                  child: Text(
+                    "Tại màn hình bắt đầu, chọn tên model (RAM tạm thời)",
+                    style: TextStyle(height: 1.5, color: colorScheme.onSurfaceVariant),
+                    textAlign: TextAlign.justify,
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                  child: Image.asset(
+                    "assets/img/Slice1.png",
+                    width: 500,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              ],
+            ),
+          ),
           const SizedBox(height: 16),
           const Divider(),
           const SizedBox(height: 16),
 
           // ================= MỤC FAQ (HỎI ĐÁP) =================
           Text(
-            "Câu hỏi thường gặp (FAQ)",
+            "Các lưu ý",
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
               fontWeight: FontWeight.bold,
               color: colorScheme.primary,
@@ -112,17 +114,77 @@ class GuideScreen extends StatelessWidget {
           ),
           const SizedBox(height: 12),
 
-          _buildFAQItem(
-            context: context,
-            question: "Tại sao tôi không thấy bài học nào?",
-            answer:
-                "Có thể danh mục bạn chọn chưa có nội dung nào được cập nhật, hoặc bạn đang gặp vấn đề về kết nối mạng. Hãy thử vuốt từ trên xuống (Pull to refresh) để tải lại dữ liệu nhé.",
+          Card(
+            elevation: 0,
+            color: colorScheme.primaryContainer,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            child: Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          """Nếu bạn không thao tác được với latex, hãy sử dụng hình ảnh để thay thế nhé""",
+                          style: TextStyle(color: colorScheme.onPrimaryContainer.withOpacity(0.8)),
+                          textAlign: TextAlign.justify,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
-          _buildFAQItem(
-            context: context,
-            question: "Làm sao để biết yêu cầu Cộng tác viên đã được duyệt?",
-            answer:
-                "Bạn hãy vào trang Hồ sơ, mục 'Đăng ký Cộng tác viên' sẽ hiển thị trạng thái hiện tại (Đang chờ duyệt, Đã duyệt, hoặc Bị từ chối). Khi được duyệt, vai trò của bạn sẽ tự động chuyển thành 'COLLABORATOR'.",
+          Card(
+            elevation: 0,
+            color: colorScheme.primaryContainer,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            child: Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          """Nếu trình giả lập không hoạt động vì lý do nào đó, hãy sử dụng classpad.net từ Casio""",
+                          style: TextStyle(color: colorScheme.onPrimaryContainer.withOpacity(0.8)),
+                          textAlign: TextAlign.justify,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          Card(
+            elevation: 0,
+            color: colorScheme.primaryContainer,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            child: Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          """Câu trả lời của AI chỉ mang tính chất tham khảo, hãy gửi email cho đội ngũ quản trị viên để được giải đáp sâu hơn""",
+                          style: TextStyle(color: colorScheme.onPrimaryContainer.withOpacity(0.8)),
+                          textAlign: TextAlign.justify,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
 
           const SizedBox(height: 40),
@@ -134,7 +196,6 @@ class GuideScreen extends StatelessWidget {
   // Hàm hỗ trợ tạo các khung Hướng dẫn (bung xòe được)
   Widget _buildGuideSection({
     required BuildContext context,
-    required IconData icon,
     required String title,
     required String content,
   }) {
@@ -149,7 +210,6 @@ class GuideScreen extends StatelessWidget {
         side: BorderSide(color: colorScheme.outlineVariant),
       ),
       child: ExpansionTile(
-        leading: Icon(icon, color: colorScheme.primary),
         title: Text(
           title,
           style: const TextStyle(fontWeight: FontWeight.bold),

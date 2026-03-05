@@ -32,7 +32,7 @@ class UserManagerScreen extends StatelessWidget {
                 children: [
                   _buildManagerCard(
                     context,
-                    title: "Kiểm duyệt\nyêu cầu cộng tác",
+                    title: "Kiểm duyệt yêu cầu cộng tác",
                     icon: Icons.verified_user_rounded,
                     iconColor: Colors.blueAccent.shade400, // Màu xanh tươi nổi bật
                     onTap: () {
@@ -41,7 +41,7 @@ class UserManagerScreen extends StatelessWidget {
                   ),
                   _buildManagerCard(
                     context,
-                    title: "Quản lý\nngười dùng",
+                    title: "Quản lý người dùng",
                     icon: Icons.manage_accounts_rounded, // Đổi icon nhìn chuyên nghiệp hơn
                     iconColor: Colors.orangeAccent.shade700, // Màu cam đậm tươi
                     onTap: () {

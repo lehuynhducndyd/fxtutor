@@ -38,7 +38,9 @@ class Page extends StatelessWidget {
     return Scaffold(
       backgroundColor: colorScheme.surface,
       appBar: AppBar(
-        title: const Text("Quản lý Chủ đề", style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text(
+          "Quản lý Chủ đề",
+        ),
         centerTitle: true,
         elevation: 0,
       ),

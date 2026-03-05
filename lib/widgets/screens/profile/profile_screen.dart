@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:fx_tutor/widgets/screens/auth/auth_cubit.dart';
 import 'package:fx_tutor/widgets/screens/profile/profile_cubit.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../services/auth_service.dart';
 import '../../../services/collaborator_service.dart';
+import '../../../services/email_service.dart'; // Import EmailService
 import '../../../services/profile_service.dart';
 import '../auth/login_screen.dart';
 
@@ -38,20 +40,23 @@ class Page extends StatefulWidget {
 class _PageState extends State<Page> {
   late TextEditingController nameController;
 
+  // Khởi tạo EmailService
+  final EmailService _emailService = EmailService();
+
   // Các biến để quản lý việc gọi Service trực tiếp
-  String? collabStatus; // Trạng thái: pending, approved, rejected, hoặc null (chưa gửi)
+  String? collabStatus;
   bool isLoadingCollab = true;
 
   @override
   void initState() {
     super.initState();
     nameController = TextEditingController();
-    _checkCollabStatus(); // Gọi kiểm tra trạng thái cộng tác viên ngay khi mở trang
+    _checkCollabStatus();
   }
 
   @override
   void dispose() {
-    nameController.dispose(); // Hủy controller để tránh tràn bộ nhớ
+    nameController.dispose();
     super.dispose();
   }
 
@@ -73,12 +78,21 @@ class _PageState extends State<Page> {
   // Hàm gửi yêu cầu trực tiếp
   Future<void> _sendCollabRequest() async {
     try {
+      // 1. Lưu yêu cầu vào database
       await CollaboratorService().requestToCollaborate();
+
+      // 2. Lấy email người dùng hiện tại
+      final currentUser = Supabase.instance.client.auth.currentUser;
+      final userEmail = currentUser?.email ?? 'Người dùng ẩn danh';
+
+      // 3. Bắn email cho Admin (chạy ngầm, không dùng await để UI mượt mà)
+      _notifyAdminViaEmail(userEmail);
+
+      // 4. Cập nhật giao diện
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Đã gửi yêu cầu thành công!')));
-        // Gửi xong thì load lại trạng thái để ẩn nút đi, hiện chữ "Đang chờ duyệt"
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Đã gửi yêu cầu thành công!')),
+        );
         setState(() => isLoadingCollab = true);
         await _checkCollabStatus();
       }
@@ -89,11 +103,37 @@ class _PageState extends State<Page> {
     }
   }
 
+  // Hàm soạn và gửi email cho QTV
+  Future<void> _notifyAdminViaEmail(String userEmail) async {
+    final htmlBody =
+        '''
+      <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eaeaea; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+        <h2 style="color: #0d6efd; border-bottom: 2px solid #0d6efd; padding-bottom: 8px;">Yêu cầu Cộng tác viên mới!</h2>
+        <p>Hệ thống FX Tutor vừa nhận được một đơn đăng ký làm Cộng tác viên nội dung.</p>
+        
+        <p><strong>Tài khoản đăng ký:</strong> <span style="color: #0d6efd; font-weight: bold;">$userEmail</span></p>
+        
+        <p style="margin-top: 32px; font-size: 14px;">Vui lòng truy cập <strong>Trang Quản lý người dùng > Kiểm duyệt yêu cầu cộng tác</strong> trên ứng dụng để xem xét và phân quyền cho người dùng này.</p>
+        <hr style="border: none; border-top: 1px solid #eaeaea; margin: 24px 0;">
+        <p style="font-size: 12px; color: #adb5bd; text-align: center;">Đây là email thông báo tự động từ hệ thống FX Tutor.</p>
+      </div>
+    ''';
+
+    try {
+      await _emailService.sendEmail(
+        toEmail: 'lehuynhducndyd@gmail.com', // Bắn thẳng về email QTV
+        subject: 'FX Tutor - Yêu cầu Cộng tác viên mới từ $userEmail',
+        htmlContent: htmlBody,
+      );
+    } catch (e) {
+      print('Lỗi gửi email yêu cầu CTV: $e');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<ProfileCubit, ProfileState>(
       listener: (context, state) {
-        // Cập nhật text cho controller 1 lần duy nhất khi dữ liệu user load xong
         if (state.user.id.isNotEmpty && nameController.text.isEmpty) {
           nameController.text = state.user.fullName ?? "";
         }
@@ -136,14 +176,13 @@ class _PageState extends State<Page> {
 
             // ================= CẬP NHẬT TÊN =================
             Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Expanded(
                   child: TextField(
                     controller: nameController,
                     decoration: InputDecoration(
                       labelText: "Tên hiển thị",
-                      prefixIcon: const Icon(Icons.badge_outlined),
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                     ),
@@ -153,7 +192,6 @@ class _PageState extends State<Page> {
                 Padding(
                   padding: const EdgeInsets.only(top: 4.0),
                   child: FilledButton(
-                    // M3 Standard
                     onPressed: () {
                       context.read<ProfileCubit>().updateProfile(fullName: nameController.text);
                       ScaffoldMessenger.of(context).showSnackBar(
@@ -175,7 +213,6 @@ class _PageState extends State<Page> {
             Row(
               children: [
                 FilledButton.icon(
-                  icon: const Icon(Icons.password),
                   label: const Text("Đổi mật khẩu"),
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
@@ -188,7 +225,6 @@ class _PageState extends State<Page> {
                 const SizedBox(width: 12),
 
                 FilledButton.icon(
-                  icon: const Icon(Icons.logout),
                   label: const Text("Đăng xuất"),
                   style: FilledButton.styleFrom(
                     backgroundColor: colorScheme.error,
@@ -208,7 +244,6 @@ class _PageState extends State<Page> {
             const Divider(height: 32),
 
             // ================= KHU VỰC CỘNG TÁC VIÊN =================
-            // Chỉ hiển thị khu vực này nếu người dùng đang là "user" bình thường
             if (user.role == 'user') ...[
               Card(
                 elevation: 0,
@@ -268,7 +303,6 @@ class _PageState extends State<Page> {
                           ),
 
                         FilledButton.tonal(
-                          // M3 Secondary action button
                           onPressed: _sendCollabRequest,
                           style: FilledButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 14),
@@ -301,7 +335,6 @@ void _showChangePasswordDialog(BuildContext context, ProfileCubit profileCubit) 
       return StatefulBuilder(
         builder: (context, setState) {
           return AlertDialog(
-            // Thiết lập hình dáng bo góc chuẩn M3
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
             title: const Row(
               children: [

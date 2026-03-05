@@ -66,7 +66,9 @@ class _AddContributeScreenState extends State<AddContributeScreen> {
       child: Scaffold(
         backgroundColor: colorScheme.surface,
         appBar: AppBar(
-          title: const Text('Gửi đóng góp', style: TextStyle(fontWeight: FontWeight.bold)),
+          title: const Text(
+            'Gửi đóng góp',
+          ),
           centerTitle: true,
           elevation: 0,
         ),

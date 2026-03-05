@@ -49,7 +49,9 @@ class _UserManagementViewState extends State<UserManagementView> {
       child: Scaffold(
         backgroundColor: colorScheme.surface,
         appBar: AppBar(
-          title: const Text('Quản lý Người dùng', style: TextStyle(fontWeight: FontWeight.bold)),
+          title: const Text(
+            'Quản lý Người dùng',
+          ),
           centerTitle: true,
           elevation: 0,
         ),

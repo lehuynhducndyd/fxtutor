@@ -33,7 +33,7 @@ class _AddGuideContentScreenState extends State<AddGuideContentScreen> {
         appBar: AppBar(
           title: Text(
             widget.isAddMode ? "Thêm hướng dẫn" : "Sửa hướng dẫn",
-            style: const TextStyle(fontWeight: FontWeight.bold),
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.normal), // Không in đậm
           ),
           centerTitle: true,
           elevation: 0,
@@ -151,39 +151,38 @@ class _BodyState extends State<Body> {
 
     return Column(
       children: [
-        // ================= THANH CÔNG CỤ TÍCH HỢP (TOOLBAR) =================
+        // ================= THANH CÔNG CỤ TÍCH HỢP (TOOLBAR) GỌN GÀNG =================
         Container(
           width: double.infinity,
-          padding: const EdgeInsets.symmetric(vertical: 8),
+          padding: const EdgeInsets.symmetric(vertical: 6), // Ép nhỏ padding dọc
           decoration: BoxDecoration(
             color: colorScheme.surface,
-            border: Border(bottom: BorderSide(color: colorScheme.outlineVariant.withOpacity(0.5))),
+            border: Border(bottom: BorderSide(color: colorScheme.outlineVariant.withOpacity(0.3))),
           ),
           child: SingleChildScrollView(
             scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+            padding: const EdgeInsets.symmetric(horizontal: 12),
             child: Row(
-              spacing: 8,
+              spacing: 6,
               children: [
                 // Nút Thêm Cách (Nổi bật nhất)
                 FilledButton.icon(
                   onPressed: _addMethod,
-                  label: const Text("Thêm Cách giải"),
+                  label: const Text("Thêm Cách giải", style: TextStyle(fontSize: 13)),
                   style: FilledButton.styleFrom(
                     visualDensity: VisualDensity.compact,
                     backgroundColor: colorScheme.primary,
                   ),
                 ),
-                const SizedBox(width: 8),
                 // Các nút công cụ phụ trợ
                 FilledButton.tonalIcon(
                   onPressed: () => Navigator.pushNamed(context, GuideScreen.route),
-                  label: const Text("Xem Hướng dẫn"),
+                  label: const Text("Xem Hướng dẫn", style: TextStyle(fontSize: 13)),
                   style: FilledButton.styleFrom(visualDensity: VisualDensity.compact),
                 ),
                 FilledButton.tonalIcon(
                   onPressed: () => Navigator.pushNamed(context, CalculatorScreen.route),
-                  label: const Text("Lấy Keylog"),
+                  label: const Text("Lấy Keylog", style: TextStyle(fontSize: 13)),
                   style: FilledButton.styleFrom(visualDensity: VisualDensity.compact),
                 ),
               ],
@@ -191,89 +190,92 @@ class _BodyState extends State<Body> {
           ),
         ),
 
-        // ================= KHU VỰC SOẠN THẢO (TỐI ƯU TABLET) =================
+        // ================= KHU VỰC SOẠN THẢO CHÍNH =================
         Expanded(
           child: Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 800), // Giới hạn 800px giống Word
               child: SingleChildScrollView(
-                padding: const EdgeInsets.all(16.0),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12.0,
+                  vertical: 16.0,
+                ), // Ép nhẹ lề ngang
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // --- TÊN HÀNH ĐỘNG ---
-                    Text(
-                      "Tên hành động",
-                      style: textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 8),
+                    // --- TÊN HÀNH ĐỘNG (Gộp LabelText) ---
                     TextField(
                       controller: _actionNameController,
-                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                       decoration: InputDecoration(
+                        labelText: "Tên hành động",
+                        labelStyle: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: colorScheme.primary,
+                        ),
                         hintText: "VD: Giải phương trình bậc 2",
                         filled: true,
-                        fillColor: colorScheme.surfaceContainerHighest.withOpacity(0.5),
+                        fillColor: colorScheme.surfaceContainerHighest.withOpacity(0.3),
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(16),
-                          borderSide: BorderSide.none,
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide(color: colorScheme.outlineVariant),
                         ),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                       ),
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 16),
 
-                    // --- DÒNG MÁY HỖ TRỢ ---
-                    Text(
-                      "Dòng máy hỗ trợ (cách nhau bởi dấu phẩy)",
-                      style: textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-                    ),
-                    const SizedBox(height: 8),
+                    // --- DÒNG MÁY HỖ TRỢ (Gộp LabelText) ---
                     TextField(
                       controller: _modelsController,
+                      style: const TextStyle(fontSize: 14),
                       decoration: InputDecoration(
+                        labelText: "Dòng máy hỗ trợ (cách nhau bởi dấu phẩy)",
                         hintText: "VD: Casio 580VNX, Vinacal 680EX",
-                        prefixIcon: Icon(Icons.devices_rounded, color: colorScheme.outline),
+                        prefixIcon: Icon(
+                          Icons.devices_rounded,
+                          color: colorScheme.outline,
+                          size: 20,
+                        ),
                         filled: true,
-                        fillColor: colorScheme.surfaceContainerHighest.withOpacity(0.5),
+                        fillColor: colorScheme.surfaceContainerHighest.withOpacity(0.3),
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(16),
+                          borderRadius: BorderRadius.circular(12),
                           borderSide: BorderSide.none,
                         ),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                       ),
                     ),
-                    const SizedBox(height: 32),
+                    const SizedBox(height: 24),
 
                     // --- TIÊU ĐỀ PHẦN PHƯƠNG THỨC ---
                     Row(
                       children: [
-                        Icon(Icons.list_alt_rounded, color: colorScheme.primary),
+                        Icon(Icons.list_alt_rounded, color: colorScheme.primary, size: 20),
                         const SizedBox(width: 8),
                         Text(
                           "Các bước thực hiện",
-                          style: textTheme.titleLarge?.copyWith(
+                          style: textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.bold,
                             color: colorScheme.primary,
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 16),
-
+                    const SizedBox(height: 12), // Giảm khoảng cách
                     // --- DANH SÁCH CÁC PHƯƠNG THỨC (CÁCH GIẢI) ---
                     ..._methods.asMap().entries.map((entry) {
                       int idx = entry.key;
                       return Card(
-                        margin: const EdgeInsets.only(bottom: 20),
+                        margin: const EdgeInsets.only(bottom: 12), // Giảm margin
                         elevation: 0,
                         color: colorScheme.surface,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
+                          borderRadius: BorderRadius.circular(12),
                           side: BorderSide(color: colorScheme.outlineVariant),
                         ),
                         child: Padding(
-                          padding: const EdgeInsets.all(16.0),
+                          padding: const EdgeInsets.all(12.0), // Giảm padding trong thẻ
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -289,13 +291,17 @@ class _BodyState extends State<Body> {
                                       style: TextStyle(
                                         fontWeight: FontWeight.bold,
                                         color: colorScheme.primary,
-                                        fontSize: 16,
+                                        fontSize: 14,
                                       ),
                                       decoration: InputDecoration(
                                         hintText: "VD: Cách 1 (Dùng Mode)",
                                         labelText: "Tên phương thức ${idx + 1}",
+                                        contentPadding: const EdgeInsets.symmetric(
+                                          horizontal: 12,
+                                          vertical: 10,
+                                        ), // Ép lùn
                                         border: OutlineInputBorder(
-                                          borderRadius: BorderRadius.circular(12),
+                                          borderRadius: BorderRadius.circular(8),
                                           borderSide: BorderSide(color: colorScheme.outlineVariant),
                                         ),
                                         isDense: true,
@@ -308,17 +314,23 @@ class _BodyState extends State<Body> {
                                     ),
                                   ),
                                   const SizedBox(width: 8),
-                                  IconButton(
-                                    icon: Icon(
-                                      Icons.delete_outline_rounded,
-                                      color: colorScheme.error,
+                                  SizedBox(
+                                    width: 36,
+                                    height: 36,
+                                    child: IconButton(
+                                      padding: EdgeInsets.zero,
+                                      icon: Icon(
+                                        Icons.delete_outline_rounded,
+                                        color: colorScheme.error,
+                                        size: 20,
+                                      ),
+                                      tooltip: "Xóa cách này",
+                                      onPressed: () => _removeMethod(idx),
                                     ),
-                                    visualDensity: VisualDensity.compact,
-                                    onPressed: () => _removeMethod(idx),
                                   ),
                                 ],
                               ),
-                              const SizedBox(height: 16),
+                              const SizedBox(height: 12),
 
                               // Nội dung chi tiết các bước bấm
                               TextField(
@@ -327,18 +339,22 @@ class _BodyState extends State<Body> {
                                   content: v,
                                 ),
                                 maxLines: 6,
-                                minLines: 3,
+                                minLines: 2,
                                 style: const TextStyle(
-                                  fontFamily: 'Courier',
                                   height: 1.5,
+                                  fontSize: 14,
                                 ), // Dùng font mono để dễ nhìn phím bấm
                                 decoration: InputDecoration(
                                   hintText:
                                       "Nhập nội dung các bước. Dùng [PHÍM] để hiển thị icon phím bấm trên giao diện.",
                                   filled: true,
                                   fillColor: colorScheme.surfaceContainerHighest.withOpacity(0.3),
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 12,
+                                  ),
                                   border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12),
+                                    borderRadius: BorderRadius.circular(8),
                                     borderSide: BorderSide.none,
                                   ),
                                 ),
@@ -361,33 +377,25 @@ class _BodyState extends State<Body> {
 
         // ================= NÚT LƯU CỐ ĐỊNH Ở ĐÁY =================
         Container(
-          padding: const EdgeInsets.all(16.0),
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
           decoration: BoxDecoration(
             color: Theme.of(context).scaffoldBackgroundColor,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                offset: const Offset(0, -4),
-                blurRadius: 10,
-              ),
-            ],
+            border: Border(top: BorderSide(color: colorScheme.outlineVariant.withOpacity(0.3))),
           ),
           child: SafeArea(
             child: Center(
               child: ConstrainedBox(
-                constraints: const BoxConstraints(
-                  maxWidth: 800,
-                ), // Căn cùng chiều rộng với khung soạn thảo
+                constraints: const BoxConstraints(maxWidth: 800),
                 child: FilledButton.icon(
                   onPressed: _onSave,
-                  icon: const Icon(Icons.save_rounded),
+                  icon: const Icon(Icons.save_rounded, size: 20),
                   label: Text(
                     widget.isAddMode ? "Tạo Hướng dẫn" : "Lưu Thay đổi",
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
                   ),
                   style: FilledButton.styleFrom(
-                    minimumSize: const Size.fromHeight(54),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    minimumSize: const Size.fromHeight(48), // Chiều cao gọn gàng chuẩn M3
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
                 ),
               ),

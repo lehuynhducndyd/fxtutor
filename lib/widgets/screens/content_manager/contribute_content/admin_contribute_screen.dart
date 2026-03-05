@@ -19,8 +19,17 @@ class AdminContributeScreen extends StatelessWidget {
   }
 }
 
-class AdminContributeView extends StatelessWidget {
+// Chuyển sang StatefulWidget để quản lý trạng thái của Bộ lọc (Filter)
+class AdminContributeView extends StatefulWidget {
   const AdminContributeView({super.key});
+
+  @override
+  State<AdminContributeView> createState() => _AdminContributeViewState();
+}
+
+class _AdminContributeViewState extends State<AdminContributeView> {
+  // Biến lưu trạng thái lọc hiện tại ('all', 'pending', 'approved', 'rejected')
+  String _selectedFilter = 'all';
 
   @override
   Widget build(BuildContext context) {
@@ -30,7 +39,9 @@ class AdminContributeView extends StatelessWidget {
     return Scaffold(
       backgroundColor: colorScheme.surface,
       appBar: AppBar(
-        title: const Text('Kiểm duyệt Đóng góp', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text(
+          'Kiểm duyệt Đóng góp',
+        ),
         centerTitle: true,
         elevation: 0,
       ),
@@ -68,7 +79,7 @@ class AdminContributeView extends StatelessWidget {
             );
           }
 
-          // ================= TRẠNG THÁI TRỐNG =================
+          // ================= TRẠNG THÁI TRỐNG TOÀN BỘ =================
           if (state.contributions.isEmpty) {
             return Center(
               child: Column(
@@ -85,7 +96,7 @@ class AdminContributeView extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    "Chưa có đóng góp nào cần duyệt lúc này.",
+                    "Chưa có đóng góp nào trong hệ thống.",
                     style: TextStyle(color: colorScheme.outline),
                   ),
                 ],
@@ -93,152 +104,243 @@ class AdminContributeView extends StatelessWidget {
             );
           }
 
-          // ================= DANH SÁCH ĐÓNG GÓP =================
-          return RefreshIndicator(
-            onRefresh: () async {
-              context.read<AdminContributeCubit>().loadAllContributions();
-            },
-            child: ListView.separated(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-              itemCount: state.contributions.length,
-              separatorBuilder: (context, index) => const SizedBox(height: 12),
-              itemBuilder: (context, index) {
-                final item = state.contributions[index];
+          // ================= LỌC DANH SÁCH =================
+          final filteredList = state.contributions.where((item) {
+            if (_selectedFilter == 'all') return true;
+            return item.status == _selectedFilter;
+          }).toList();
 
-                return Card(
-                  elevation: 0,
-                  color: colorScheme.surfaceContainerHighest.withOpacity(0.3),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    side: BorderSide(color: colorScheme.outlineVariant.withOpacity(0.5)),
-                  ),
-                  child: InkWell(
-                    borderRadius: BorderRadius.circular(16),
-                    onTap: () =>
-                        _showReviewDialog(context, item, context.read<AdminContributeCubit>()),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Header: Email & Trạng thái
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Expanded(
-                                child: Row(
-                                  children: [
-                                    CircleAvatar(
-                                      radius: 14,
-                                      backgroundColor: colorScheme.primaryContainer,
-                                      child: Icon(
-                                        Icons.person_rounded,
-                                        size: 16,
-                                        color: colorScheme.primary,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Expanded(
-                                      child: Text(
-                                        item.userEmail,
-                                        style: textTheme.titleSmall?.copyWith(
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              _buildStatusBadge(item.status),
-                            ],
-                          ),
+          return Column(
+            children: [
+              // ================= BỘ LỌC (SEGMENTED CONTROL M3) =================
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: Row(
+                  children: [
+                    _buildFilterChip('Tất cả', 'all', Icons.all_inbox_rounded, colorScheme),
+                    const SizedBox(width: 8),
+                    _buildFilterChip(
+                      'Chờ duyệt',
+                      'pending',
+                      Icons.pending_actions_rounded,
+                      colorScheme,
+                    ),
+                    const SizedBox(width: 8),
+                    _buildFilterChip(
+                      'Đã duyệt',
+                      'approved',
+                      Icons.check_circle_rounded,
+                      colorScheme,
+                    ),
+                    const SizedBox(width: 8),
+                    _buildFilterChip('Từ chối', 'rejected', Icons.cancel_rounded, colorScheme),
+                  ],
+                ),
+              ),
+              const Divider(height: 1),
 
-                          const SizedBox(height: 12),
-                          const Divider(height: 1),
-                          const SizedBox(height: 12),
-
-                          // Nội dung đóng góp
-                          Text(
-                            item.content,
-                            style: textTheme.bodyLarge?.copyWith(
-                              color: colorScheme.onSurface,
-                              height: 1.5,
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-
-                          // Footer: Thời gian
-                          Row(
-                            children: [
-                              Icon(Icons.access_time_rounded, size: 14, color: colorScheme.outline),
-                              const SizedBox(width: 6),
-                              Text(
-                                item.createdAt.toString().substring(0, 16),
-                                style: textTheme.labelMedium?.copyWith(
-                                  color: colorScheme.onSurfaceVariant,
-                                ),
-                              ),
-                            ],
-                          ),
-
-                          // Phản hồi của Admin (Nếu có)
-                          if (item.response != null && item.response!.isNotEmpty) ...[
-                            const SizedBox(height: 12),
-                            Container(
-                              padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                color: colorScheme.secondaryContainer.withOpacity(0.5),
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: colorScheme.secondaryContainer),
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    children: [
-                                      Icon(
-                                        Icons.admin_panel_settings_rounded,
-                                        size: 16,
-                                        color: colorScheme.secondary,
-                                      ),
-                                      const SizedBox(width: 6),
-                                      Text(
-                                        "Phản hồi đã gửi:",
-                                        style: textTheme.labelLarge?.copyWith(
-                                          fontWeight: FontWeight.bold,
-                                          color: colorScheme.secondary,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 6),
-                                  Text(
-                                    item.response!,
-                                    style: textTheme.bodyMedium?.copyWith(
-                                      fontStyle: FontStyle.italic,
-                                      color: colorScheme.onSecondaryContainer,
-                                    ),
-                                  ),
-                                ],
+              // ================= DANH SÁCH ĐÓNG GÓP =================
+              Expanded(
+                child: filteredList.isEmpty
+                    ? Center(
+                        // Khi bộ lọc hiện tại không có dữ liệu
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.search_off_rounded, size: 64, color: colorScheme.outline),
+                            const SizedBox(height: 16),
+                            Text(
+                              "Không có thư nào",
+                              style: textTheme.titleMedium?.copyWith(
+                                color: colorScheme.onSurfaceVariant,
                               ),
                             ),
                           ],
-                        ],
+                        ),
+                      )
+                    : RefreshIndicator(
+                        onRefresh: () async {
+                          context.read<AdminContributeCubit>().loadAllContributions();
+                        },
+                        child: ListView.separated(
+                          physics: const AlwaysScrollableScrollPhysics(
+                            parent: BouncingScrollPhysics(),
+                          ),
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                          itemCount: filteredList.length,
+                          separatorBuilder: (context, index) => const SizedBox(height: 12),
+                          itemBuilder: (context, index) {
+                            final item = filteredList[index];
+
+                            return Card(
+                              elevation: 0,
+                              color: colorScheme.surfaceContainerHighest.withOpacity(0.3),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                                side: BorderSide(
+                                  color: colorScheme.outlineVariant.withOpacity(0.5),
+                                ),
+                              ),
+                              child: InkWell(
+                                borderRadius: BorderRadius.circular(16),
+                                onTap: () => _showReviewDialog(
+                                  context,
+                                  item,
+                                  context.read<AdminContributeCubit>(),
+                                ),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(16.0),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      // Header: Email & Trạng thái
+                                      Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Expanded(
+                                            child: Row(
+                                              children: [
+                                                CircleAvatar(
+                                                  radius: 14,
+                                                  backgroundColor: colorScheme.primaryContainer,
+                                                  child: Icon(
+                                                    Icons.person_rounded,
+                                                    size: 16,
+                                                    color: colorScheme.primary,
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 8),
+                                                Expanded(
+                                                  child: Text(
+                                                    item.userEmail,
+                                                    style: textTheme.titleSmall?.copyWith(
+                                                      fontWeight: FontWeight.bold,
+                                                    ),
+                                                    overflow: TextOverflow.ellipsis,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                          const SizedBox(width: 8),
+                                          _buildStatusBadge(item.status),
+                                        ],
+                                      ),
+
+                                      const SizedBox(height: 12),
+                                      const Divider(height: 1),
+                                      const SizedBox(height: 12),
+
+                                      // Nội dung đóng góp
+                                      Text(
+                                        item.content,
+                                        style: textTheme.bodyLarge?.copyWith(
+                                          color: colorScheme.onSurface,
+                                          height: 1.5,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 16),
+
+                                      // Footer: Thời gian
+                                      Row(
+                                        children: [
+                                          Icon(
+                                            Icons.access_time_rounded,
+                                            size: 14,
+                                            color: colorScheme.outline,
+                                          ),
+                                          const SizedBox(width: 6),
+                                          Text(
+                                            item.createdAt.toString().substring(0, 16),
+                                            style: textTheme.labelMedium?.copyWith(
+                                              color: colorScheme.onSurfaceVariant,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+
+                                      // Phản hồi của Admin (Nếu có)
+                                      if (item.response != null && item.response!.isNotEmpty) ...[
+                                        const SizedBox(height: 12),
+                                        Container(
+                                          padding: const EdgeInsets.all(12),
+                                          decoration: BoxDecoration(
+                                            color: colorScheme.secondaryContainer.withOpacity(0.5),
+                                            borderRadius: BorderRadius.circular(12),
+                                            border: Border.all(
+                                              color: colorScheme.secondaryContainer,
+                                            ),
+                                          ),
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              Row(
+                                                children: [
+                                                  Icon(
+                                                    Icons.admin_panel_settings_rounded,
+                                                    size: 16,
+                                                    color: colorScheme.secondary,
+                                                  ),
+                                                  const SizedBox(width: 6),
+                                                  Text(
+                                                    "Phản hồi đã gửi:",
+                                                    style: textTheme.labelLarge?.copyWith(
+                                                      fontWeight: FontWeight.bold,
+                                                      color: colorScheme.secondary,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                              const SizedBox(height: 6),
+                                              Text(
+                                                item.response!,
+                                                style: textTheme.bodyMedium?.copyWith(
+                                                  fontStyle: FontStyle.italic,
+                                                  color: colorScheme.onSecondaryContainer,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            );
+                          },
+                        ),
                       ),
-                    ),
-                  ),
-                );
-              },
-            ),
+              ),
+            ],
           );
         },
       ),
     );
   }
 
+  // Hàm tạo Widget Filter Chip
+  Widget _buildFilterChip(String label, String value, IconData icon, ColorScheme colorScheme) {
+    final isSelected = _selectedFilter == value;
+    return ChoiceChip(
+      label: Text(label),
+      avatar: isSelected ? null : Icon(icon, size: 18, color: colorScheme.onSurfaceVariant),
+      selected: isSelected,
+      showCheckmark: true,
+      selectedColor: colorScheme.primaryContainer,
+      onSelected: (bool selected) {
+        if (selected) {
+          setState(() {
+            _selectedFilter = value;
+          });
+        }
+      },
+    );
+  }
+
+  // Hộp thoại kiểm duyệt M3
   // Hộp thoại kiểm duyệt M3
   void _showReviewDialog(
     BuildContext context,
@@ -256,9 +358,10 @@ class AdminContributeView extends StatelessWidget {
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
           title: Row(
             children: [
-              Icon(Icons.gavel_rounded, color: colorScheme.primary),
-              const SizedBox(width: 12),
-              const Text('Kiểm duyệt đóng góp'),
+              Text(
+                'Kiểm duyệt đóng góp',
+                style: textTheme.titleLarge,
+              ),
             ],
           ),
           content: SingleChildScrollView(
@@ -317,18 +420,24 @@ class AdminContributeView extends StatelessWidget {
                 foregroundColor: colorScheme.onErrorContainer,
               ),
               onPressed: () async {
+                // 1. Lấy dữ liệu text trước
+                final responseText = responseController.text.trim();
+
+                // 2. Đóng popup NGAY LẬP TỨC để tạo cảm giác mượt mà
+                Navigator.pop(dialogContext);
+
+                // 3. Xử lý logic ngầm
                 final success = await cubit.review(
                   item.id,
                   'rejected',
-                  responseController.text.trim(),
+                  responseText,
                 );
-                if (context.mounted) {
-                  Navigator.pop(dialogContext); // Đóng dialog
-                  if (success) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Đã từ chối đóng góp')),
-                    );
-                  }
+
+                // 4. Báo thành công (nếu widget gốc vẫn còn tồn tại)
+                if (context.mounted && success) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Đã từ chối đóng góp')),
+                  );
                 }
               },
               child: const Text('Từ chối'),
@@ -339,18 +448,24 @@ class AdminContributeView extends StatelessWidget {
                 foregroundColor: Colors.white,
               ),
               onPressed: () async {
+                // 1. Lấy dữ liệu text trước
+                final responseText = responseController.text.trim();
+
+                // 2. Đóng popup NGAY LẬP TỨC
+                Navigator.pop(dialogContext);
+
+                // 3. Xử lý logic ngầm
                 final success = await cubit.review(
                   item.id,
                   'approved',
-                  responseController.text.trim(),
+                  responseText,
                 );
-                if (context.mounted) {
-                  Navigator.pop(dialogContext); // Đóng dialog
-                  if (success) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Đã duyệt thành công')),
-                    );
-                  }
+
+                // 4. Báo thành công
+                if (context.mounted && success) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Đã duyệt thành công')),
+                  );
                 }
               },
               child: const Text('Duyệt'),

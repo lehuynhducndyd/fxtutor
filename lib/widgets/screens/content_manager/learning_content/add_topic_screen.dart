@@ -18,7 +18,6 @@ class AddTopicScreen extends StatelessWidget {
         appBar: AppBar(
           title: Text(
             isAddMode ? "Thêm chủ đề mới" : "Sửa chủ đề",
-            style: const TextStyle(fontWeight: FontWeight.bold),
           ),
           centerTitle: true,
           elevation: 0,

@@ -51,6 +51,11 @@ dependencies:
   animated_quiz_widget: ^1.0.3
   quick_quiz: ^1.0.0
   google_sign_in: ^6.1.0
+  flutter_inappwebview: ^6.1.5 # Thêm dòng này
+  url_launcher: ^6.3.2
+  path_provider: ^2.1.2  # Thêm thư viện này (Lưu file tạm)
+  share_plus: ^7.2.1 # Thêm dòng này
+  gal: ^2.3.2
 
 dev_dependencies:
   flutter_test:
@@ -111,6 +116,8 @@ flutter:
     - assets/keymap/keymap880.json
     - assets/keymap/other880.json
     - assets/keymap/other580.json
+    - assets/img/googleLogo.png
+    - assets/img/Slice1.png
   fonts:
     - family: Casio580
       fonts:
