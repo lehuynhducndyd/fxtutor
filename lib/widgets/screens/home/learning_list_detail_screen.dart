@@ -52,7 +52,7 @@ class _LearningListDetailScreenState extends State<LearningListDetailScreen> {
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(16.0),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   // ================= HEADER: THÔNG TIN TÁC GIẢ =================
                   FutureBuilder<UserModel?>(
@@ -203,8 +203,7 @@ class _LearningListDetailScreenState extends State<LearningListDetailScreen> {
                 borderRadius: BorderRadius.circular(16),
                 child: Container(
                   constraints: const BoxConstraints(
-                    maxHeight: 250,
-                    minWidth: double.infinity,
+                    maxWidth: 400,
                   ),
                   color: colorScheme.surfaceContainerHighest,
                   child: Image.network(
