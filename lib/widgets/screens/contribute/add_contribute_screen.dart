@@ -5,6 +5,7 @@ import 'contribute_cubit.dart';
 
 class AddContributeScreen extends StatefulWidget {
   const AddContributeScreen({super.key});
+  static const String route = 'AddContributeScreen';
 
   @override
   State<AddContributeScreen> createState() => _AddContributeScreenState();

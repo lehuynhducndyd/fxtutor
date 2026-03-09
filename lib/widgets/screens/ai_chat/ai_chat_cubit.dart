@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:fx_tutor/models/calculator_guide_model.dart';
 
 import '../../../common/enum/load_status.dart';
 import '../../../models/learning_content.dart';
@@ -11,6 +12,15 @@ class AiChatCubit extends Cubit<AiChatState> {
   final AiChatService _service;
 
   AiChatCubit(this._service) : super(AiChatState.initial());
+  Future<CalculatorGuideModel?> getGuide({
+    String? textInput,
+    Uint8List? imageBytes,
+  }) async {
+    return _service.getGuide(
+      textInput: textInput,
+      imageBytes: imageBytes,
+    );
+  }
 
   Future<void> sendMessage({
     String? text,
@@ -24,6 +34,15 @@ class AiChatCubit extends Cubit<AiChatState> {
       isUser: true,
       image: image,
     );
+    Future<CalculatorGuideModel?> getGuide({
+      String? textInput,
+      Uint8List? imageBytes,
+    }) {
+      return _service.getGuide(
+        textInput: textInput,
+        imageBytes: imageBytes,
+      );
+    }
 
     final updatedMessages = List<ChatMessage>.from(state.messages)..add(userMsg);
     emit(state.copyWith(status: LoadStatus.Loading, messages: updatedMessages));
@@ -34,9 +53,13 @@ class AiChatCubit extends Cubit<AiChatState> {
         textInput: text,
         imageBytes: image,
       );
+      final guide = await getGuide(
+        textInput: text,
+        imageBytes: image,
+      );
 
       // 3. Thêm phản hồi của AI
-      final aiMsg = ChatMessage(text: aiResponse, isUser: false);
+      final aiMsg = ChatMessage(text: aiResponse, isUser: false, guide: guide);
       final finalMessages = List<ChatMessage>.from(state.messages)..add(aiMsg);
 
       emit(state.copyWith(status: LoadStatus.Done, messages: finalMessages));

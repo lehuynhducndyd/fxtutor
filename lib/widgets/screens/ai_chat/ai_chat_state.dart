@@ -2,13 +2,20 @@ import 'dart:typed_data';
 
 import '../../../common/enum/load_status.dart';
 import '../../../models/ai_quiz_model.dart';
+import '../../../models/calculator_guide_model.dart';
 
 class ChatMessage {
   final String text;
   final bool isUser;
-  final Uint8List? image; // Để hiển thị lại ảnh user đã gửi
+  final Uint8List? image;
+  final CalculatorGuideModel? guide; // THÊM DÒNG NÀY
 
-  ChatMessage({required this.text, required this.isUser, this.image});
+  ChatMessage({
+    required this.text,
+    required this.isUser,
+    this.image,
+    this.guide, // THÊM DÒNG NÀY
+  });
 }
 
 class AiChatState {
@@ -25,10 +32,10 @@ class AiChatState {
   });
 
   factory AiChatState.initial() => AiChatState(
-        messages: [],
-        quiz: null,
-        status: LoadStatus.Init,
-      );
+    messages: [],
+    quiz: null,
+    status: LoadStatus.Init,
+  );
 
   AiChatState copyWith({
     List<ChatMessage>? messages,

@@ -16,7 +16,7 @@ class AiChatService {
 
   AiChatService()
     : _chatModel = GenerativeModel(
-        model: 'gemini-2.5-flash',
+        model: 'gemma-3-27b-it',
         apiKey: dotenv.env['API_KEY'] ?? '',
       ),
       _embeddingModel = GenerativeModel(
@@ -25,6 +25,26 @@ class AiChatService {
       );
 
   // 1. BỎ tham số required userModel
+  Future<CalculatorGuideModel?> getGuide({
+    String? textInput,
+    Uint8List? imageBytes,
+  }) async {
+    try {
+      final analysis = await _identifyTopicAndModel(textInput, imageBytes);
+      final specificProblem = analysis['problem'] ?? '';
+      final topicName = analysis['topic'] ?? '';
+
+      if (topicName.isEmpty) {
+        return null;
+      } else {
+        // SỬA Ở ĐÂY: Thêm chữ "return" thay vì "final guide ="
+        return await _searchSupabaseForGuide(specificProblem);
+      }
+    } catch (e) {
+      return null;
+    }
+  }
+
   Future<String> solveAndGuide({
     String? textInput,
     Uint8List? imageBytes,
@@ -117,72 +137,117 @@ class AiChatService {
     required String userProblem,
     required String topicFound,
     CalculatorGuideModel? guide,
-    String? detectedModel, // Model AI tự phát hiện
+    String? detectedModel,
   }) async {
     final buffer = StringBuffer();
-    buffer.writeln("Bạn là trợ lý toán học (Gia sư AI).");
-    buffer.writeln("User cần giải bài: '$userProblem' (Dạng: $topicFound).");
 
-    // LOGIC XỬ LÝ MODEL
-    if (detectedModel != null &&
-        detectedModel.toLowerCase() != 'null' &&
-        detectedModel.isNotEmpty) {
-      buffer.writeln("Người dùng đang hỏi về máy: $detectedModel.");
-    } else {
-      buffer.writeln("Người dùng KHÔNG chỉ định dòng máy cụ thể.");
-    }
+    // ==========================================
+    // 1. RÀNG BUỘC TỐI CAO (SYSTEM PROMPT)
+    // ==========================================
+    buffer.writeln(
+      r'''Bạn là một Gia sư Toán học AI và Bậc thầy Casio. Nhiệm vụ của bạn là giải toán và BẮT BUỘC TRẢ VỀ DUY NHẤT MỘT MẢNG JSON hợp lệ.
 
+⚠️ QUY TẮC ĐỊNH DẠNG JSON:
+- TUYỆT ĐỐI KHÔNG bọc bằng ```json. Chỉ trả về mảng bắt đầu bằng [ và kết thúc bằng ].
+- Cấu trúc mỗi phần tử bắt buộc phải có dạng: {"type": "...", "data": "..."}
+- Các type được phép dùng: "text", "latex", "580keylog", "880keylog".
+
+⚠️ QUY TẮC NỘI DUNG TỪNG KHỐI (QUAN TRỌNG):
+- Khối "text": Chứa văn bản giải thích dạng TEXT THUẦN TÚY (Plain Text). 
+  + TUYỆT ĐỐI KHÔNG dùng bất kỳ định dạng Markdown nào (KHÔNG in đậm **, KHÔNG in nghiêng *, KHÔNG gạch đầu dòng -, *, +, KHÔNG tạo danh sách 1. 2. 3.).
+  + Viết thành các đoạn văn bình thường. Nếu cần liệt kê, hãy viết: "Bước 1: ... Bước 2: ..." (viết liền mạch hoặc chỉ xuống dòng \n).
+  + TUYỆT ĐỐI KHÔNG DÙNG mã LaTeX (như \sqrt, \pm, \frac, ^2) trong khối này. Hãy dùng ký tự phổ thông (như √, ±, x²).
+- Khối "latex": ĐỂ CHỨA CÔNG THỨC TOÁN. Bất cứ khi nào có phương trình, biểu thức phức tạp, hãy TÁCH RIÊNG nó thành khối "latex" độc lập.
+- Khối "*keylog": Các phím BẮT BUỘC nằm trong ngoặc vuông (VD: [MENU][9]).
+
+💡 Ví dụ cách bạn TRẢ LỜI ĐÚNG:
+[
+  {"type": "text", "data": "Để giải phương trình x² = 3, ta làm theo các bước sau.\nBước 1: Lấy căn bậc hai hai vế của phương trình."},
+  {"type": "latex", "data": "x = \\pm \\sqrt{3}"},
+  {"type": "580keylog", "data": "[ALPHA][*][2][4][SHIFT][)](,)[3][6][)][=]"},
+  {"type": "text", "data": "Bước 2: Rút ra kết luận. Vậy phương trình có 2 nghiệm phân biệt."}
+]
+''',
+    );
+
+    // ==========================================
+    // 2. NGỮ CẢNH BÀI TOÁN CỦA USER
+    // ==========================================
+    buffer.writeln("\n--- THÔNG TIN BÀI TOÁN ---");
+    buffer.writeln("Đề bài: '$userProblem'");
+    buffer.writeln("Dạng toán: $topicFound");
+
+    // ==========================================
+    // 3. LOGIC RẼ NHÁNH: XỬ LÝ HƯỚNG DẪN & MÁY TÍNH
+    // ==========================================
     if (guide != null) {
-      buffer.writeln("\n--- DỮ LIỆU HƯỚNG DẪN TỪ HỆ THỐNG ---");
-      buffer.writeln("Các máy hỗ trợ trong DB: ${guide.compatibleModels.join(', ')}");
-      // Convert list methods sang chuỗi để AI đọc
+      buffer.writeln("\n--- DỮ LIỆU HƯỚNG DẪN BẤM MÁY (TỪ DB) ---");
       buffer.writeln(
-        "Chi tiết cách bấm: ${jsonEncode(guide.methods.map((e) => e.toJson()).toList())}",
+        "Chi tiết cách bấm tổng quát: ${jsonEncode(guide.methods.map((e) => e.toJson()).toList())}",
       );
 
-      buffer.writeln("\n--- YÊU CẦU TRẢ LỜI ---");
-      buffer.writeln("1. Hãy giải bài toán '$userProblem' chi tiết.");
+      buffer.writeln("\n--- YÊU CẦU XỬ LÝ ---");
+      buffer.writeln(
+        "1. Hãy giải tay chi tiết bài toán trên, sau đó áp dụng hệ số vào hướng dẫn bấm máy.",
+      );
 
-      // LOGIC QUAN TRỌNG: Có model hay không?
-      if (detectedModel != null &&
+      // Xử lý logic Model
+      bool hasSpecificModel =
+          detectedModel != null &&
           detectedModel.toLowerCase() != 'null' &&
-          detectedModel.isNotEmpty) {
-        // TRƯỜNG HỢP 1: User có nói tên máy (VD: 580)
+          detectedModel.trim().isNotEmpty;
+
+      if (hasSpecificModel) {
         buffer.writeln(
-          "2. Chỉ trích xuất hướng dẫn bấm máy cho dòng '$detectedModel' (hoặc dòng tương tự nhất trong DB).",
+          "2. LƯU Ý QUAN TRỌNG: Người dùng CHỈ quan tâm đến dòng máy '$detectedModel'.",
         );
-        buffer.writeln("3. Nếu DB không có máy đó, hãy cảnh báo và hướng dẫn bằng máy có sẵn.");
+        buffer.writeln(
+          " -> BẠN CHỈ ĐƯỢC PHÉP tạo khối keylog cho dòng máy '$detectedModel' (Ví dụ: chỉ tạo type '580keylog' nếu user hỏi 580).",
+        );
+        buffer.writeln(
+          " -> Bỏ qua phần hướng dẫn của các máy khác để tránh làm rối người dùng. Nếu DB không có máy này, hãy tạo khối 'text' thông báo không hỗ trợ và đưa ra cách bấm của máy có sẵn.",
+        );
       } else {
-        // TRƯỜNG HỢP 2: User KHÔNG nói tên máy -> Hiện tất cả
+        buffer.writeln("2. LƯU Ý QUAN TRỌNG: Người dùng KHÔNG chỉ định máy tính cụ thể.");
         buffer.writeln(
-          "2. Vì người dùng không nói rõ dùng máy nào, hãy liệt kê hướng dẫn cho TẤT CẢ các dòng máy có trong dữ liệu trên (VD: Cách bấm cho 580..., Cách bấm cho 880...).",
+          " -> BẠN PHẢI tạo đầy đủ các khối keylog cho TẤT CẢ các dòng máy có trong dữ liệu DB (Ví dụ: tạo cả '580keylog' và '880keylog' tách biệt nhau).",
         );
-        buffer.writeln("3. Trình bày tách biệt rõ ràng từng loại máy.");
+      }
+    } else {
+      buffer.writeln("\n--- YÊU CẦU XỬ LÝ ---");
+      buffer.writeln("1. KHÔNG CÓ hướng dẫn bấm máy cho dạng này trong DB.");
+      buffer.writeln("2. Bạn chỉ cần giải tay từng bước, sử dụng type 'text' và 'latex'.");
+      buffer.writeln(
+        "3. TUYỆT ĐỐI KHÔNG TẠO ra các khối type '580keylog' hay '880keylog' trong trường hợp này.",
+      );
+    }
+
+    // ==========================================
+    // 4. CALL API
+    // ==========================================
+    final prompt = buffer.toString();
+
+    try {
+      final response = await _chatModel.generateContent([Content.text(prompt)]);
+
+      // Clean response để chống AI nhả thêm rác markdown
+      String finalData = response.text ?? "";
+
+      // SỬA LỖI: Cắt đúng thẻ markdown ```json và ```
+      finalData = finalData.replaceAll('```json', '').replaceAll('```', '').trim();
+
+      // BẢO HIỂM LỚP 2: Nếu AI vẫn vui tính chèn thêm text bên ngoài mảng JSON
+      if (finalData.contains('[') && finalData.contains(']')) {
+        finalData = finalData.substring(
+          finalData.indexOf('['),
+          finalData.lastIndexOf(']') + 1,
+        );
       }
 
-      buffer.writeln(
-        "4. Các phím bấm BẮT BUỘC để trong ngoặc vuông [ ] giống như chi tiết cách bấm được cung cấp. Ví dụ: [MENU], [AC]. Trả lời ngắn gọn sát với hướng dẫn.",
-      );
-      buffer.writeln(
-        '''5. QUY ĐỊNH TRÌNH BÀY:
-    - KHÔNG sử dụng định dạng danh sách Markdown (1. 2. 3. hoặc * + - ).
-    - Thay vào đó, hãy viết các bước theo kiểu: Bước 1:, Bước 2:... a) b) c) ..... Hiển thị code latex khi cần
-    - Giữ văn bản ở dạng đoạn văn (paragraph) đơn giản để đảm bảo hiển thị đồng nhất. Không gạch đầu dòng.''',
-      );
-    } else {
-      buffer.writeln(
-        "\nChưa có hướng dẫn bấm máy trong DB cho dạng này. Hãy giải tay từng bước và giải thích kỹ.",
-      );
-      buffer.writeln(
-        '''QUY ĐỊNH TRÌNH BÀY:
-    - KHÔNG sử dụng định dạng danh sách Markdown (1. 2. 3. hoặc * + -).
-     - Thay vào đó, hãy viết các bước theo kiểu: Bước 1:, Bước 2:... a) b) c) ..... Hiển thị code latex khi cần
-    - Giữ văn bản ở dạng đoạn văn (paragraph) đơn giản để đảm bảo hiển thị đồng nhất. Không gạch đầu dòng''',
-      );
+      return finalData;
+    } catch (e) {
+      return "Lỗi khi gọi AI: $e";
     }
-
-    final response = await _chatModel.generateContent([Content.text(buffer.toString())]);
-    return response.text ?? "Xin lỗi, AI không thể tạo câu trả lời.";
   }
 
   Future<List<AiQuizModel>> generateQuiz(LearningContent content) async {

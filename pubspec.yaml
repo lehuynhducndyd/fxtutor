@@ -53,8 +53,7 @@ dependencies:
   google_sign_in: ^6.1.0
   flutter_inappwebview: ^6.1.5 # Thêm dòng này
   url_launcher: ^6.3.2
-  path_provider: ^2.1.2  # Thêm thư viện này (Lưu file tạm)
-  share_plus: ^7.2.1 # Thêm dòng này
+  path_provider: ^2.1.2
   gal: ^2.3.2
 
 dev_dependencies:

@@ -22,6 +22,7 @@ import 'package:fx_tutor/widgets/screens/content_manager/learning_content/learni
 import 'package:fx_tutor/widgets/screens/content_manager/learning_content/more_keylog_screen.dart';
 import 'package:fx_tutor/widgets/screens/content_manager/learning_content/more_keylog_screen2.dart';
 import 'package:fx_tutor/widgets/screens/content_manager/learning_content/topic_cubit.dart';
+import 'package:fx_tutor/widgets/screens/contribute/add_contribute_screen.dart';
 import 'package:fx_tutor/widgets/screens/contribute/contribute_screen.dart';
 import 'package:fx_tutor/widgets/screens/guide/guide_screen.dart';
 import 'package:fx_tutor/widgets/screens/home/home_screen.dart';
@@ -201,6 +202,8 @@ Route<dynamic>? mainRoute(RouteSettings settings) {
       return MaterialPageRoute(builder: (context) => ContributeScreen(), settings: settings);
     case GuideScreen.route:
       return MaterialPageRoute(builder: (context) => GuideScreen(), settings: settings);
+    case AddContributeScreen.route:
+      return MaterialPageRoute(builder: (context) => AddContributeScreen(), settings: settings);
     case InfoScreen.route:
       return MaterialPageRoute(builder: (context) => InfoScreen(), settings: settings);
     case UserManagerScreen.route:

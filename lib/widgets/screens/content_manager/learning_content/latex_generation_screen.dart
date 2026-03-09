@@ -92,7 +92,7 @@ class _LatexGeneratorScreenState extends State<LatexGeneratorScreen> {
     return Scaffold(
       backgroundColor: colorScheme.surface,
       appBar: AppBar(
-        title: const Text('Tạo mã LaTeX AI'),
+        title: const Text('Tạo mã LaTeX'),
         centerTitle: true,
       ),
       body: SingleChildScrollView(

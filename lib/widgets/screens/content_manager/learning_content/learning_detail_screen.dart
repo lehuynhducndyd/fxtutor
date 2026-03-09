@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_math_fork/flutter_math.dart';
 // Đảm bảo đường dẫn này đúng tới file latex.dart bạn đã tạo
 import 'package:fx_tutor/common/latex.dart';
 import 'package:markdown_widget/config/configs.dart';
@@ -153,20 +154,20 @@ class _LearningDetailScreenState extends State<LearningDetailScreen> {
       case 'latex':
         return Container(
           width: double.infinity,
+          alignment: Alignment.center,
           margin: const EdgeInsets.only(bottom: 16.0),
           padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
           decoration: BoxDecoration(
             color: colorScheme.surfaceContainerHighest.withOpacity(0.5),
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(12),
             border: Border.all(color: colorScheme.outlineVariant.withOpacity(0.5)),
           ),
-          child: MarkdownWidget(
-            data: "\$\$${block.data}\$\$", // Ép kiểu Block Math để căn giữa
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            markdownGenerator: MarkdownGenerator(
-              generators: [latexGenerator],
-              inlineSyntaxList: [LatexSyntax()],
+          // Bọc Math.tex bằng SingleChildScrollView để cho phép cuộn ngang
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Math.tex(
+              "${block.data}",
+              textStyle: const TextStyle(fontSize: 17),
             ),
           ),
         );

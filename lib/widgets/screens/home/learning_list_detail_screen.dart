@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_math_fork/flutter_math.dart';
 import 'package:fx_tutor/models/learning_content.dart';
 import 'package:fx_tutor/models/user_model.dart';
 import 'package:fx_tutor/services/learning_content_service.dart';
@@ -11,6 +12,7 @@ import 'package:markdown_widget/widget/markdown.dart';
 
 import '../../../common/key_mapper.dart';
 import '../../../common/latex.dart';
+import '../contribute/add_contribute_screen.dart';
 
 class LearningListDetailScreen extends StatefulWidget {
   final LearningContent content;
@@ -100,15 +102,33 @@ class _LearningListDetailScreenState extends State<LearningListDetailScreen> {
 
                   // ================= NỘI DUNG BÀI HỌC (BLOCKS) =================
                   ...widget.content.blocks.map((block) => _buildBlock(context, block)),
-                  const SizedBox(height: 24), // Khoảng trống dưới cùng cho thoáng
+                  const SizedBox(height: 24),
+                  const SizedBox(height: 12), // Khoảng cách giữa 2 nút
+                  // Nút Báo cáo lỗi / Góp ý (Nút phụ)
+                  OutlinedButton.icon(
+                    onPressed: () {
+                      Navigator.pushNamed(context, AddContributeScreen.route);
+                    },
+                    icon: Icon(Icons.flag_outlined, color: colorScheme.error, size: 20),
+                    label: Text(
+                      "Báo cáo lỗi / Góp ý bài viết này",
+                      style: TextStyle(color: colorScheme.error, fontWeight: FontWeight.w600),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      minimumSize: const Size.fromHeight(48),
+                      side: BorderSide(color: colorScheme.error.withOpacity(0.5)),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                  ), // Khoảng trống dưới cùng cho thoáng
                 ],
               ),
             ),
           ),
 
           // ================= FOOTER: NÚT LÀM TRẮC NGHIỆM =================
+          // ================= FOOTER: NÚT BẤM =================
           Container(
-            padding: const EdgeInsets.all(16.0),
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
             decoration: BoxDecoration(
               color: Theme.of(context).scaffoldBackgroundColor,
               boxShadow: [
@@ -120,19 +140,25 @@ class _LearningListDetailScreenState extends State<LearningListDetailScreen> {
               ],
             ),
             child: SafeArea(
-              child: FilledButton.icon(
-                onPressed: () {
-                  Navigator.pushNamed(context, QuizScreen.route, arguments: widget.content);
-                },
-                icon: const Icon(Icons.quiz_rounded),
-                label: const Text(
-                  "Làm bài Trắc nghiệm",
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                ),
-                style: FilledButton.styleFrom(
-                  minimumSize: const Size.fromHeight(54), // Nút full chiều ngang
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min, // Để column ôm khít 2 nút
+                children: [
+                  // Nút Làm bài Trắc nghiệm (Nút chính)
+                  FilledButton.icon(
+                    onPressed: () {
+                      Navigator.pushNamed(context, QuizScreen.route, arguments: widget.content);
+                    },
+                    icon: const Icon(Icons.quiz_rounded),
+                    label: const Text(
+                      "Làm bài Trắc nghiệm",
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                    ),
+                    style: FilledButton.styleFrom(
+                      minimumSize: const Size.fromHeight(54),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -176,6 +202,7 @@ class _LearningListDetailScreenState extends State<LearningListDetailScreen> {
       case 'latex':
         return Container(
           width: double.infinity,
+          alignment: Alignment.center,
           margin: const EdgeInsets.only(bottom: 16.0),
           padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
           decoration: BoxDecoration(
@@ -183,13 +210,12 @@ class _LearningListDetailScreenState extends State<LearningListDetailScreen> {
             borderRadius: BorderRadius.circular(12),
             border: Border.all(color: colorScheme.outlineVariant.withOpacity(0.5)),
           ),
-          child: MarkdownWidget(
-            data: "\$\$${block.data}\$\$", // Ép kiểu Block Math
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            markdownGenerator: MarkdownGenerator(
-              generators: [latexGenerator],
-              inlineSyntaxList: [LatexSyntax()],
+          // Bọc Math.tex bằng SingleChildScrollView để cho phép cuộn ngang
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Math.tex(
+              "${block.data}",
+              textStyle: const TextStyle(fontSize: 17),
             ),
           ),
         );
