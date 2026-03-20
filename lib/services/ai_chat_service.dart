@@ -183,9 +183,11 @@ class AiChatService {
     if (guide != null) {
       buffer.writeln("\n--- DỮ LIỆU HƯỚNG DẪN BẤM MÁY (TỪ DB) ---");
       buffer.writeln(
-        "Chi tiết cách bấm tổng quát: ${jsonEncode(guide.methods.map((e) => e.toJson()).toList())}",
+        "Chi tiết cách bấm tổng quát: ${jsonEncode(guide.methods.map((e) => e.toJson()).toList())}, máy hõ trợ ${jsonEncode(guide.compatibleModels.toString())} ",
       );
-
+      print(
+        "Chi tiết cách bấm tổng quát: ${jsonEncode(guide.methods.map((e) => e.toJson()).toList())}, máy hõ trợ ${jsonEncode(guide.compatibleModels.toString())} ",
+      );
       buffer.writeln("\n--- YÊU CẦU XỬ LÝ ---");
       buffer.writeln(
         "1. Hãy giải tay chi tiết bài toán trên, sau đó áp dụng hệ số vào hướng dẫn bấm máy.",
@@ -210,7 +212,7 @@ class AiChatService {
       } else {
         buffer.writeln("2. LƯU Ý QUAN TRỌNG: Người dùng KHÔNG chỉ định máy tính cụ thể.");
         buffer.writeln(
-          " -> BẠN PHẢI tạo đầy đủ các khối keylog cho TẤT CẢ các dòng máy có trong dữ liệu DB (Ví dụ: tạo cả '580keylog' và '880keylog' tách biệt nhau).",
+          " -> BẠN PHẢI tạo đầy đủ các khối keylog cho TẤT CẢ các dòng máy: máy hỗ trợ ${jsonEncode(guide.compatibleModels.toString())}  ( nếu có 2 máy thì '580keylog' và '880keylog' tách biệt nhau).",
         );
       }
     } else {

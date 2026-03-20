@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_math_fork/flutter_math.dart';
 
 import '../../../../services/ai_chat_service.dart';
+import 'casio_qr.dart';
 
 // Nhớ import AiChatService của bạn vào đây nhé
 // import 'package:fx_tutor/services/ai_chat_service.dart';
@@ -134,6 +135,18 @@ class _LatexGeneratorScreenState extends State<LatexGeneratorScreen> {
                     )
                   : const Icon(Icons.auto_awesome_rounded),
               label: Text(_isLoading ? "Đang xử lý..." : "Chuyển sang LaTeX"),
+              style: FilledButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+            ),
+            const SizedBox(height: 16),
+            FilledButton.icon(
+              onPressed: () {
+                Navigator.pushNamed(context, CasioQr.route);
+              },
+              icon: const Icon(Icons.qr_code),
+              label: Text("Lấy Latex từ Casio (chỉ fx-880BTG)"),
               style: FilledButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),

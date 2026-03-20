@@ -32,6 +32,9 @@ class AddLearningContentScreen extends StatefulWidget {
 class _AddLearningContentScreenState extends State<AddLearningContentScreen> {
   @override
   Widget build(BuildContext context) {
+    // 1. Xác định kích thước màn hình
+    final isLargeScreen = MediaQuery.of(context).size.width >= 800;
+
     return GestureDetector(
       onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
@@ -43,7 +46,32 @@ class _AddLearningContentScreenState extends State<AddLearningContentScreen> {
           centerTitle: true,
           elevation: 0,
         ),
-        body: Body(isAddMode: widget.isAddMode, editIndex: widget.editIndex),
+        // 2. Chia tỉ lệ màn hình nếu là màn hình lớn
+        body: isLargeScreen
+            ? SafeArea(
+                child: Row(
+                  children: [
+                    Expanded(
+                      flex: 2, // Khung soạn thảo chiếm 2/3
+                      child: Body(
+                        isAddMode: widget.isAddMode,
+                        editIndex: widget.editIndex,
+                        isLargeScreen: isLargeScreen,
+                      ),
+                    ),
+                    const VerticalDivider(width: 1, thickness: 1), // Đường phân cách
+                    const Expanded(
+                      flex: 1, // Khung Máy tính chiếm 1/3
+                      child: CalculatorScreen(),
+                    ),
+                  ],
+                ),
+              )
+            : Body(
+                isAddMode: widget.isAddMode,
+                editIndex: widget.editIndex,
+                isLargeScreen: isLargeScreen,
+              ), // Màn hình nhỏ thì hiển thị bình thường
       ),
     );
   }
@@ -52,8 +80,14 @@ class _AddLearningContentScreenState extends State<AddLearningContentScreen> {
 class Body extends StatefulWidget {
   final bool isAddMode;
   final int? editIndex;
+  final bool isLargeScreen; // Khai báo thêm biến nhận trạng thái màn hình
 
-  const Body({super.key, required this.isAddMode, this.editIndex});
+  const Body({
+    super.key,
+    required this.isAddMode,
+    this.editIndex,
+    required this.isLargeScreen,
+  });
 
   @override
   State<Body> createState() => _BodyState();
@@ -230,11 +264,15 @@ class _BodyState extends State<Body> {
                   label: const Text("Latex"),
                   style: FilledButton.styleFrom(visualDensity: VisualDensity.compact),
                 ),
-                FilledButton.tonalIcon(
-                  onPressed: () => Navigator.pushNamed(context, CalculatorScreen.route),
-                  label: const Text("Keylog/Screen"),
-                  style: FilledButton.styleFrom(visualDensity: VisualDensity.compact),
-                ),
+
+                // 3. Ẩn nút Keylog/Screen nếu đang mở trên màn hình lớn
+                if (!widget.isLargeScreen)
+                  FilledButton.tonalIcon(
+                    onPressed: () => Navigator.pushNamed(context, CalculatorScreen.route),
+                    label: const Text("Keylog/Screen"),
+                    style: FilledButton.styleFrom(visualDensity: VisualDensity.compact),
+                  ),
+
                 FilledButton.tonalIcon(
                   onPressed: () => Navigator.pushNamed(context, MoreKeylogScreen2.route),
                   label: const Text("2nd Keylog 580"),

@@ -26,19 +26,58 @@ class AddGuideContentScreen extends StatefulWidget {
 class _AddGuideContentScreenState extends State<AddGuideContentScreen> {
   @override
   Widget build(BuildContext context) {
+    // 1. Xác định kích thước màn hình
+    final isLargeScreen = MediaQuery.of(context).size.width >= 800;
+    // 2. Lấy chiều cao bàn phím để tránh vỡ layout WebView
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+
     return GestureDetector(
-      onTap: () => FocusScope.of(context).unfocus(), // Chạm ra ngoài để hạ bàn phím
+      onTap: () => FocusScope.of(context).unfocus(),
       child: Scaffold(
         backgroundColor: Theme.of(context).colorScheme.surface,
+
+        // 3. Tắt tự bóp màn hình ở màn hình lớn để bảo vệ WebView
+        resizeToAvoidBottomInset: !isLargeScreen,
+
         appBar: AppBar(
           title: Text(
             widget.isAddMode ? "Thêm hướng dẫn" : "Sửa hướng dẫn",
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.normal), // Không in đậm
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.normal),
           ),
           centerTitle: true,
           elevation: 0,
         ),
-        body: Body(isAddMode: widget.isAddMode, editIndex: widget.editIndex),
+
+        // 4. Chia màn hình tỉ lệ 2:1
+        body: isLargeScreen
+            ? SafeArea(
+                child: Row(
+                  children: [
+                    Expanded(
+                      flex: 2,
+                      // 5. Đẩy khung soạn thảo lên bằng đúng chiều cao bàn phím ảo
+                      child: Padding(
+                        padding: EdgeInsets.only(bottom: bottomInset),
+                        child: Body(
+                          isAddMode: widget.isAddMode,
+                          editIndex: widget.editIndex,
+                          isLargeScreen: isLargeScreen, // Truyền biến màn hình lớn xuống
+                        ),
+                      ),
+                    ),
+                    const VerticalDivider(width: 1, thickness: 1),
+                    const Expanded(
+                      flex: 1,
+                      child: CalculatorScreen(),
+                    ),
+                  ],
+                ),
+              )
+            : Body(
+                isAddMode: widget.isAddMode,
+                editIndex: widget.editIndex,
+                isLargeScreen: isLargeScreen,
+              ),
       ),
     );
   }
@@ -47,8 +86,14 @@ class _AddGuideContentScreenState extends State<AddGuideContentScreen> {
 class Body extends StatefulWidget {
   final bool isAddMode;
   final int? editIndex;
+  final bool isLargeScreen;
 
-  const Body({super.key, required this.isAddMode, this.editIndex});
+  const Body({
+    super.key,
+    required this.isAddMode,
+    this.editIndex,
+    required this.isLargeScreen,
+  });
 
   @override
   State<Body> createState() => _BodyState();
@@ -86,8 +131,29 @@ class _BodyState extends State<Body> {
     }
   }
 
+  // --- HÀM THÊM NHANH DÒNG MÁY ---
+  void _addModelChip(String modelName) {
+    String currentText = _modelsController.text.trim();
+    if (currentText.isEmpty) {
+      _modelsController.text = modelName;
+    } else {
+      // Kiểm tra xem đã có model này chưa để tránh chèn đúp
+      if (!currentText.contains(modelName)) {
+        if (currentText.endsWith(',')) {
+          _modelsController.text = "$currentText $modelName";
+        } else {
+          _modelsController.text = "$currentText, $modelName";
+        }
+      }
+    }
+    // Chuyển con trỏ về cuối dòng
+    _modelsController.selection = TextSelection.fromPosition(
+      TextPosition(offset: _modelsController.text.length),
+    );
+  }
+
   void _onSave() {
-    FocusScope.of(context).unfocus(); // Ẩn bàn phím khi lưu
+    FocusScope.of(context).unfocus();
 
     final colorScheme = Theme.of(context).colorScheme;
 
@@ -151,10 +217,10 @@ class _BodyState extends State<Body> {
 
     return Column(
       children: [
-        // ================= THANH CÔNG CỤ TÍCH HỢP (TOOLBAR) GỌN GÀNG =================
+        // ================= THANH CÔNG CỤ TÍCH HỢP (TOOLBAR) =================
         Container(
           width: double.infinity,
-          padding: const EdgeInsets.symmetric(vertical: 6), // Ép nhỏ padding dọc
+          padding: const EdgeInsets.symmetric(vertical: 6),
           decoration: BoxDecoration(
             color: colorScheme.surface,
             border: Border(bottom: BorderSide(color: colorScheme.outlineVariant.withOpacity(0.3))),
@@ -165,7 +231,6 @@ class _BodyState extends State<Body> {
             child: Row(
               spacing: 6,
               children: [
-                // Nút Thêm Cách (Nổi bật nhất)
                 FilledButton.icon(
                   onPressed: _addMethod,
                   label: const Text("Thêm Cách giải", style: TextStyle(fontSize: 13)),
@@ -174,17 +239,18 @@ class _BodyState extends State<Body> {
                     backgroundColor: colorScheme.primary,
                   ),
                 ),
-                // Các nút công cụ phụ trợ
                 FilledButton.tonalIcon(
                   onPressed: () => Navigator.pushNamed(context, GuideScreen.route),
                   label: const Text("Xem Hướng dẫn", style: TextStyle(fontSize: 13)),
                   style: FilledButton.styleFrom(visualDensity: VisualDensity.compact),
                 ),
-                FilledButton.tonalIcon(
-                  onPressed: () => Navigator.pushNamed(context, CalculatorScreen.route),
-                  label: const Text("Lấy Keylog", style: TextStyle(fontSize: 13)),
-                  style: FilledButton.styleFrom(visualDensity: VisualDensity.compact),
-                ),
+                // Ẩn nút nếu đang dùng màn hình lớn (vì WebView máy tính đã mở sẵn bên cạnh)
+                if (!widget.isLargeScreen)
+                  FilledButton.tonalIcon(
+                    onPressed: () => Navigator.pushNamed(context, CalculatorScreen.route),
+                    label: const Text("Lấy Keylog", style: TextStyle(fontSize: 13)),
+                    style: FilledButton.styleFrom(visualDensity: VisualDensity.compact),
+                  ),
               ],
             ),
           ),
@@ -194,16 +260,16 @@ class _BodyState extends State<Body> {
         Expanded(
           child: Center(
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 800), // Giới hạn 800px giống Word
+              constraints: const BoxConstraints(maxWidth: 800),
               child: SingleChildScrollView(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 12.0,
                   vertical: 16.0,
-                ), // Ép nhẹ lề ngang
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // --- TÊN HÀNH ĐỘNG (Gộp LabelText) ---
+                    // --- TÊN HÀNH ĐỘNG ---
                     TextField(
                       controller: _actionNameController,
                       style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
@@ -225,26 +291,67 @@ class _BodyState extends State<Body> {
                     ),
                     const SizedBox(height: 16),
 
-                    // --- DÒNG MÁY HỖ TRỢ (Gộp LabelText) ---
-                    TextField(
-                      controller: _modelsController,
-                      style: const TextStyle(fontSize: 14),
-                      decoration: InputDecoration(
-                        labelText: "Dòng máy hỗ trợ (cách nhau bởi dấu phẩy)",
-                        hintText: "VD: Casio 580VNX, Vinacal 680EX",
-                        prefixIcon: Icon(
-                          Icons.devices_rounded,
-                          color: colorScheme.outline,
-                          size: 20,
+                    // --- DÒNG MÁY HỖ TRỢ ---
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        TextField(
+                          controller: _modelsController,
+                          style: const TextStyle(fontSize: 14),
+                          decoration: InputDecoration(
+                            labelText: "Dòng máy hỗ trợ (cách nhau bởi dấu phẩy)",
+                            hintText: "VD: 580, 880",
+                            prefixIcon: Icon(
+                              Icons.devices_rounded,
+                              color: colorScheme.outline,
+                              size: 20,
+                            ),
+                            filled: true,
+                            fillColor: colorScheme.surfaceContainerHighest.withOpacity(0.3),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide.none,
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 12,
+                            ),
+                          ),
                         ),
-                        filled: true,
-                        fillColor: colorScheme.surfaceContainerHighest.withOpacity(0.3),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide.none,
+                        const SizedBox(height: 8),
+
+                        // CÁC NÚT CHỌN NHANH MODEL MÁY TÍNH
+                        SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: Row(
+                            children: [
+                              Text(
+                                "Chọn nhanh: ",
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: colorScheme.onSurfaceVariant,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              ActionChip(
+                                label: const Text("fx-580VNX"),
+                                labelStyle: const TextStyle(fontSize: 12),
+                                visualDensity: VisualDensity.compact,
+                                onPressed: () => _addModelChip("fx-580VNX"),
+                              ),
+                              const SizedBox(width: 6),
+                              ActionChip(
+                                label: const Text("fx-880BTG"),
+                                labelStyle: const TextStyle(fontSize: 12),
+                                visualDensity: VisualDensity.compact,
+                                onPressed: () => _addModelChip("fx-880BTG"),
+                              ),
+                              const SizedBox(width: 6),
+                            ],
+                          ),
                         ),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                      ),
+                      ],
                     ),
                     const SizedBox(height: 24),
 
@@ -262,12 +369,13 @@ class _BodyState extends State<Body> {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 12), // Giảm khoảng cách
+                    const SizedBox(height: 12),
+
                     // --- DANH SÁCH CÁC PHƯƠNG THỨC (CÁCH GIẢI) ---
                     ..._methods.asMap().entries.map((entry) {
                       int idx = entry.key;
                       return Card(
-                        margin: const EdgeInsets.only(bottom: 12), // Giảm margin
+                        margin: const EdgeInsets.only(bottom: 12),
                         elevation: 0,
                         color: colorScheme.surface,
                         shape: RoundedRectangleBorder(
@@ -275,7 +383,7 @@ class _BodyState extends State<Body> {
                           side: BorderSide(color: colorScheme.outlineVariant),
                         ),
                         child: Padding(
-                          padding: const EdgeInsets.all(12.0), // Giảm padding trong thẻ
+                          padding: const EdgeInsets.all(12.0),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -299,7 +407,7 @@ class _BodyState extends State<Body> {
                                         contentPadding: const EdgeInsets.symmetric(
                                           horizontal: 12,
                                           vertical: 10,
-                                        ), // Ép lùn
+                                        ),
                                         border: OutlineInputBorder(
                                           borderRadius: BorderRadius.circular(8),
                                           borderSide: BorderSide(color: colorScheme.outlineVariant),
@@ -343,7 +451,7 @@ class _BodyState extends State<Body> {
                                 style: const TextStyle(
                                   height: 1.5,
                                   fontSize: 14,
-                                ), // Dùng font mono để dễ nhìn phím bấm
+                                ),
                                 decoration: InputDecoration(
                                   hintText:
                                       "Nhập nội dung các bước. Dùng [PHÍM] để hiển thị icon phím bấm trên giao diện.",
@@ -394,7 +502,7 @@ class _BodyState extends State<Body> {
                     style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
                   ),
                   style: FilledButton.styleFrom(
-                    minimumSize: const Size.fromHeight(48), // Chiều cao gọn gàng chuẩn M3
+                    minimumSize: const Size.fromHeight(48),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
                 ),

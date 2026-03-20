@@ -55,6 +55,8 @@ dependencies:
   url_launcher: ^6.3.2
   path_provider: ^2.1.2
   gal: ^2.3.2
+  mobile_scanner: ^5.2.0
+  flutter_js: ^0.8.7
 
 dev_dependencies:
   flutter_test:
@@ -117,6 +119,7 @@ flutter:
     - assets/keymap/other580.json
     - assets/img/googleLogo.png
     - assets/img/Slice1.png
+    - assets/js/cwqr.js
   fonts:
     - family: Casio580
       fonts:

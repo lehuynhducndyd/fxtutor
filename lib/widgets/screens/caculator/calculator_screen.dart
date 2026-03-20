@@ -11,10 +11,17 @@ class CalculatorScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Xác định màn hình lớn (chiều rộng >= 800)
+    final isLargeScreen = MediaQuery.of(context).size.width >= 800;
+
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Lấy Keylog/Screenshoot'),
-      ),
+      // Nếu là màn hình lớn thì gán appBar = null để ẩn hoàn toàn
+      appBar: isLargeScreen
+          ? null
+          : AppBar(
+              title: const Text('Lấy Keylog/Screenshoot'),
+              elevation: 0,
+            ),
       body: const KeepAliveWebView(url: 'https://calc-emu.vercel.app/'),
     );
   }

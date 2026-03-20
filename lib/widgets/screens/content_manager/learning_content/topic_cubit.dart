@@ -15,7 +15,12 @@ class TopicCubit extends Cubit<TopicState> {
     emit(state.copyWith(loadStatus: LoadStatus.Loading));
     try {
       List<TopicModel> topics = await topicService.getTopics();
-      emit(state.copyWith(listTopic: topics, loadStatus: LoadStatus.Done));
+      emit(
+        state.copyWith(
+          listTopic: topics,
+          loadStatus: LoadStatus.Done,
+        ),
+      );
     } catch (e) {
       print(e);
       emit(state.copyWith(loadStatus: LoadStatus.Error));

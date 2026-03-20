@@ -250,11 +250,14 @@ class _AiChatScreenState extends State<AiChatScreen> {
                   // 2. Hiển thị Text
                   if (msg.text.isNotEmpty)
                     if (isUser)
-                      Text(
-                        msg.text,
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: colorScheme.onPrimary,
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Text(
+                          msg.text,
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: colorScheme.onPrimary,
+                          ),
                         ),
                       )
                     else
