@@ -29,4 +29,9 @@ class AdminContributeService {
         })
         .eq('id', contributeId);
   }
+
+  // Xóa đóng góp
+  Future<void> deleteContribution(String id) async {
+    await _supabase.from('contribute').delete().eq('id', id);
+  }
 }

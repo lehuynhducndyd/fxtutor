@@ -41,6 +41,33 @@ class _LearningDetailScreenState extends State<LearningDetailScreen> {
     }
   }
 
+  // --- HÀM HỖ TRỢ MAP MÀU TỪ JSON ---
+  Color _mapColor(String? colorStr, ColorScheme defaultScheme) {
+    switch (colorStr) {
+      case 'red':
+        return Colors.red;
+      case 'blue':
+        return Colors.blue;
+      case 'green':
+        return Colors.green;
+      // Trả về màu mặc định theo Theme sáng/tối của máy
+      default:
+        return defaultScheme.onSurface;
+    }
+  }
+
+  // --- HÀM HỖ TRỢ MAP KÍCH THƯỚC TỪ JSON ---
+  double _mapSize(String? sizeStr) {
+    switch (sizeStr) {
+      case 'small':
+        return 14.0;
+      case 'large':
+        return 20.0;
+      default:
+        return 16.0; // medium
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
@@ -48,9 +75,7 @@ class _LearningDetailScreenState extends State<LearningDetailScreen> {
     return Scaffold(
       backgroundColor: colorScheme.surface,
       appBar: AppBar(
-        title: Text(
-          widget.content.title,
-        ),
+        title: Text(widget.content.title),
         centerTitle: true,
         elevation: 0,
       ),
@@ -116,7 +141,7 @@ class _LearningDetailScreenState extends State<LearningDetailScreen> {
     );
   }
 
-  // Hàm hỗ trợ vẽ từng khối nội dung
+  // ================= HÀM HỖ TRỢ VẼ TỪNG KHỐI NỘI DUNG =================
   Widget _buildBlock(BuildContext context, ContentBlock block) {
     final colorScheme = Theme.of(context).colorScheme;
 
@@ -128,6 +153,13 @@ class _LearningDetailScreenState extends State<LearningDetailScreen> {
 
     switch (block.type) {
       case 'text':
+        // Đọc các thuộc tính Style từ JSON
+        final bool isBold = block.isBold ?? false;
+        final bool isItalic = block.isItalic ?? false;
+        final bool isUnderline = block.isUnderline ?? false;
+        final Color textColor = _mapColor(block.color, colorScheme);
+        final double textSize = _mapSize(block.fontSize);
+
         return Padding(
           padding: const EdgeInsets.only(bottom: 16.0),
           child: MarkdownWidget(
@@ -139,11 +171,13 @@ class _LearningDetailScreenState extends State<LearningDetailScreen> {
               configs: [
                 PConfig(
                   textStyle: TextStyle(
-                    fontSize: 16,
+                    fontSize: textSize,
                     height: 1.6,
-                    color: Theme.of(
-                      context,
-                    ).textTheme.bodyLarge?.color, // Tự đổi màu theo theme sáng/tối
+                    color: textColor,
+                    fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
+                    fontStyle: isItalic ? FontStyle.italic : FontStyle.normal,
+                    decoration: isUnderline ? TextDecoration.underline : TextDecoration.none,
+                    decorationColor: textColor, // Đổi màu gạch chân cho tiệp với màu chữ
                   ),
                 ),
               ],

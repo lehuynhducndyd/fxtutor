@@ -44,12 +44,43 @@ class _CasioQrState extends State<CasioQr> {
   String _getTemplatedLatex() {
     if (_qrContent['result'] != null && _qrContent['result'] is List) {
       for (var item in _qrContent['result']) {
+        // Tìm đúng block có name là 'templated'
         if (item['name'] == 'templated') {
-          return item['latex'] ?? '';
+          String rawLatex = item['latex'] ?? '';
+
+          // Nếu rỗng thì trả về rỗng luôn
+          if (rawLatex.isEmpty) return '';
+          rawLatex = rawLatex.replaceAll(r'\\', r'\\[15pt]');
+          // Kiểm tra xem chuỗi đã có môi trường đa dòng chưa
+          // Nếu chưa có (chứa các dấu \\ trơ trọi) thì bọc nó vào mảng để xuống dòng
+          if (!rawLatex.contains('\\begin{')) {
+            return '\\begin{array}{l} $rawLatex \\end{array}';
+          }
+
+          return rawLatex;
         }
       }
     }
     return '';
+  }
+
+  String _getEquationLatex() {
+    // Kiểm tra xem 'equation' có tồn tại và là một Map hay không
+    if (_qrContent['equation'] != null && _qrContent['equation'] is Map) {
+      // Truy cập trực tiếp vào key 'latex'
+      String rawLatex = _qrContent['equation']['latex'] ?? '';
+      if (rawLatex.isEmpty) return '';
+      rawLatex = rawLatex.replaceAll(r'\\', r'\\[15pt]');
+      // Kiểm tra xem chuỗi đã có môi trường đa dòng chưa
+      // Nếu chưa có (chứa các dấu \\ trơ trọi) thì bọc nó vào mảng để xuống dòng
+      if (!rawLatex.contains('\\begin{')) {
+        return '\\begin{array}{l} $rawLatex \\end{array}';
+      }
+
+      return rawLatex;
+    } else {
+      return '';
+    }
   }
 
   // Component UI giống y hệt phong cách của LatexGeneratorScreen
@@ -160,6 +191,7 @@ class _CasioQrState extends State<CasioQr> {
     final colorScheme = Theme.of(context).colorScheme;
 
     String expression = _qrContent['expression'] ?? '';
+    String equation = _getEquationLatex();
     String templated = _getTemplatedLatex();
 
     return Scaffold(
@@ -186,7 +218,11 @@ class _CasioQrState extends State<CasioQr> {
                   padding: const EdgeInsets.all(32.0),
                   child: Column(
                     children: [
-                      Icon(Icons.qr_code_scanner_rounded, size: 48, color: colorScheme.outline),
+                      Icon(
+                        Icons.qr_code_scanner_rounded,
+                        size: 80,
+                        color: colorScheme.outline.withOpacity(0.4), // Màu xám mờ tinh tế
+                      ),
                       const SizedBox(height: 16),
                       Text(
                         "Bấm nút Quét QR bên dưới để giải mã biểu thức từ máy tính Casio fx-880BTG.",
@@ -194,7 +230,7 @@ class _CasioQrState extends State<CasioQr> {
                         style: TextStyle(color: colorScheme.outline),
                       ),
                       Text(
-                        "Chỉ khả dụng ở chế độ Calculate (Phép tính thường)",
+                        "Chỉ khả dụng ở chế độ Calculate (Phép tính thường) \nHãy dùng QR version 11 \nKhông hõ trợ QR phân đoạn",
                         textAlign: TextAlign.center,
                         style: TextStyle(color: colorScheme.outline),
                       ),
@@ -205,10 +241,49 @@ class _CasioQrState extends State<CasioQr> {
 
             // KHI ĐÃ CÓ KẾT QUẢ
             if (_qrContent.isNotEmpty) ...[
-              _buildLatexSection('Biểu thức', expression, context),
+              equation.isNotEmpty
+                  ? _buildLatexSection('Biểu thức', equation, context)
+                  : _buildLatexSection('Biểu thức', expression, context),
+
               Divider(color: colorScheme.outlineVariant.withOpacity(0.5)),
               const SizedBox(height: 24),
               _buildLatexSection('Kết quả', templated, context),
+              (equation.isEmpty && templated.isEmpty && _qrContent.isNotEmpty)
+                  ? Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 60.0), // Căn giữa không gian
+                      child: Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.qr_code_scanner_rounded,
+                              size: 80,
+                              color: colorScheme.outline.withOpacity(0.4), // Màu xám mờ tinh tế
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              'Không phân tích được mã QR',
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Do chế độ hiện tại hoặc QR phân đoạn không được hỗ trợ \n *Khi dữ liệu quá lớn, Casio sẽ tách thành nhiều QR nhỏ',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: colorScheme.outline,
+                                height: 1.5,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    )
+                  : const SizedBox.shrink(),
             ],
             const SizedBox(height: 64),
           ],

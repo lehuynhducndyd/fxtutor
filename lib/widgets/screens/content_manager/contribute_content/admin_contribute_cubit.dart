@@ -91,6 +91,22 @@ class AdminContributeCubit extends Cubit<AdminContributeState> {
     }
   }
 
+  Future<bool> delete(String id) async {
+    try {
+      await _service.deleteContribution(id);
+      await loadAllContributions();
+      return true;
+    } catch (e) {
+      emit(
+        state.copyWith(
+          loadStatus: AdminContributeStatus.error,
+          errorMessage: "Lỗi khi xóa: $e",
+        ),
+      );
+      return false;
+    }
+  }
+
   // Khâu chuẩn bị giao diện HTML và Gửi qua EmailService
   Future<void> _sendEmailNotification({
     required String toEmail,

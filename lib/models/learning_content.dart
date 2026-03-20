@@ -4,88 +4,81 @@ class ContentBlock {
   final String? url;
   final String? caption;
 
+  // === THÊM CÁC THUỘC TÍNH STYLE CHO TEXT ===
+  final bool? isBold;
+  final bool? isItalic;
+  final bool? isUnderline;
+  final String? color;
+  final String? fontSize;
+
+  const ContentBlock({
+    required this.type,
+    this.data,
+    this.url,
+    this.caption,
+    this.isBold = false,
+    this.isItalic = false,
+    this.isUnderline = false,
+    this.color = 'black',
+    this.fontSize = 'medium',
+  });
+
+  // Chuyển từ JSON (trên DB) thành Object trong App
   factory ContentBlock.fromJson(Map<String, dynamic> json) {
     return ContentBlock(
-      type: json['type'] ?? 'text',
-      data: json['data'],
-      url: json['url'],
-      caption: json['caption'],
+      type: json['type'] as String,
+      data: json['data'] as String?,
+      url: json['url'] as String?,
+      caption: json['caption'] as String?,
+      // Lấy dữ liệu style lên, nếu không có thì set giá trị mặc định
+      isBold: json['isBold'] as bool? ?? false,
+      isItalic: json['isItalic'] as bool? ?? false,
+      isUnderline: json['isUnderline'] as bool? ?? false,
+      color: json['color'] as String? ?? 'black',
+      fontSize: json['fontSize'] as String? ?? 'medium',
     );
   }
 
+  // Chuyển từ Object trong App thành JSON để lưu xuống DB
   Map<String, dynamic> toJson() {
     return {
       'type': type,
       'data': data,
       'url': url,
       'caption': caption,
+      // Cực kỳ tối ưu: Chỉ lưu các trường style này nếu khối đó là 'text'
+      if (type == 'text') 'isBold': isBold,
+      if (type == 'text') 'isItalic': isItalic,
+      if (type == 'text') 'isUnderline': isUnderline,
+      if (type == 'text') 'color': color,
+      if (type == 'text') 'fontSize': fontSize,
     };
   }
 
-  //<editor-fold desc="Data Methods">
-  const ContentBlock({
-    required this.type,
-    this.data,
-    this.url,
-    this.caption,
-  });
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      (other is ContentBlock &&
-          runtimeType == other.runtimeType &&
-          type == other.type &&
-          data == other.data &&
-          url == other.url &&
-          caption == other.caption);
-
-  @override
-  int get hashCode => type.hashCode ^ data.hashCode ^ url.hashCode ^ caption.hashCode;
-
-  @override
-  String toString() {
-    return 'ContentBlock{' +
-        ' type: $type,' +
-        ' data: $data,' +
-        ' url: $url,' +
-        ' caption: $caption,' +
-        '}';
-  }
-
+  // Hàm copyWith để dễ dàng update UI khi bấm nút đổi màu/đổi size
   ContentBlock copyWith({
     String? type,
     String? data,
     String? url,
     String? caption,
+    bool? isBold,
+    bool? isItalic,
+    bool? isUnderline,
+    String? color,
+    String? fontSize,
   }) {
     return ContentBlock(
       type: type ?? this.type,
       data: data ?? this.data,
       url: url ?? this.url,
       caption: caption ?? this.caption,
+      isBold: isBold ?? this.isBold,
+      isItalic: isItalic ?? this.isItalic,
+      isUnderline: isUnderline ?? this.isUnderline,
+      color: color ?? this.color,
+      fontSize: fontSize ?? this.fontSize,
     );
   }
-
-  Map<String, dynamic> toMap() {
-    return {
-      'type': this.type,
-      'data': this.data,
-      'url': this.url,
-      'caption': this.caption,
-    };
-  }
-
-  factory ContentBlock.fromMap(Map<String, dynamic> map) {
-    return ContentBlock(
-      type: map['type'] as String,
-      data: map['data'] as String,
-      url: map['url'] as String,
-      caption: map['caption'] as String,
-    );
-  }
-
-  //</editor-fold>
 }
 
 class LearningContent {

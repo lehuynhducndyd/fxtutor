@@ -112,7 +112,7 @@ class _LatexGeneratorScreenState extends State<LatexGeneratorScreen> {
               maxLines: 3,
               minLines: 2,
               decoration: InputDecoration(
-                hintText: "VD: hệ phương trình x+y=2 và x-y=0 ...",
+                hintText: "VD: Sum(x^2,2,3) ...",
                 filled: true,
                 fillColor: colorScheme.surfaceContainerHighest.withOpacity(0.3),
                 border: OutlineInputBorder(
@@ -146,7 +146,7 @@ class _LatexGeneratorScreenState extends State<LatexGeneratorScreen> {
                 Navigator.pushNamed(context, CasioQr.route);
               },
               icon: const Icon(Icons.qr_code),
-              label: Text("Lấy Latex từ Casio (chỉ fx-880BTG)"),
+              label: Text("Tạo Latex từ Casio (Model hỗ trợ QR)"),
               style: FilledButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),

@@ -32,7 +32,6 @@ class AddLearningContentScreen extends StatefulWidget {
 class _AddLearningContentScreenState extends State<AddLearningContentScreen> {
   @override
   Widget build(BuildContext context) {
-    // 1. Xác định kích thước màn hình
     final isLargeScreen = MediaQuery.of(context).size.width >= 800;
 
     return GestureDetector(
@@ -46,22 +45,21 @@ class _AddLearningContentScreenState extends State<AddLearningContentScreen> {
           centerTitle: true,
           elevation: 0,
         ),
-        // 2. Chia tỉ lệ màn hình nếu là màn hình lớn
         body: isLargeScreen
             ? SafeArea(
                 child: Row(
                   children: [
                     Expanded(
-                      flex: 2, // Khung soạn thảo chiếm 2/3
+                      flex: 2,
                       child: Body(
                         isAddMode: widget.isAddMode,
                         editIndex: widget.editIndex,
                         isLargeScreen: isLargeScreen,
                       ),
                     ),
-                    const VerticalDivider(width: 1, thickness: 1), // Đường phân cách
+                    const VerticalDivider(width: 1, thickness: 1),
                     const Expanded(
-                      flex: 1, // Khung Máy tính chiếm 1/3
+                      flex: 1,
                       child: CalculatorScreen(),
                     ),
                   ],
@@ -71,7 +69,7 @@ class _AddLearningContentScreenState extends State<AddLearningContentScreen> {
                 isAddMode: widget.isAddMode,
                 editIndex: widget.editIndex,
                 isLargeScreen: isLargeScreen,
-              ), // Màn hình nhỏ thì hiển thị bình thường
+              ),
       ),
     );
   }
@@ -80,7 +78,7 @@ class _AddLearningContentScreenState extends State<AddLearningContentScreen> {
 class Body extends StatefulWidget {
   final bool isAddMode;
   final int? editIndex;
-  final bool isLargeScreen; // Khai báo thêm biến nhận trạng thái màn hình
+  final bool isLargeScreen;
 
   const Body({
     super.key,
@@ -100,6 +98,10 @@ class _BodyState extends State<Body> {
   final ImagePicker _picker = ImagePicker();
   bool _isUploading = false;
 
+  // GIẢI PHÁP 2: Khai báo Map để lưu trữ các Controller, tránh reset con trỏ
+  final Map<int, TextEditingController> _dataControllers = {};
+  final Map<int, TextEditingController> _captionControllers = {};
+
   @override
   void initState() {
     super.initState();
@@ -109,20 +111,71 @@ class _BodyState extends State<Body> {
         final content = state.contents[widget.editIndex!];
         _titleController.text = content.title;
         _blocks = List.from(content.blocks);
+
+        // Khởi tạo các controller ban đầu
+        for (int i = 0; i < _blocks.length; i++) {
+          _dataControllers[i] = TextEditingController(text: _blocks[i].data);
+          _captionControllers[i] = TextEditingController(text: _blocks[i].caption);
+        }
       }
+    } else {
+      // Nếu là chế độ Thêm mới, khởi tạo controller cho block đầu tiên
+      _dataControllers[0] = TextEditingController(text: '');
+      _captionControllers[0] = TextEditingController(text: '');
     }
+  }
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    // Giải phóng bộ nhớ cho các controller
+    for (var controller in _dataControllers.values) {
+      controller.dispose();
+    }
+    for (var controller in _captionControllers.values) {
+      controller.dispose();
+    }
+    super.dispose();
   }
 
   // --- LOGIC XỬ LÝ KHỐI ---
   void _addBlock(String type) {
     setState(() {
-      _blocks.add(ContentBlock(type: type, data: '', url: '', caption: ''));
+      final newIndex = _blocks.length;
+      _blocks.add(
+        ContentBlock(
+          type: type,
+          data: '',
+          url: '',
+          caption: '',
+          isBold: false,
+          isItalic: false,
+          isUnderline: false,
+          color: 'black',
+          fontSize: 'medium',
+        ),
+      );
+      // Tạo mới controller khi thêm khối
+      _dataControllers[newIndex] = TextEditingController(text: '');
+      _captionControllers[newIndex] = TextEditingController(text: '');
     });
   }
 
   void _removeBlock(int index) {
     setState(() {
       _blocks.removeAt(index);
+
+      // Xóa controller và dịch chuyển các controller phía sau lên 1 bậc
+      _dataControllers[index]?.dispose();
+      _captionControllers[index]?.dispose();
+
+      for (int i = index; i < _blocks.length; i++) {
+        _dataControllers[i] = _dataControllers[i + 1]!;
+        _captionControllers[i] = _captionControllers[i + 1]!;
+      }
+
+      _dataControllers.remove(_blocks.length);
+      _captionControllers.remove(_blocks.length);
     });
   }
 
@@ -217,7 +270,6 @@ class _BodyState extends State<Body> {
     Navigator.pop(context);
   }
 
-  // --- GIAO DIỆN ---
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
@@ -243,7 +295,7 @@ class _BodyState extends State<Body> {
         // ================= THANH CÔNG CỤ (TOOL BAR) =================
         Container(
           width: double.infinity,
-          padding: const EdgeInsets.symmetric(vertical: 6), // Ép nhỏ padding dọc
+          padding: const EdgeInsets.symmetric(vertical: 6),
           decoration: BoxDecoration(
             color: colorScheme.surface,
             border: Border(bottom: BorderSide(color: colorScheme.outlineVariant.withOpacity(0.3))),
@@ -264,15 +316,12 @@ class _BodyState extends State<Body> {
                   label: const Text("Latex"),
                   style: FilledButton.styleFrom(visualDensity: VisualDensity.compact),
                 ),
-
-                // 3. Ẩn nút Keylog/Screen nếu đang mở trên màn hình lớn
                 if (!widget.isLargeScreen)
                   FilledButton.tonalIcon(
                     onPressed: () => Navigator.pushNamed(context, CalculatorScreen.route),
                     label: const Text("Keylog/Screen"),
                     style: FilledButton.styleFrom(visualDensity: VisualDensity.compact),
                   ),
-
                 FilledButton.tonalIcon(
                   onPressed: () => Navigator.pushNamed(context, MoreKeylogScreen2.route),
                   label: const Text("2nd Keylog 580"),
@@ -291,7 +340,7 @@ class _BodyState extends State<Body> {
         // ================= THANH CỐ ĐỊNH: THÊM KHỐI MỚI =================
         Container(
           width: double.infinity,
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8), // Tối ưu padding
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           decoration: BoxDecoration(
             color: colorScheme.surface,
             border: Border(
@@ -336,7 +385,7 @@ class _BodyState extends State<Body> {
                 ],
                 child: Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.symmetric(vertical: 10), // Giảm độ dày nút Thêm
+                  padding: const EdgeInsets.symmetric(vertical: 10),
                   decoration: BoxDecoration(
                     color: colorScheme.primaryContainer.withOpacity(0.4),
                     borderRadius: BorderRadius.circular(10),
@@ -371,7 +420,7 @@ class _BodyState extends State<Body> {
                 padding: const EdgeInsets.symmetric(
                   horizontal: 12.0,
                   vertical: 16.0,
-                ), // Ép nhẹ lề ngang
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -392,7 +441,6 @@ class _BodyState extends State<Body> {
                           borderRadius: BorderRadius.circular(12),
                           borderSide: BorderSide(color: colorScheme.outlineVariant),
                         ),
-                        // Bóp padding của TextField
                         contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                       ),
                     ),
@@ -442,7 +490,7 @@ class _BodyState extends State<Body> {
                     style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
                   ),
                   style: FilledButton.styleFrom(
-                    minimumSize: const Size.fromHeight(48), // Chiều cao chuẩn 48px thay vì 54px
+                    minimumSize: const Size.fromHeight(48),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
                 ),
@@ -459,7 +507,7 @@ class _BodyState extends State<Body> {
   PopupMenuItem<String> _buildPopupItem(String value, IconData icon, String text, Color color) {
     return PopupMenuItem(
       value: value,
-      height: 40, // Ép gọn chiều cao item trong menu
+      height: 40,
       child: Row(
         children: [
           Icon(icon, color: color, size: 20),
@@ -521,11 +569,35 @@ class _BodyState extends State<Body> {
     }
   }
 
+  Color _mapStringToColor(String colorStr) {
+    switch (colorStr) {
+      case 'red':
+        return Colors.red;
+      case 'blue':
+        return Colors.blue;
+      case 'green':
+        return Colors.green;
+      default:
+        return Colors.black87;
+    }
+  }
+
+  double _mapStringToSize(String sizeStr) {
+    switch (sizeStr) {
+      case 'small':
+        return 12.0;
+      case 'large':
+        return 18.0;
+      default:
+        return 14.0; // medium
+    }
+  }
+
   Widget _buildBlockItem(int index, ContentBlock block, ColorScheme colorScheme) {
     final Color colorTheme = _getBlockColor(block.type);
 
     return Card(
-      margin: const EdgeInsets.only(bottom: 12), // Giảm khoảng cách giữa các khối
+      margin: const EdgeInsets.only(bottom: 12),
       elevation: 0,
       color: colorScheme.surface,
       shape: RoundedRectangleBorder(
@@ -533,19 +605,15 @@ class _BodyState extends State<Body> {
         side: BorderSide(color: colorScheme.outlineVariant),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(12.0), // Giảm padding trong card
+        padding: const EdgeInsets.all(12.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // --- HEADER KHỐI ---
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
-                  ), // Nhỏ gọn badge lại
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
                     color: colorTheme.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(6),
@@ -565,6 +633,195 @@ class _BodyState extends State<Body> {
                     ],
                   ),
                 ),
+                const SizedBox(width: 8),
+
+                // === THANH CÔNG CỤ MINI (ĐÃ THÊM TÍNH NĂNG CUỘN NGANG) ===
+                if (block.type == 'text') ...[
+                  // GIẢI PHÁP 1: Bọc trong Expanded + SingleChildScrollView để cuộn ngang được
+                  Expanded(
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      reverse: true, // Để mặc định các nút dồn về bên phải
+                      child: Container(
+                        height: 34,
+                        padding: const EdgeInsets.symmetric(horizontal: 4),
+                        decoration: BoxDecoration(
+                          color: colorScheme.surfaceContainerHighest.withOpacity(0.4),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            // --- IN ĐẬM ---
+                            const SizedBox(width: 20),
+                            IconButton(
+                              icon: const Icon(Icons.format_bold_rounded, size: 18),
+                              tooltip: "In đậm",
+                              color: (block.isBold ?? false)
+                                  ? colorScheme.onPrimaryContainer
+                                  : colorScheme.onSurfaceVariant,
+                              style: IconButton.styleFrom(
+                                backgroundColor: (block.isBold ?? false)
+                                    ? colorScheme.primaryContainer
+                                    : Colors.transparent,
+                                padding: EdgeInsets.zero,
+                                minimumSize: const Size(26, 26),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                              ),
+                              onPressed: () => setState(
+                                () => _blocks[index] = block.copyWith(
+                                  isBold: !(block.isBold ?? false),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 2),
+
+                            // --- IN NGHIÊNG ---
+                            IconButton(
+                              icon: const Icon(Icons.format_italic_rounded, size: 18),
+                              tooltip: "In nghiêng",
+                              color: (block.isItalic ?? false)
+                                  ? colorScheme.onPrimaryContainer
+                                  : colorScheme.onSurfaceVariant,
+                              style: IconButton.styleFrom(
+                                backgroundColor: (block.isItalic ?? false)
+                                    ? colorScheme.primaryContainer
+                                    : Colors.transparent,
+                                padding: EdgeInsets.zero,
+                                minimumSize: const Size(26, 26),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                              ),
+                              onPressed: () => setState(
+                                () => _blocks[index] = block.copyWith(
+                                  isItalic: !(block.isItalic ?? false),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 2),
+
+                            // --- GẠCH CHÂN ---
+                            IconButton(
+                              icon: const Icon(Icons.format_underlined_rounded, size: 18),
+                              tooltip: "Gạch chân",
+                              color: (block.isUnderline ?? false)
+                                  ? colorScheme.onPrimaryContainer
+                                  : colorScheme.onSurfaceVariant,
+                              style: IconButton.styleFrom(
+                                backgroundColor: (block.isUnderline ?? false)
+                                    ? colorScheme.primaryContainer
+                                    : Colors.transparent,
+                                padding: EdgeInsets.zero,
+                                minimumSize: const Size(26, 26),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                              ),
+                              onPressed: () => setState(
+                                () => _blocks[index] = block.copyWith(
+                                  isUnderline: !(block.isUnderline ?? false),
+                                ),
+                              ),
+                            ),
+
+                            // --- VẠCH NGĂN CÁCH ---
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                              child: VerticalDivider(
+                                width: 1,
+                                indent: 6,
+                                endIndent: 6,
+                                color: colorScheme.outlineVariant,
+                              ),
+                            ),
+
+                            // --- CHỌN MÀU CHỮ ---
+                            PopupMenuButton<String>(
+                              tooltip: "Màu chữ",
+                              initialValue: block.color ?? 'black',
+                              onSelected: (val) =>
+                                  setState(() => _blocks[index] = block.copyWith(color: val)),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              offset: const Offset(0, 30),
+                              itemBuilder: (context) => [
+                                const PopupMenuItem(value: 'black', child: Text('Đen')),
+                                const PopupMenuItem(
+                                  value: 'red',
+                                  child: Text('Đỏ', style: TextStyle(color: Colors.red)),
+                                ),
+                                const PopupMenuItem(
+                                  value: 'green',
+                                  child: Text('Lục', style: TextStyle(color: Colors.green)),
+                                ),
+                                const PopupMenuItem(
+                                  value: 'blue',
+                                  child: Text('Lam', style: TextStyle(color: Colors.blue)),
+                                ),
+                              ],
+                              child: Container(
+                                width: 26,
+                                height: 26,
+                                margin: const EdgeInsets.symmetric(horizontal: 2),
+                                decoration: BoxDecoration(borderRadius: BorderRadius.circular(6)),
+                                child: Icon(
+                                  Icons.palette_rounded,
+                                  size: 18,
+                                  color: _mapStringToColor(block.color ?? 'black'),
+                                ),
+                              ),
+                            ),
+
+                            // --- CHỌN SIZE CHỮ ---
+                            PopupMenuButton<String>(
+                              tooltip: "Kích thước chữ",
+                              initialValue: block.fontSize ?? 'medium',
+                              onSelected: (val) =>
+                                  setState(() => _blocks[index] = block.copyWith(fontSize: val)),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              offset: const Offset(0, 30),
+                              itemBuilder: (context) => const [
+                                PopupMenuItem(
+                                  value: 'small',
+                                  child: Text('Nhỏ (Small)', style: TextStyle(fontSize: 12)),
+                                ),
+                                PopupMenuItem(
+                                  value: 'medium',
+                                  child: Text('Vừa (Medium)', style: TextStyle(fontSize: 14)),
+                                ),
+                                PopupMenuItem(
+                                  value: 'large',
+                                  child: Text('Lớn (Large)', style: TextStyle(fontSize: 18)),
+                                ),
+                              ],
+                              child: Container(
+                                width: 26,
+                                height: 26,
+                                margin: const EdgeInsets.symmetric(horizontal: 2),
+                                decoration: BoxDecoration(borderRadius: BorderRadius.circular(6)),
+                                child: Icon(
+                                  Icons.text_fields_rounded,
+                                  size: 18,
+                                  color: colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 40),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ] else
+                  const Spacer(),
+
+                // Nút Xóa
                 SizedBox(
                   width: 32,
                   height: 32,
@@ -577,26 +834,32 @@ class _BodyState extends State<Body> {
                 ),
               ],
             ),
-            const SizedBox(height: 10), // Giảm khoảng cách từ header xuống ô nhập
+            const SizedBox(height: 10),
+
             // --- NỘI DUNG TÙY THEO LOẠI ---
 
             // 1. VĂN BẢN
             if (block.type == 'text')
               TextField(
-                controller: TextEditingController(text: block.data)
-                  ..selection = TextSelection.collapsed(offset: block.data?.length ?? 0),
+                // Sử dụng Controller từ Map đã khai báo ở trên để không bị reset con trỏ
+                controller: _dataControllers[index],
                 onChanged: (v) => _blocks[index] = block.copyWith(data: v),
                 maxLines: null,
                 minLines: 2,
-                style: const TextStyle(fontSize: 14),
+                style: TextStyle(
+                  fontSize: _mapStringToSize(block.fontSize ?? 'medium'),
+                  color: _mapStringToColor(block.color ?? 'black'),
+                  fontWeight: (block.isBold ?? false) ? FontWeight.bold : FontWeight.normal,
+                  fontStyle: (block.isItalic ?? false) ? FontStyle.italic : FontStyle.normal,
+                  decoration: (block.isUnderline ?? false)
+                      ? TextDecoration.underline
+                      : TextDecoration.none,
+                ),
                 decoration: InputDecoration(
                   hintText: "Nhập văn bản thông thường...",
                   filled: true,
                   fillColor: colorScheme.surfaceContainerHighest.withOpacity(0.3),
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 10,
-                  ), // Ép mỏng padding
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
                     borderSide: BorderSide.none,
@@ -607,8 +870,7 @@ class _BodyState extends State<Body> {
             // 2. LATEX
             if (block.type == 'latex')
               TextField(
-                controller: TextEditingController(text: block.data)
-                  ..selection = TextSelection.collapsed(offset: block.data?.length ?? 0),
+                controller: _dataControllers[index],
                 onChanged: (v) => _blocks[index] = block.copyWith(data: v),
                 maxLines: null,
                 minLines: 1,
@@ -621,17 +883,14 @@ class _BodyState extends State<Body> {
                 decoration: InputDecoration(
                   hintText: "VD: x = \\frac{-b \\pm \\sqrt{\\Delta}}{2a}",
                   hintStyle: TextStyle(
-                    color: Colors.teal.withOpacity(0.6), // Giảm độ đậm của màu
-                    fontWeight: FontWeight.normal, // Để chữ thường, không in đậm
+                    color: Colors.teal.withOpacity(0.6),
+                    fontWeight: FontWeight.normal,
                   ),
                   prefixText: "\$\$ ",
                   suffixText: " \$\$",
                   filled: true,
                   fillColor: Colors.teal.withOpacity(0.05),
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 10,
-                  ), // Ép mỏng padding
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
                     borderSide: BorderSide(color: Colors.teal.withOpacity(0.3)),
@@ -639,14 +898,13 @@ class _BodyState extends State<Body> {
                 ),
               ),
 
-            // 3. FX-580 / FX-880 KEYLOG
+            // 3. KEYLOG
             if (block.type == '580keylog' || block.type == '880keylog')
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   TextField(
-                    controller: TextEditingController(text: block.data)
-                      ..selection = TextSelection.collapsed(offset: block.data?.length ?? 0),
+                    controller: _dataControllers[index],
                     onChanged: (v) => _blocks[index] = block.copyWith(data: v),
                     maxLines: null,
                     minLines: 1,
@@ -659,10 +917,7 @@ class _BodyState extends State<Body> {
                       prefixIcon: Icon(Icons.keyboard_rounded, size: 20, color: colorTheme),
                       filled: true,
                       fillColor: colorTheme.withOpacity(0.05),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 10,
-                      ), // Ép mỏng padding
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
                         borderSide: BorderSide(color: colorTheme.withOpacity(0.3)),
@@ -681,7 +936,7 @@ class _BodyState extends State<Body> {
             if (block.type == 'image') ...[
               Container(
                 width: double.infinity,
-                height: 150, // Ép lùn khung ảnh xuống để đỡ tốn diện tích
+                height: 150,
                 decoration: BoxDecoration(
                   color: colorScheme.surfaceContainerHighest.withOpacity(0.5),
                   borderRadius: BorderRadius.circular(8),
@@ -738,8 +993,7 @@ class _BodyState extends State<Body> {
               ),
               const SizedBox(height: 8),
               TextField(
-                controller: TextEditingController(text: block.caption)
-                  ..selection = TextSelection.collapsed(offset: block.caption?.length ?? 0),
+                controller: _captionControllers[index],
                 onChanged: (v) => _blocks[index] = block.copyWith(caption: v),
                 style: const TextStyle(fontSize: 13),
                 decoration: InputDecoration(
@@ -747,10 +1001,7 @@ class _BodyState extends State<Body> {
                   prefixIcon: const Icon(Icons.description_outlined, size: 18),
                   filled: true,
                   fillColor: colorScheme.surfaceContainerHighest.withOpacity(0.3),
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 10,
-                  ), // Ép mỏng padding
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(8),
                     borderSide: BorderSide.none,

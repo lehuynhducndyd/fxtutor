@@ -245,18 +245,36 @@ class _AdminContributeViewState extends State<AdminContributeView> {
 
                                       // Footer: Thời gian
                                       Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                         children: [
-                                          Icon(
-                                            Icons.access_time_rounded,
-                                            size: 14,
-                                            color: colorScheme.outline,
+                                          Row(
+                                            children: [
+                                              Icon(
+                                                Icons.access_time_rounded,
+                                                size: 14,
+                                                color: colorScheme.outline,
+                                              ),
+                                              const SizedBox(width: 6),
+                                              Text(
+                                                item.createdAt.toString().substring(0, 16),
+                                                style: textTheme.labelMedium?.copyWith(
+                                                  color: colorScheme.onSurfaceVariant,
+                                                ),
+                                              ),
+                                            ],
                                           ),
-                                          const SizedBox(width: 6),
-                                          Text(
-                                            item.createdAt.toString().substring(0, 16),
-                                            style: textTheme.labelMedium?.copyWith(
-                                              color: colorScheme.onSurfaceVariant,
+                                          IconButton(
+                                            onPressed: () => _showDeleteDialog(
+                                              context,
+                                              item,
+                                              context.read<AdminContributeCubit>(),
                                             ),
+                                            icon: Icon(
+                                              Icons.delete_outline_rounded,
+                                              color: colorScheme.error,
+                                              size: 20,
+                                            ),
+                                            visualDensity: VisualDensity.compact,
                                           ),
                                         ],
                                       ),
@@ -340,7 +358,45 @@ class _AdminContributeViewState extends State<AdminContributeView> {
     );
   }
 
-  // Hộp thoại kiểm duyệt M3
+  // Hộp thoại xác nhận xóa
+  void _showDeleteDialog(
+    BuildContext context,
+    AdminContributeModel item,
+    AdminContributeCubit cubit,
+  ) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text("Xác nhận xóa"),
+        content: const Text(
+          "Bạn có chắc chắn muốn xóa đóng góp này không? Hành động này không thể hoàn tác.",
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: const Text("Hủy"),
+          ),
+          FilledButton(
+            onPressed: () async {
+              Navigator.pop(dialogContext);
+              final success = await cubit.delete(item.id);
+              if (context.mounted && success) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Đã xóa thành công')),
+                );
+              }
+            },
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.error,
+              foregroundColor: Theme.of(context).colorScheme.onError,
+            ),
+            child: const Text("Xóa"),
+          ),
+        ],
+      ),
+    );
+  }
+
   // Hộp thoại kiểm duyệt M3
   void _showReviewDialog(
     BuildContext context,
