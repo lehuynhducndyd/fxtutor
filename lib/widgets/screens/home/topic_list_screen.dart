@@ -152,115 +152,93 @@ class _BodyState extends State<_Body> {
                       onRefresh: () async {
                         context.read<TopicCubit>().loadTopics();
                       },
-                      child: ListView.separated(
+                      child: ListView.builder(
                         physics:
                             const AlwaysScrollableScrollPhysics(), // Đảm bảo luôn kéo refresh được kể cả khi list ngắn
                         padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
                         itemCount: filteredTopics.length,
-                        separatorBuilder: (context, index) => const SizedBox(height: 12),
                         itemBuilder: (context, index) {
                           final topic = filteredTopics[index];
                           final originalIndex = state.listTopic.indexOf(topic);
 
-                          return Card(
-                            elevation: 0, // M3 style
-                            color: colorScheme.surfaceContainerHighest.withOpacity(0.4),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                              side: BorderSide(color: colorScheme.outlineVariant.withOpacity(0.5)),
-                            ),
-                            child: InkWell(
-                              borderRadius: BorderRadius.circular(16),
-                              onTap: () {
-                                context.read<TopicCubit>().setSelectedIdx(originalIndex);
-                                Navigator.pushNamed(
-                                  context,
-                                  LearningListScreen.route,
-                                  arguments: {'cubit': context.read<TopicCubit>()},
-                                );
-                              },
-                              child: Padding(
-                                padding: const EdgeInsets.all(16.0),
-                                child: Row(
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 12.0),
+                            child: Card(
+                              elevation: 2,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: ListTile(
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 12,
+                                ),
+                                leading: const Icon(
+                                  Icons.menu_book_rounded,
+                                  color: Colors.blueAccent,
+                                  size: 32,
+                                ),
+                                title: Text(
+                                  topic.title,
+                                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                                ),
+                                subtitle: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    // Icon trang trí hiện đại
-                                    Container(
-                                      padding: const EdgeInsets.all(12),
-                                      decoration: BoxDecoration(
-                                        color: colorScheme.primaryContainer,
-                                        borderRadius: BorderRadius.circular(12),
+                                    const SizedBox(height: 6),
+                                    Text(
+                                      topic.description,
+                                      style: textTheme.bodyMedium?.copyWith(
+                                        color: colorScheme.onSurfaceVariant,
                                       ),
-                                      child: Icon(
-                                        Icons.menu_book_rounded,
-                                        color: colorScheme.onPrimaryContainer,
-                                        size: 24,
-                                      ),
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
                                     ),
-                                    const SizedBox(width: 16),
-                                    // Nội dung text
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            topic.title,
-                                            style: textTheme.titleMedium?.copyWith(
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                          const SizedBox(height: 6),
-                                          Text(
-                                            topic.description,
-                                            style: textTheme.bodyMedium?.copyWith(
-                                              color: colorScheme.onSurfaceVariant,
-                                            ),
-                                            maxLines: 2,
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                          const SizedBox(height: 10),
 
-                                          // Người tạo
-                                          if (topic.userId != null && topic.userId!.isNotEmpty)
-                                            FutureBuilder<UserModel?>(
-                                              future: context.read<LearningService>().getUserById(
-                                                topic.userId!,
-                                              ),
-                                              builder: (context, snapshot) {
-                                                if (snapshot.hasData && snapshot.data != null) {
-                                                  return Row(
-                                                    children: [
-                                                      Icon(
-                                                        Icons.edit_square,
-                                                        size: 14,
-                                                        color: colorScheme.primary,
-                                                      ),
-                                                      const SizedBox(width: 4),
-                                                      Text(
-                                                        snapshot.data!.fullName ??
-                                                            snapshot.data!.email ??
-                                                            'Ẩn danh',
-                                                        style: textTheme.labelMedium?.copyWith(
-                                                          color: colorScheme.primary,
-                                                          fontWeight: FontWeight.w500,
-                                                        ),
-                                                      ),
-                                                    ],
-                                                  );
-                                                }
-                                                return const SizedBox.shrink();
-                                              },
-                                            ),
-                                        ],
+                                    // Hiển thị người tạo
+                                    if (topic.userId != null && topic.userId!.isNotEmpty) ...[
+                                      const SizedBox(height: 8),
+                                      FutureBuilder<UserModel?>(
+                                        future: context.read<LearningService>().getUserById(
+                                          topic.userId!,
+                                        ),
+                                        builder: (context, snapshot) {
+                                          if (snapshot.hasData && snapshot.data != null) {
+                                            return Row(
+                                              children: [
+                                                Icon(
+                                                  Icons.edit_square,
+                                                  size: 14,
+                                                  color: colorScheme.primary,
+                                                ),
+                                                const SizedBox(width: 4),
+                                                Text(
+                                                  snapshot.data!.fullName ??
+                                                      snapshot.data!.email ??
+                                                      'Ẩn danh',
+                                                  style: textTheme.labelMedium?.copyWith(
+                                                    color: colorScheme.primary,
+                                                    fontWeight: FontWeight.w500,
+                                                  ),
+                                                ),
+                                              ],
+                                            );
+                                          }
+                                          return const SizedBox.shrink();
+                                        },
                                       ),
-                                    ),
-                                    // Mũi tên điều hướng (canh giữa chiều dọc)
-                                    const Padding(
-                                      padding: EdgeInsets.only(top: 12.0),
-                                      child: Icon(Icons.chevron_right, color: Colors.grey),
-                                    ),
+                                    ],
                                   ],
                                 ),
+                                trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 16),
+                                onTap: () {
+                                  context.read<TopicCubit>().setSelectedIdx(originalIndex);
+                                  Navigator.pushNamed(
+                                    context,
+                                    LearningListScreen.route,
+                                    arguments: {'cubit': context.read<TopicCubit>()},
+                                  );
+                                },
                               ),
                             ),
                           );

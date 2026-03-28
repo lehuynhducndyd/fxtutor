@@ -26,6 +26,7 @@ import 'package:fx_tutor/widgets/screens/content_manager/learning_content/topic_
 import 'package:fx_tutor/widgets/screens/contribute/add_contribute_screen.dart';
 import 'package:fx_tutor/widgets/screens/contribute/contribute_screen.dart';
 import 'package:fx_tutor/widgets/screens/guide/guide_screen.dart';
+import 'package:fx_tutor/widgets/screens/home/casio_qr_guide.dart';
 import 'package:fx_tutor/widgets/screens/home/home_screen.dart';
 import 'package:fx_tutor/widgets/screens/home/learning_list_detail_screen.dart';
 import 'package:fx_tutor/widgets/screens/home/learning_list_screen.dart';
@@ -211,6 +212,8 @@ Route<dynamic>? mainRoute(RouteSettings settings) {
       return MaterialPageRoute(builder: (context) => InfoScreen(), settings: settings);
     case UserManagerScreen.route:
       return MaterialPageRoute(builder: (context) => UserManagerScreen(), settings: settings);
+    case CasioQrGuide.route:
+      return MaterialPageRoute(builder: (context) => CasioQrGuide(), settings: settings);
     default:
       return MaterialPageRoute(builder: (context) => LoginScreen(), settings: settings);
   }

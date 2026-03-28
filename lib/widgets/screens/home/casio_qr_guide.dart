@@ -1,20 +1,28 @@
+import 'dart:convert';
+import 'dart:typed_data';
+
+import 'package:file_saver/file_saver.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_math_fork/flutter_math.dart';
+import 'package:fx_tutor/services/translate.dart';
+import 'package:fx_tutor/widgets/screens/home/pdf_viewer.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../services/qr_parse_service.dart';
 
-class CasioQr extends StatefulWidget {
-  const CasioQr({super.key});
-  static const String route = 'CasioQr';
+class CasioQrGuide extends StatefulWidget {
+  const CasioQrGuide({super.key});
+  static const String route = 'CasioQrGuide';
 
   @override
-  State<CasioQr> createState() => _CasioQrState();
+  State<CasioQrGuide> createState() => _CasioQrGuideState();
 }
 
-class _CasioQrState extends State<CasioQr> {
+class _CasioQrGuideState extends State<CasioQrGuide> {
   Map<String, dynamic> _qrContent = {};
+  String rawLink = "";
+  String modeCode = "";
 
   late CasioQRParser _parser;
   bool _isParserReady = false;
@@ -39,6 +47,18 @@ class _CasioQrState extends State<CasioQr> {
   void dispose() {
     _parser.dispose();
     super.dispose();
+  }
+
+  String _getCSVString() {
+    String csvString = '';
+
+    if (_qrContent['statistic'] != null) {
+      csvString = _qrContent['statistic']['csv'];
+    }
+    if (_qrContent['spreadsheet'] != null) {
+      csvString = _qrContent['spreadsheet']['csv'];
+    }
+    return csvString;
   }
 
   String _getEquationLatex() {
@@ -84,6 +104,29 @@ class _CasioQrState extends State<CasioQr> {
       }
 
       return rawLatex;
+    } else {
+      return '';
+    }
+  }
+
+  String _getName() {
+    if (_qrContent['mode'] != null && _qrContent['mode'] is Map) {
+      String mainName = CasioTranslator.translate(_qrContent['mode']['mainName']) ?? '';
+      String subName = '';
+      if (_qrContent['mode']['subName'] != null) {
+        String subName = CasioTranslator.translate(_qrContent['mode']['subName']) ?? '';
+        if (subName.isNotEmpty) subName = ' - $subName';
+      }
+      return '$mainName$subName';
+    } else {
+      return '';
+    }
+  }
+
+  String _getMode() {
+    if (_qrContent['mode'] != null && _qrContent['mode'] is Map) {
+      String mainMode = CasioTranslator.translate(_qrContent['mode']['mainMode']) ?? '';
+      return mainMode;
     } else {
       return '';
     }
@@ -231,6 +274,138 @@ class _CasioQrState extends State<CasioQr> {
     return ''; // Nếu không có gì thì trả về chuỗi rỗng
   }
 
+  Widget _buildTable(String title, String csvstring, BuildContext context) {
+    if (csvstring.isEmpty) return const SizedBox.shrink();
+
+    // 1. Phân tích chuỗi CSV ngay trong hàm
+    List<String> rows = csvstring.trim().split('\n');
+    List<List<String>> tableData = rows.map((row) => row.split(',')).toList();
+
+    // Gọt bỏ các dòng rỗng (chứa toàn dấu phẩy như ",,,,")
+    tableData.removeWhere((row) => row.every((cell) => cell.trim().isEmpty));
+
+    if (tableData.isEmpty || tableData[0].isEmpty) return const SizedBox.shrink();
+
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // ================= TIÊU ĐỀ & NÚT XUẤT FILE =================
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              title,
+              style: textTheme.titleSmall?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: colorScheme.outline,
+              ),
+            ),
+            TextButton.icon(
+              onPressed: () async {
+                try {
+                  // 1. Chuyển chuỗi CSV sang định dạng byte (UTF-8)
+                  final bytes = Uint8List.fromList(utf8.encode(csvstring));
+
+                  // 2. Gọi lệnh "Save As" để ÉP hệ điều hành hiện hộp thoại chọn thư mục
+                  String? filePath = await FileSaver.instance.saveAs(
+                    name: 'casio_data_${DateTime.now().millisecondsSinceEpoch}',
+                    bytes: bytes, // Nếu IDE vẫn báo lỗi đỏ thì thêm 'as dynamic' vô lại nha
+                    mimeType: MimeType.csv,
+                    fileExtension: 'csv',
+                  );
+
+                  // 3. Thông báo thành công
+                  // LƯU Ý: Check filePath != null vì người dùng có thể bấm "Hủy/Cancel" lúc chọn thư mục
+                  if (context.mounted && filePath != null && filePath.isNotEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Đã lưu tại: $filePath'), // In luôn đường dẫn ra cho dễ tìm
+                        backgroundColor: Colors.green,
+                        behavior: SnackBarBehavior.floating,
+                      ),
+                    );
+                  }
+                } catch (e) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Lỗi lưu file: $e'),
+                        backgroundColor: Colors.red,
+                        behavior: SnackBarBehavior.floating,
+                      ),
+                    );
+                  }
+                }
+              },
+              icon: const Icon(Icons.download_rounded, size: 18),
+              label: const Text("Lưu CSV"),
+              style: TextButton.styleFrom(visualDensity: VisualDensity.compact),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+
+        // ================= GIAO DIỆN BẢNG DATATABLE =================
+        Container(
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: colorScheme.surface,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: colorScheme.outlineVariant),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.02),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          clipBehavior: Clip.antiAlias, // Bo góc mượt mà cho bảng
+          child: Align(
+            alignment: Alignment.center,
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal, // Cuộn ngang nếu cột quá dài
+              child: DataTable(
+                headingRowColor: WidgetStateProperty.all(
+                  colorScheme.surfaceContainerHighest.withOpacity(0.5),
+                ),
+                columns: List.generate(
+                  tableData[0].length,
+                  (index) => DataColumn(
+                    label: Text(
+                      // Tự động đánh tên cột: A, B, C, D...
+                      String.fromCharCode(65 + index),
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ),
+                rows: tableData.map((row) {
+                  return DataRow(
+                    cells: row.map((cell) {
+                      final cellText = cell.trim();
+                      return DataCell(
+                        Text(
+                          cellText.isEmpty ? '-' : cellText, // Ô rỗng thì để dấu trừ cho đỡ trống
+                          style: TextStyle(
+                            color: cellText.isEmpty ? colorScheme.outline : colorScheme.onSurface,
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  );
+                }).toList(),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 32),
+      ],
+    );
+  }
+
   Widget _buildLatexSection(String title, String latexCode, BuildContext context) {
     if (latexCode.isEmpty) return const SizedBox.shrink();
 
@@ -240,51 +415,8 @@ class _CasioQrState extends State<CasioQr> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              title,
-              style: textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-            ),
-            TextButton.icon(
-              onPressed: () {
-                Clipboard.setData(ClipboardData(text: latexCode));
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Đã sao chép $title!'),
-                    behavior: SnackBarBehavior.floating,
-                  ),
-                );
-              },
-              icon: const Icon(Icons.copy_rounded, size: 18),
-              label: const Text("Copy nhanh"),
-              style: TextButton.styleFrom(visualDensity: VisualDensity.compact),
-            ),
-          ],
-        ),
-        const SizedBox(height: 8),
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: colorScheme.surfaceContainerHighest.withOpacity(0.5),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: colorScheme.outlineVariant),
-          ),
-          child: SelectableText(
-            latexCode,
-            style: const TextStyle(
-              fontFamily: 'Courier',
-              fontSize: 14,
-              color: Colors.teal,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ),
-        const SizedBox(height: 24),
         Text(
-          "Xem trước (Preview)",
+          title,
           style: textTheme.titleSmall?.copyWith(
             fontWeight: FontWeight.bold,
             color: colorScheme.outline,
@@ -312,7 +444,7 @@ class _CasioQrState extends State<CasioQr> {
               child: Math.tex(
                 latexCode,
                 mathStyle: MathStyle.display,
-                textStyle: const TextStyle(fontSize: 22),
+                textStyle: const TextStyle(fontSize: 18),
                 onErrorFallback: (FlutterMathException e) {
                   return Text(
                     "Lỗi hiển thị: ${e.message}",
@@ -328,6 +460,125 @@ class _CasioQrState extends State<CasioQr> {
     );
   }
 
+  String getPdfPath(String mode) {
+    switch (mode) {
+      case 'X1':
+        return 'assets/pdf/X1.pdf';
+      case 'X2':
+        return 'assets/pdf/X2.pdf';
+      case 'X3':
+        return 'assets/pdf/X3.pdf';
+      case 'X4':
+        return 'assets/pdf/X4.pdf';
+      case 'X5':
+        return 'assets/pdf/X5.pdf';
+      case 'X6':
+        return 'assets/pdf/X6.pdf';
+      case 'X7':
+        return 'assets/pdf/X7.pdf';
+      case 'X8':
+        return 'assets/pdf/X8.pdf';
+      case 'XA':
+        return 'assets/pdf/XA.pdf';
+      case 'XB':
+        return 'assets/pdf/XB.pdf';
+      case 'XC':
+        return 'assets/pdf/XC.pdf';
+      case 'XD':
+        return 'assets/pdf/XD.pdf';
+      case 'XE':
+        return 'assets/pdf/XE.pdf';
+      case 'XF':
+        return 'assets/pdf/XF.pdf';
+      case 'Z0':
+      case 'Z1':
+        return 'assets/pdf/Z0.pdf';
+      case 'Y1':
+      case 'Y2':
+      case 'Y3':
+      case 'Y4':
+      case 'Y5':
+      case 'Y6':
+      case 'Y7':
+      case 'Y8':
+      case 'Y9':
+      case 'YA':
+      case 'YB':
+      case 'YC':
+      case 'YD':
+      case 'YE':
+      case 'YF':
+      case 'YG':
+      case 'YH':
+      case 'YZ':
+        return 'assets/pdf/Y.pdf';
+      default:
+        return '';
+    }
+  }
+
+  Widget _listGuideX1(BuildContext context) {
+    // Tạo danh sách cấu hình gồm tên (dummy) và đường dẫn file
+    final List<Map<String, String>> guides = [
+      {'title': 'Phép tính số học', 'path': 'assets/pdf/X1_1.pdf'},
+      {'title': 'Phép tính phân số', 'path': 'assets/pdf/X1_2.pdf'},
+      {'title': 'Lũy thừa, căn, nghịch đảo', 'path': 'assets/pdf/X1_3.pdf'},
+      {'title': 'Số Pi, cơ số lôgarit tự nhiên e', 'path': 'assets/pdf/X1_4.pdf'},
+      {'title': 'Lịch sử và hiển thị lại phép tính', 'path': 'assets/pdf/X1_5.pdf'},
+      {'title': 'Sử dụng chức năng bộ nhớ', 'path': 'assets/pdf/X1_6.pdf'},
+      {'title': 'Sử dụng CALC', 'path': 'assets/pdf/X1_7.pdf'},
+    ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      // Dùng map để tự động tạo ra 7 cái thẻ (Card)
+      children: guides.map((guide) {
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 12.0), // Khoảng cách giữa các thẻ
+          child: Card(
+            elevation: 2, // Đổ bóng nhẹ cho đẹp
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: ListTile(
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              leading: const Icon(
+                Icons.picture_as_pdf_rounded,
+                color: Colors.redAccent,
+                size: 32,
+              ),
+              title: Text(
+                guide['title']!,
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 16),
+
+              // Thay onPressed bằng onTap của ListTile
+              onTap: () {
+                try {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => AssetPdfViewerScreen(
+                        assetPath: guide['path']!,
+                        title: guide['title']!, // Truyền luôn tên qua màn hình PDF nếu cần
+                      ),
+                    ),
+                  );
+                } catch (e) {
+                  debugPrint("Lỗi khi mở PDF: $e");
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Không thể mở file: $e')),
+                  );
+                }
+              },
+            ),
+          ),
+        );
+      }).toList(),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
@@ -337,12 +588,17 @@ class _CasioQrState extends State<CasioQr> {
     List<String> matrices = _getMatrixLatex();
     String result = _getResultLatex();
     List<String> vectors = _getVectorLatex();
+    String csvString = _getCSVString();
     String distribution = _getdistributionLatex();
+    String name = _getName();
+    String mode = _getMode();
+    String assetPath = "";
+    assetPath = getPdfPath(mode);
 
     return Scaffold(
       backgroundColor: colorScheme.surface,
       appBar: AppBar(
-        title: const Text('Tạo Latex từ Casio'),
+        title: const Text('Quét mã QR Casio'),
         centerTitle: true,
       ),
       body: SingleChildScrollView(
@@ -383,7 +639,35 @@ class _CasioQrState extends State<CasioQr> {
                   ),
                 ),
               ),
-
+            (name.isNotEmpty)
+                ? Padding(
+                    padding: const EdgeInsets.fromLTRB(0, 0, 0, 18),
+                    child: Text(
+                      name,
+                      style: const TextStyle(fontSize: 18),
+                    ),
+                  )
+                : const SizedBox(height: 0),
+            (assetPath.isNotEmpty && mode != 'X1')
+                ? ElevatedButton(
+                    onPressed: () {
+                      try {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => AssetPdfViewerScreen(
+                              assetPath: assetPath,
+                            ),
+                          ),
+                        );
+                      } catch (e) {
+                        print("Lỗi khi mở PDF: $e");
+                      }
+                    },
+                    child: Text("Mở hướng dẫn sử dụng"),
+                  )
+                : const SizedBox(height: 0),
+            (mode == 'X1') ? _listGuideX1(context) : const SizedBox(height: 0),
             if (_qrContent.isNotEmpty) ...[
               if (expression.isNotEmpty)
                 _buildLatexSection('Biểu thức', expression, context)
@@ -398,6 +682,11 @@ class _CasioQrState extends State<CasioQr> {
                 _buildLatexSection('Tham số Phân phối', distribution, context)
               else
                 const SizedBox(height: 0),
+              if (csvString.isNotEmpty)
+                _buildTable('Bảng dữ liệu', csvString, context)
+              else
+                const SizedBox(height: 0),
+
               // TỰ ĐỘNG LẶP: Có bao nhiêu hàm số (f(x), g(x)...) in ra bấy nhiêu
               if (functions.isNotEmpty)
                 ...functions.map(
@@ -405,6 +694,28 @@ class _CasioQrState extends State<CasioQr> {
                 )
               else
                 const SizedBox(height: 0),
+              (functions.isNotEmpty)
+                  ? ElevatedButton(
+                      onPressed: () async {
+                        if (rawLink.isNotEmpty) {
+                          final Uri url = Uri.parse(rawLink);
+                          // Dùng mode externalApplication để ép mở bằng Chrome/Safari/trình duyệt mặc định
+                          if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Không thể mở trình duyệt lúc này!'),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                            }
+                          }
+                        }
+                      },
+                      child: const Text("Xem đồ thị"),
+                    )
+                  : const SizedBox(height: 0),
+              // TỰ ĐỘNG LẶP: Có bao nhiêu ma trận in ra bấy nhiêu
               if (matrices.isNotEmpty)
                 ...matrices.map(
                   (matrixLatex) => _buildLatexSection('Ma trận', matrixLatex, context),
@@ -430,8 +741,10 @@ class _CasioQrState extends State<CasioQr> {
                   functions.isEmpty &&
                   matrices.isEmpty &&
                   result.isEmpty &&
+                  csvString.isEmpty &&
                   distribution.isEmpty &&
                   vectors.isEmpty &&
+                  name.isEmpty &&
                   expression.isEmpty)
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 60.0),
@@ -455,7 +768,7 @@ class _CasioQrState extends State<CasioQr> {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          'Chế độ hiện tại trên máy tính Casio chưa được hệ thống hỗ trợ phân tích hoặc không phù hợp.',
+                          'Chế độ hiện tại trên máy tính Casio chưa được hệ thống hỗ trợ phân tích.',
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             fontSize: 14,
@@ -486,6 +799,7 @@ class _CasioQrState extends State<CasioQr> {
 
             setState(() {
               _qrContent = parsedData;
+              rawLink = result;
             });
           }
         },
@@ -550,7 +864,8 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
     showDialog(
       context: context,
       barrierDismissible: false, // Bắt buộc người dùng bấm nút
-      builder: (BuildContext context) {
+      // ĐỔI TÊN BIẾN NÀY THÀNH dialogContext ĐỂ KHÔNG BỊ NHẦM LẪN
+      builder: (BuildContext dialogContext) {
         final colorScheme = Theme.of(context).colorScheme;
 
         return AlertDialog(
@@ -585,7 +900,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
             TextButton(
               onPressed: () {
                 // CHỌN QUÉT TIẾP
-                Navigator.pop(context); // Đóng popup
+                Navigator.pop(dialogContext); // Đóng popup bằng dialogContext
                 setState(() {
                   _isPaused = false; // Mở khoá camera để quét mã tiếp theo
                 });
@@ -595,11 +910,13 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
             FilledButton(
               onPressed: () {
                 // CHỌN HOÀN TẤT
-                Navigator.pop(context); // Đóng popup
+                Navigator.pop(dialogContext); // 1. Đóng popup bằng dialogContext
 
                 // GHÉP CHUỖI VÀ GỬI VỀ
                 String fullCasioData = _scannedParts.join('');
-                _controller.stop();
+                _controller.stop(); // Tắt camera
+
+                // 2. Đóng màn hình Quét QR bằng 'context' gốc của màn hình
                 Navigator.pop(context, fullCasioData);
               },
               child: const Text('Hoàn tất & Xử lý'),

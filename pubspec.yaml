@@ -57,7 +57,9 @@ dependencies:
   gal: ^2.3.2
   mobile_scanner: ^5.2.0
   flutter_js: ^0.8.7
-
+  share_plus: ^12.0.1
+  file_saver: ^0.3.1
+  syncfusion_flutter_pdfviewer: ^33.1.45
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -120,6 +122,27 @@ flutter:
     - assets/img/googleLogo.png
     - assets/img/Slice1.png
     - assets/js/cwqr.js
+    - assets/pdf/X1_1.pdf
+    - assets/pdf/X1_2.pdf
+    - assets/pdf/X1_3.pdf
+    - assets/pdf/X1_4.pdf
+    - assets/pdf/X1_5.pdf
+    - assets/pdf/X1_6.pdf
+    - assets/pdf/X1_7.pdf
+    - assets/pdf/X2.pdf
+    - assets/pdf/X3.pdf
+    - assets/pdf/X4.pdf
+    - assets/pdf/X5.pdf
+    - assets/pdf/X6.pdf
+    - assets/pdf/X7.pdf
+    - assets/pdf/X8.pdf
+    - assets/pdf/XA.pdf
+    - assets/pdf/XB.pdf
+    - assets/pdf/XC.pdf
+    - assets/pdf/XD.pdf
+    - assets/pdf/XF.pdf
+    - assets/pdf/Y.pdf
+    - assets/pdf/Z0.pdf
   fonts:
     - family: Casio580
       fonts:

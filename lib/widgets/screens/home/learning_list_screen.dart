@@ -171,18 +171,11 @@ class _LearningListBodyState extends State<LearningListBody> {
                               padding: const EdgeInsets.all(16),
                               child: Row(
                                 children: [
-                                  // Icon trang trí hiện đại
-                                  Container(
-                                    padding: const EdgeInsets.all(12),
-                                    decoration: BoxDecoration(
-                                      color: colorScheme.primaryContainer,
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    child: Icon(
-                                      Icons.menu_book_rounded,
-                                      color: colorScheme.onPrimaryContainer,
-                                      size: 24,
-                                    ),
+                                  // Icon đã được tinh gọn lại cho giống màn hình Casio QR
+                                  const Icon(
+                                    Icons.menu_book_rounded,
+                                    color: Colors.blueAccent,
+                                    size: 32,
                                   ),
                                   const SizedBox(width: 16),
                                   // Tiêu đề bài học

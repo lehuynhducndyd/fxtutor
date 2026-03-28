@@ -42,7 +42,7 @@ class CasioQRParser {
     try {
       String safeUrl = casioUrl.replaceAll("'", "\\'");
       JsEvalResult jsResult = _jsRuntime.evaluate("""
-        JSON.stringify(cwqr.parseUrl('$safeUrl', 'en'))
+        JSON.stringify(cwqr.parseUrl('$safeUrl', 'vi'))
       """);
 
       if (jsResult.isError) {
