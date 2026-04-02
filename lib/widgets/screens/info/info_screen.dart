@@ -45,29 +45,6 @@ class InfoScreen extends StatelessWidget {
           const SizedBox(height: 32),
 
           // ================= 1. TÁC GIẢ =================
-          _buildSectionHeader(context, Icons.person, "Tác giả"),
-          Card(
-            elevation: 0,
-            color: colorScheme.surfaceContainerHighest,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            child: const Padding(
-              padding: EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    "Lê Huỳnh Đức",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  SizedBox(height: 8),
-                  Text("Sinh viên năm 4 - Chuyên ngành Kỹ thuật Phần mềm"),
-                  SizedBox(height: 4),
-                  Text("Trường Đại học Cần Thơ"),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(height: 24),
 
           // ================= 2. LỜI CẢM ƠN =================
           _buildSectionHeader(context, Icons.favorite, "Lời cảm ơn"),
@@ -79,7 +56,8 @@ class InfoScreen extends StatelessWidget {
               padding: EdgeInsets.all(16.0),
               child: Text(
                 "Xin gửi lời cảm ơn chân thành đến quý Thầy Cô trường Đại học Cần Thơ đã tận tình giảng dạy và hướng dẫn.\n\n"
-                "Special thanks to CalcWorld and other open-source contributors for the Web-calc emulator. Cảm ơn cộng đồng đã cung cấp các tài liệu và thư viện quý giá để hoàn thiện ứng dụng này.",
+                "Special thanks to CalcWorld and other open-source contributors for the Web-calc emulator. Cảm ơn cộng đồng đã cung cấp các tài liệu và thư viện quý giá để hoàn thiện ứng dụng này.\n\n"
+                "Nguồn tài liệu hướng dẫn sử dụng máy tính Casio fx-880BTG: Bản quyền thuộc về CASIO COMPUTER CO., LTD).",
                 style: TextStyle(height: 1.5),
                 textAlign: TextAlign.justify,
               ),

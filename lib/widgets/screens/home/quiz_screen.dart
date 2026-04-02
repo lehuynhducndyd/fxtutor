@@ -50,41 +50,45 @@ class _QuizScreenState extends State<QuizScreen> with AutomaticKeepAliveClientMi
             // ================= TRẠNG THÁI LOADING =================
             if (state.status == LoadStatus.Loading) {
               return Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(24.0),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(24),
-                        decoration: BoxDecoration(
-                          color: colorScheme.primaryContainer,
-                          shape: BoxShape.circle,
+                // Thêm SingleChildScrollView để chống tràn viền
+                child: SingleChildScrollView(
+                  child: Padding(
+                    padding: const EdgeInsets.all(24.0),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.min, // Giữ column ôm sát nội dung
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(24),
+                          decoration: BoxDecoration(
+                            color: colorScheme.primaryContainer,
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            Icons.auto_awesome_rounded,
+                            size: 48,
+                            color: colorScheme.onPrimaryContainer,
+                          ),
                         ),
-                        child: Icon(
-                          Icons.auto_awesome_rounded,
-                          size: 48,
-                          color: colorScheme.onPrimaryContainer,
+                        const SizedBox(height: 32),
+                        const CircularProgressIndicator(),
+                        const SizedBox(height: 24),
+                        Text(
+                          "AI đang phân tích và tạo trắc nghiệm...",
+                          style: textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: colorScheme.primary,
+                          ),
+                          textAlign: TextAlign.center,
                         ),
-                      ),
-                      const SizedBox(height: 32),
-                      const CircularProgressIndicator(),
-                      const SizedBox(height: 24),
-                      Text(
-                        "AI đang phân tích và tạo trắc nghiệm...",
-                        style: textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: colorScheme.primary,
+                        const SizedBox(height: 8),
+                        Text(
+                          "Bạn sẽ có 5 phút để hoàn thành 5 câu hỏi.\nVui lòng đợi giây lát!",
+                          style: TextStyle(color: colorScheme.onSurfaceVariant, height: 1.5),
+                          textAlign: TextAlign.center,
                         ),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        "Bạn sẽ có 5 phút để hoàn thành 5 câu hỏi.\nVui lòng đợi giây lát!",
-                        style: TextStyle(color: colorScheme.onSurfaceVariant, height: 1.5),
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               );
@@ -93,37 +97,41 @@ class _QuizScreenState extends State<QuizScreen> with AutomaticKeepAliveClientMi
             // ================= TRẠNG THÁI LỖI =================
             if (state.status == LoadStatus.Error) {
               return Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(24.0),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.error_outline_rounded, size: 64, color: colorScheme.error),
-                      const SizedBox(height: 16),
-                      Text(
-                        "Rất tiếc, đã có lỗi xảy ra",
-                        style: textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        state.errorMessage ??
-                            "Lỗi khi tạo trắc nghiệm. Máy chủ AI có thể đang quá tải.",
-                        style: TextStyle(color: colorScheme.onSurfaceVariant),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 24),
-                      FilledButton.icon(
-                        onPressed: () {
-                          setState(() => _cachedQuiz = null); // Reset lại cache nếu thử lại
-                          context.read<AiChatCubit>().generateQuiz(widget.content);
-                        },
-                        icon: const Icon(Icons.refresh_rounded),
-                        label: const Text("Tạo lại trắc nghiệm"),
-                        style: FilledButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                // Thêm SingleChildScrollView để chống tràn viền
+                child: SingleChildScrollView(
+                  child: Padding(
+                    padding: const EdgeInsets.all(24.0),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.error_outline_rounded, size: 64, color: colorScheme.error),
+                        const SizedBox(height: 16),
+                        Text(
+                          "Rất tiếc, đã có lỗi xảy ra",
+                          style: textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
                         ),
-                      ),
-                    ],
+                        const SizedBox(height: 8),
+                        Text(
+                          state.errorMessage ??
+                              "Lỗi khi tạo trắc nghiệm. Máy chủ AI có thể đang quá tải.",
+                          style: TextStyle(color: colorScheme.onSurfaceVariant),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 24),
+                        FilledButton.icon(
+                          onPressed: () {
+                            setState(() => _cachedQuiz = null); // Reset lại cache nếu thử lại
+                            context.read<AiChatCubit>().generateQuiz(widget.content);
+                          },
+                          icon: const Icon(Icons.refresh_rounded),
+                          label: const Text("Tạo lại trắc nghiệm"),
+                          style: FilledButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               );
@@ -131,7 +139,6 @@ class _QuizScreenState extends State<QuizScreen> with AutomaticKeepAliveClientMi
 
             // ================= TRẠNG THÁI THÀNH CÔNG =================
             if (state.quiz != null && state.quiz!.isNotEmpty) {
-              // 4. CHỈ KHỞI TẠO QUIZ 1 LẦN DUY NHẤT VÀ LƯU VÀO CACHE
               if (_cachedQuiz == null) {
                 _cachedQuiz = Quiz(
                   questions: state.quiz!
@@ -148,22 +155,25 @@ class _QuizScreenState extends State<QuizScreen> with AutomaticKeepAliveClientMi
                 );
               }
 
-              // Truyền đối tượng đã cache vào QuizPage
               return QuizPage(quiz: _cachedQuiz!);
             }
 
             // ================= TRẠNG THÁI TRỐNG =================
             return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.quiz_outlined, size: 64, color: colorScheme.outline),
-                  const SizedBox(height: 16),
-                  Text(
-                    "Không có dữ liệu trắc nghiệm.",
-                    style: textTheme.titleMedium?.copyWith(color: colorScheme.onSurfaceVariant),
-                  ),
-                ],
+              // Thêm SingleChildScrollView để chống tràn viền
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.quiz_outlined, size: 64, color: colorScheme.outline),
+                    const SizedBox(height: 16),
+                    Text(
+                      "Không có dữ liệu trắc nghiệm.",
+                      style: textTheme.titleMedium?.copyWith(color: colorScheme.onSurfaceVariant),
+                    ),
+                  ],
+                ),
               ),
             );
           },

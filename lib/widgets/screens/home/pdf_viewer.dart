@@ -29,7 +29,7 @@ class AssetPdfViewerScreen extends StatelessWidget {
         // Giới hạn chiều ngang tối đa (khoảng 800 là đẹp cho tablet)
         child: ConstrainedBox(
           constraints: const BoxConstraints(
-            maxWidth: 800,
+            maxWidth: 600,
           ),
           child: Container(
             // Nếu màn hình bự hơn 800 (tablet), đánh thêm cái bóng đổ nhìn cho nghệ
