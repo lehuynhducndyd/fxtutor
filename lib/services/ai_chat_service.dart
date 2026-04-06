@@ -16,7 +16,7 @@ class AiChatService {
 
   AiChatService()
     : _chatModel = GenerativeModel(
-        model: 'gemma-3-27b-it',
+        model: 'gemini-3.1-flash-lite-preview',
         apiKey: dotenv.env['API_KEY'] ?? '',
       ),
       _embeddingModel = GenerativeModel(
