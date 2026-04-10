@@ -63,6 +63,28 @@ class _LearningListDetailScreenState extends State<LearningListDetailScreen> {
     }
   }
 
+  String disableMarkdown(String input) {
+    // 1. Thoát các ký tự định dạng Markdown phổ biến
+    String escaped = input
+        .replaceAll('\\', r'\\') // Thoát chính dấu \ trước tiên
+        .replaceAll('#', r'\#') // Tiêu đề
+        .replaceAll('*', r'\*') // In đậm, in nghiêng, list
+        .replaceAll('_', r'\_') // In nghiêng, gạch chân
+        .replaceAll('>', r'\>') // Trích dẫn (Blockquote)
+        .replaceAll('-', r'\-') // Gạch đầu dòng
+        .replaceAll('+', r'\+') // Gạch đầu dòng
+        .replaceAll('`', r'\`'); // Code block
+
+    // 2. Xử lý danh sách đánh số (1. 2. 3. ...)
+    // Tìm tất cả các con số theo sau là dấu chấm (vd: "1.", "12.") và chèn dấu \ vào giữa
+    escaped = escaped.replaceAllMapped(
+      RegExp(r'(\d+)\.'),
+      (match) => '${match.group(1)}\\.',
+    );
+
+    return escaped;
+  }
+
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
@@ -133,7 +155,15 @@ class _LearningListDetailScreenState extends State<LearningListDetailScreen> {
                   // Nút Báo cáo lỗi / Góp ý (Nút phụ)
                   OutlinedButton.icon(
                     onPressed: () {
-                      Navigator.pushNamed(context, AddContributeScreen.route);
+                      // Tạo chuỗi nội dung điền sẵn
+                      final prefillText =
+                          "Báo cáo/Góp ý bài học: ${widget.content.title}\nNội dung chi tiết: ";
+
+                      Navigator.pushNamed(
+                        context,
+                        AddContributeScreen.route,
+                        arguments: prefillText, // Gửi chuỗi này sang màn hình đóng góp
+                      );
                     },
                     icon: Icon(Icons.flag_outlined, color: colorScheme.error, size: 20),
                     label: Text(
@@ -214,7 +244,7 @@ class _LearningListDetailScreenState extends State<LearningListDetailScreen> {
         return Padding(
           padding: const EdgeInsets.only(bottom: 16.0),
           child: MarkdownWidget(
-            data: block.data ?? '',
+            data: disableMarkdown(block.data ?? ''),
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             markdownGenerator: markdownConfig,

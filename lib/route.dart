@@ -207,7 +207,13 @@ Route<dynamic>? mainRoute(RouteSettings settings) {
     case CasioQr.route:
       return MaterialPageRoute(builder: (context) => CasioQr(), settings: settings);
     case AddContributeScreen.route:
-      return MaterialPageRoute(builder: (context) => AddContributeScreen(), settings: settings);
+      // Lấy dữ liệu được truyền qua arguments (nếu có)
+      final initialContent = settings.arguments as String?;
+
+      return MaterialPageRoute(
+        builder: (context) => AddContributeScreen(initialContent: initialContent),
+        settings: settings,
+      );
     case InfoScreen.route:
       return MaterialPageRoute(builder: (context) => InfoScreen(), settings: settings);
     case UserManagerScreen.route:

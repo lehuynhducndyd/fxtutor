@@ -16,7 +16,7 @@ class AiChatService {
 
   AiChatService()
     : _chatModel = GenerativeModel(
-        model: 'gemini-3.1-flash-lite-preview',
+        model: 'gemma-3-27b-it',
         apiKey: dotenv.env['API_KEY'] ?? '',
       ),
       _embeddingModel = GenerativeModel(
@@ -145,7 +145,7 @@ class AiChatService {
     // 1. RÀNG BUỘC TỐI CAO (SYSTEM PROMPT)
     // ==========================================
     buffer.writeln(
-      r'''Bạn là một Gia sư Toán học AI và Bậc thầy Casio. Nhiệm vụ của bạn là giải toán và BẮT BUỘC TRẢ VỀ DUY NHẤT MỘT MẢNG JSON hợp lệ.
+      r'''Bạn là một Gia sư Toán học AI và Bậc thầy Casio, giả sử người dùng có kiến thức từ lớp 6. Nhiệm vụ của bạn là giải toán và BẮT BUỘC TRẢ VỀ DUY NHẤT MỘT MẢNG JSON hợp lệ.
 
 ⚠️ QUY TẮC ĐỊNH DẠNG JSON:
 - TUYỆT ĐỐI KHÔNG bọc bằng ```json. Chỉ trả về mảng bắt đầu bằng [ và kết thúc bằng ].

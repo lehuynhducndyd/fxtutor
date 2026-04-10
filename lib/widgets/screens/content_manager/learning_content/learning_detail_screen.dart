@@ -68,6 +68,28 @@ class _LearningDetailScreenState extends State<LearningDetailScreen> {
     }
   }
 
+  String disableMarkdown(String input) {
+    // 1. Thoát các ký tự định dạng Markdown phổ biến
+    String escaped = input
+        .replaceAll('\\', r'\\') // Thoát chính dấu \ trước tiên
+        .replaceAll('#', r'\#') // Tiêu đề
+        .replaceAll('*', r'\*') // In đậm, in nghiêng, list
+        .replaceAll('_', r'\_') // In nghiêng, gạch chân
+        .replaceAll('>', r'\>') // Trích dẫn (Blockquote)
+        .replaceAll('-', r'\-') // Gạch đầu dòng
+        .replaceAll('+', r'\+') // Gạch đầu dòng
+        .replaceAll('`', r'\`'); // Code block
+
+    // 2. Xử lý danh sách đánh số (1. 2. 3. ...)
+    // Tìm tất cả các con số theo sau là dấu chấm (vd: "1.", "12.") và chèn dấu \ vào giữa
+    escaped = escaped.replaceAllMapped(
+      RegExp(r'(\d+)\.'),
+      (match) => '${match.group(1)}\\.',
+    );
+
+    return escaped;
+  }
+
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
@@ -147,8 +169,8 @@ class _LearningDetailScreenState extends State<LearningDetailScreen> {
 
     // Cấu hình chung cho Markdown (Text & Latex)
     final markdownConfig = MarkdownGenerator(
-      generators: [latexGenerator],
-      inlineSyntaxList: [LatexSyntax()],
+      generators: [latexGenerator], // Kích hoạt Latex generator
+      inlineSyntaxList: [LatexSyntax()], // Kích hoạt cú pháp inline $...$
     );
 
     switch (block.type) {
@@ -163,7 +185,7 @@ class _LearningDetailScreenState extends State<LearningDetailScreen> {
         return Padding(
           padding: const EdgeInsets.only(bottom: 16.0),
           child: MarkdownWidget(
-            data: block.data ?? '',
+            data: disableMarkdown(block.data ?? ''),
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             markdownGenerator: markdownConfig,
@@ -215,8 +237,7 @@ class _LearningDetailScreenState extends State<LearningDetailScreen> {
                 borderRadius: BorderRadius.circular(16),
                 child: Container(
                   constraints: const BoxConstraints(
-                    maxHeight: 250,
-                    minWidth: double.infinity,
+                    maxWidth: 400,
                   ),
                   color: colorScheme.surfaceContainerHighest,
                   child: Image.network(
@@ -284,7 +305,7 @@ class _LearningDetailScreenState extends State<LearningDetailScreen> {
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: colorScheme.primaryContainer.withOpacity(0.3),
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(12),
             border: Border.all(color: colorScheme.primary.withOpacity(0.2)),
           ),
           child: RichText(

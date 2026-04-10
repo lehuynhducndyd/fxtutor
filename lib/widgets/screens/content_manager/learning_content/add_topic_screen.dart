@@ -75,6 +75,7 @@ class _BodyState extends State<Body> {
           content: const Text("Vui lòng điền đầy đủ tên và mô tả chủ đề!"),
           backgroundColor: Theme.of(context).colorScheme.error,
           behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 1),
         ),
       );
       return;
@@ -95,6 +96,7 @@ class _BodyState extends State<Body> {
       SnackBar(
         content: Text(widget.isAddMode ? "Đã thêm chủ đề mới!" : "Đã cập nhật chủ đề!"),
         behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 1),
       ),
     );
   }

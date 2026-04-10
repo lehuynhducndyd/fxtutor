@@ -162,6 +162,7 @@ class _BodyState extends State<Body> {
         SnackBar(
           content: const Text('Vui lòng nhập tên hành động'),
           backgroundColor: colorScheme.error,
+          duration: const Duration(seconds: 1),
         ),
       );
       return;
@@ -172,6 +173,7 @@ class _BodyState extends State<Body> {
         SnackBar(
           content: const Text('Vui lòng nhập dòng máy hỗ trợ'),
           backgroundColor: colorScheme.error,
+          duration: const Duration(seconds: 1),
         ),
       );
       return;
@@ -182,6 +184,7 @@ class _BodyState extends State<Body> {
         SnackBar(
           content: const Text('Vui lòng nhập đầy đủ tên và nội dung các phương thức'),
           backgroundColor: colorScheme.error,
+          duration: const Duration(seconds: 1),
         ),
       );
       return;

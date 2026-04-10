@@ -151,6 +151,7 @@ class _KeepAliveWebViewState extends State<KeepAliveWebView> with AutomaticKeepA
         SnackBar(
           content: Text(message),
           behavior: SnackBarBehavior.floating,
+          duration: const Duration(milliseconds: 500),
         ),
       );
     }

@@ -91,14 +91,22 @@ class _PageState extends State<Page> {
       // 4. Cập nhật giao diện
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Đã gửi yêu cầu thành công!')),
+          const SnackBar(
+            content: Text('Đã gửi yêu cầu thành công!'),
+            duration: Duration(seconds: 1),
+          ),
         );
         setState(() => isLoadingCollab = true);
         await _checkCollabStatus();
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString()),
+            duration: const Duration(seconds: 1),
+          ),
+        );
       }
     }
   }
@@ -195,7 +203,10 @@ class _PageState extends State<Page> {
                     onPressed: () {
                       context.read<ProfileCubit>().updateProfile(fullName: nameController.text);
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Đổi tên thành công!')),
+                        const SnackBar(
+                          content: Text('Đổi tên thành công!'),
+                          duration: Duration(seconds: 1),
+                        ),
                       );
                     },
                     style: FilledButton.styleFrom(
@@ -403,7 +414,10 @@ void _showChangePasswordDialog(BuildContext context, ProfileCubit profileCubit) 
                   Navigator.pop(context);
 
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Đổi mật khẩu thành công!')),
+                    const SnackBar(
+                      content: Text('Đổi mật khẩu thành công!'),
+                      duration: Duration(seconds: 1),
+                    ),
                   );
                 },
                 child: const Text('Lưu'),

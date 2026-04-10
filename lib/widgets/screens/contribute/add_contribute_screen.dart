@@ -4,7 +4,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'contribute_cubit.dart';
 
 class AddContributeScreen extends StatefulWidget {
-  const AddContributeScreen({super.key});
+  final String? initialContent; // Thêm biến chứa nội dung khởi tạo
+
+  const AddContributeScreen({super.key, this.initialContent});
+
   static const String route = 'AddContributeScreen';
 
   @override
@@ -14,6 +17,15 @@ class AddContributeScreen extends StatefulWidget {
 class _AddContributeScreenState extends State<AddContributeScreen> {
   final _contentController = TextEditingController();
   bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Nếu có dữ liệu điền sẵn được truyền sang, gán nó vào controller
+    if (widget.initialContent != null) {
+      _contentController.text = widget.initialContent!;
+    }
+  }
 
   @override
   void dispose() {
@@ -32,6 +44,7 @@ class _AddContributeScreenState extends State<AddContributeScreen> {
           content: const Text('Vui lòng nhập nội dung đóng góp!'),
           backgroundColor: Theme.of(context).colorScheme.error,
           behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 1),
         ),
       );
       return;
@@ -49,6 +62,7 @@ class _AddContributeScreenState extends State<AddContributeScreen> {
           const SnackBar(
             content: Text('Đã gửi đóng góp thành công! Cảm ơn bạn rất nhiều.'),
             behavior: SnackBarBehavior.floating,
+            duration: const Duration(seconds: 1),
           ),
         );
         Navigator.pop(context); // Trở về màn hình trước

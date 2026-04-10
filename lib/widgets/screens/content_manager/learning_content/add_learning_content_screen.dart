@@ -94,13 +94,12 @@ class Body extends StatefulWidget {
 class _BodyState extends State<Body> {
   final _titleController = TextEditingController();
 
-  List<ContentBlock> _blocks = [const ContentBlock(type: 'text', data: '')];
+  List<ContentBlock> _blocks = [];
   final ImagePicker _picker = ImagePicker();
   bool _isUploading = false;
 
-  // GIẢI PHÁP 2: Khai báo Map để lưu trữ các Controller, tránh reset con trỏ
-  final Map<int, TextEditingController> _dataControllers = {};
-  final Map<int, TextEditingController> _captionControllers = {};
+  final List<TextEditingController> _dataControllers = [];
+  final List<TextEditingController> _captionControllers = [];
 
   @override
   void initState() {
@@ -112,37 +111,35 @@ class _BodyState extends State<Body> {
         _titleController.text = content.title;
         _blocks = List.from(content.blocks);
 
-        // Khởi tạo các controller ban đầu
-        for (int i = 0; i < _blocks.length; i++) {
-          _dataControllers[i] = TextEditingController(text: _blocks[i].data);
-          _captionControllers[i] = TextEditingController(text: _blocks[i].caption);
+        for (var block in _blocks) {
+          _dataControllers.add(TextEditingController(text: block.data));
+          _captionControllers.add(TextEditingController(text: block.caption));
         }
       }
     } else {
-      // Nếu là chế độ Thêm mới, khởi tạo controller cho block đầu tiên
-      _dataControllers[0] = TextEditingController(text: '');
-      _captionControllers[0] = TextEditingController(text: '');
+      _blocks.add(const ContentBlock(type: 'text', data: ''));
+      _dataControllers.add(TextEditingController(text: ''));
+      _captionControllers.add(TextEditingController(text: ''));
     }
   }
 
   @override
   void dispose() {
     _titleController.dispose();
-    // Giải phóng bộ nhớ cho các controller
-    for (var controller in _dataControllers.values) {
+    for (var controller in _dataControllers) {
       controller.dispose();
     }
-    for (var controller in _captionControllers.values) {
+    for (var controller in _captionControllers) {
       controller.dispose();
     }
     super.dispose();
   }
 
-  // --- LOGIC XỬ LÝ KHỐI ---
-  void _addBlock(String type) {
+  void _addBlock(String type, {int? insertIndex}) {
     setState(() {
-      final newIndex = _blocks.length;
-      _blocks.add(
+      final targetIndex = insertIndex ?? _blocks.length;
+      _blocks.insert(
+        targetIndex,
         ContentBlock(
           type: type,
           data: '',
@@ -155,9 +152,8 @@ class _BodyState extends State<Body> {
           fontSize: 'medium',
         ),
       );
-      // Tạo mới controller khi thêm khối
-      _dataControllers[newIndex] = TextEditingController(text: '');
-      _captionControllers[newIndex] = TextEditingController(text: '');
+      _dataControllers.insert(targetIndex, TextEditingController(text: ''));
+      _captionControllers.insert(targetIndex, TextEditingController(text: ''));
     });
   }
 
@@ -165,25 +161,58 @@ class _BodyState extends State<Body> {
     setState(() {
       _blocks.removeAt(index);
 
-      // Xóa controller và dịch chuyển các controller phía sau lên 1 bậc
-      _dataControllers[index]?.dispose();
-      _captionControllers[index]?.dispose();
+      _dataControllers[index].dispose();
+      _dataControllers.removeAt(index);
 
-      for (int i = index; i < _blocks.length; i++) {
-        _dataControllers[i] = _dataControllers[i + 1]!;
-        _captionControllers[i] = _captionControllers[i + 1]!;
-      }
-
-      _dataControllers.remove(_blocks.length);
-      _captionControllers.remove(_blocks.length);
+      _captionControllers[index].dispose();
+      _captionControllers.removeAt(index);
     });
   }
 
-  // --- LOGIC UPLOAD ẢNH ---
+  void _onReorder(int oldIndex, int newIndex) {
+    setState(() {
+      if (newIndex > oldIndex) {
+        newIndex -= 1;
+      }
+      final block = _blocks.removeAt(oldIndex);
+      final dataCtrl = _dataControllers.removeAt(oldIndex);
+      final capCtrl = _captionControllers.removeAt(oldIndex);
+
+      _blocks.insert(newIndex, block);
+      _dataControllers.insert(newIndex, dataCtrl);
+      _captionControllers.insert(newIndex, capCtrl);
+    });
+  }
+
+  // --- LOGIC UPLOAD ẢNH CÓ GIỚI HẠN 4MB ---
   Future<void> _pickAndUploadImage(int index) async {
     try {
       final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
       if (image == null) return;
+
+      // KIỂM TRA DUNG LƯỢNG ẢNH (GIỚI HẠN 4MB)
+      final int fileBytes = await image.length();
+      final int maxBytes = 4 * 1024 * 1024; // 4 Megabytes
+
+      if (fileBytes > maxBytes) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Row(
+                children: [
+                  Icon(Icons.error_outline_rounded, color: Colors.white),
+                  SizedBox(width: 8),
+                  Expanded(child: Text("Ảnh quá lớn! Vui lòng chọn ảnh dưới 4MB.")),
+                ],
+              ),
+              backgroundColor: Theme.of(context).colorScheme.error,
+              behavior: SnackBarBehavior.floating,
+              duration: const Duration(seconds: 1),
+            ),
+          );
+        }
+        return; // Hủy upload nếu quá dung lượng
+      }
 
       setState(() => _isUploading = true);
 
@@ -215,13 +244,16 @@ class _BodyState extends State<Body> {
       setState(() => _isUploading = false);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Lỗi upload ảnh: $e"), backgroundColor: Colors.red),
+          SnackBar(
+            content: Text("Lỗi upload ảnh: $e"),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 1),
+          ),
         );
       }
     }
   }
 
-  // --- LOGIC SAVE ---
   void _onSave() {
     FocusScope.of(context).unfocus();
 
@@ -230,6 +262,7 @@ class _BodyState extends State<Body> {
         SnackBar(
           content: const Text("Vui lòng nhập tiêu đề bài học"),
           backgroundColor: Theme.of(context).colorScheme.error,
+          duration: const Duration(seconds: 1),
         ),
       );
       return;
@@ -251,6 +284,7 @@ class _BodyState extends State<Body> {
         SnackBar(
           content: const Text("Vui lòng điền đầy đủ nội dung các khối"),
           backgroundColor: Theme.of(context).colorScheme.error,
+          duration: const Duration(seconds: 1),
         ),
       );
       return;
@@ -337,7 +371,7 @@ class _BodyState extends State<Body> {
           ),
         ),
 
-        // ================= THANH CỐ ĐỊNH: THÊM KHỐI MỚI =================
+        // ================= THANH CỐ ĐỊNH: THÊM KHỐI MỚI (VÀO CUỐI DỰ ÁN) =================
         Container(
           width: double.infinity,
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -358,31 +392,10 @@ class _BodyState extends State<Body> {
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 800),
               child: PopupMenuButton<String>(
-                onSelected: _addBlock,
+                onSelected: (type) => _addBlock(type),
                 position: PopupMenuPosition.under,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                itemBuilder: (context) => [
-                  _buildPopupItem('text', Icons.notes_rounded, "Văn bản", Colors.blueGrey),
-                  _buildPopupItem(
-                    'latex',
-                    Icons.functions_rounded,
-                    "Công thức (LaTeX)",
-                    Colors.teal,
-                  ),
-                  _buildPopupItem('image', Icons.image_rounded, "Hình ảnh", Colors.blue),
-                  _buildPopupItem(
-                    '580keylog',
-                    Icons.calculate_rounded,
-                    "Casio fx-580 Keylog",
-                    Colors.deepPurple,
-                  ),
-                  _buildPopupItem(
-                    '880keylog',
-                    Icons.calculate_outlined,
-                    "Casio fx-880 Keylog",
-                    Colors.indigo,
-                  ),
-                ],
+                itemBuilder: (context) => _getAddBlockMenuItems(),
                 child: Container(
                   width: double.infinity,
                   padding: const EdgeInsets.symmetric(vertical: 10),
@@ -416,15 +429,13 @@ class _BodyState extends State<Body> {
           child: Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 800),
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12.0,
-                  vertical: 16.0,
-                ),
-                child: Column(
+              child: ReorderableListView.builder(
+                padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 16.0),
+                buildDefaultDragHandles: false,
+                onReorder: _onReorder,
+                header: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // TIÊU ĐỀ BÀI HỌC
                     TextField(
                       controller: _titleController,
                       style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
@@ -446,7 +457,6 @@ class _BodyState extends State<Body> {
                     ),
                     const SizedBox(height: 16),
 
-                    // DANH SÁCH CÁC KHỐI ĐÃ THÊM
                     if (_blocks.isEmpty)
                       Center(
                         child: Padding(
@@ -458,14 +468,15 @@ class _BodyState extends State<Body> {
                           ),
                         ),
                       ),
-
-                    ..._blocks.asMap().entries.map((entry) {
-                      int idx = entry.key;
-                      ContentBlock block = entry.value;
-                      return _buildBlockItem(idx, block, colorScheme);
-                    }).toList(),
                   ],
                 ),
+                itemCount: _blocks.length,
+                itemBuilder: (context, index) {
+                  return Container(
+                    key: ObjectKey(_dataControllers[index]),
+                    child: _buildBlockItem(index, _blocks[index], colorScheme),
+                  );
+                },
               ),
             ),
           ),
@@ -504,6 +515,21 @@ class _BodyState extends State<Body> {
 
   // --- CÁC HÀM HELPER VẼ UI ---
 
+  List<PopupMenuEntry<String>> _getAddBlockMenuItems() {
+    return [
+      _buildPopupItem('text', Icons.notes_rounded, "Văn bản", Colors.blueGrey),
+      _buildPopupItem('latex', Icons.functions_rounded, "Công thức (LaTeX)", Colors.teal),
+      _buildPopupItem('image', Icons.image_rounded, "Hình ảnh", Colors.blue),
+      _buildPopupItem(
+        '580keylog',
+        Icons.calculate_rounded,
+        "Casio fx-580 Keylog",
+        Colors.deepPurple,
+      ),
+      _buildPopupItem('880keylog', Icons.calculate_outlined, "Casio fx-880 Keylog", Colors.indigo),
+    ];
+  }
+
   PopupMenuItem<String> _buildPopupItem(String value, IconData icon, String text, Color color) {
     return PopupMenuItem(
       value: value,
@@ -538,15 +564,15 @@ class _BodyState extends State<Body> {
   String _getBlockTitle(String type) {
     switch (type) {
       case 'text':
-        return "VĂN BẢN";
+        return "Text";
       case 'latex':
-        return "LATEX (TOÁN)";
+        return "Latex";
       case 'image':
-        return "HÌNH ẢNH";
+        return "Image";
       case '580keylog':
-        return "FX-580 KEYLOG";
+        return "580KEY";
       case '880keylog':
-        return "FX-880 KEYLOG";
+        return "880KEY";
       default:
         return type.toUpperCase();
     }
@@ -569,7 +595,7 @@ class _BodyState extends State<Body> {
     }
   }
 
-  Color _mapStringToColor(String colorStr) {
+  Color _mapStringToColor(String colorStr, ColorScheme colorScheme) {
     switch (colorStr) {
       case 'red':
         return Colors.red;
@@ -578,7 +604,7 @@ class _BodyState extends State<Body> {
       case 'green':
         return Colors.green;
       default:
-        return Colors.black87;
+        return colorScheme.onSurface;
     }
   }
 
@@ -589,7 +615,7 @@ class _BodyState extends State<Body> {
       case 'large':
         return 18.0;
       default:
-        return 14.0; // medium
+        return 14.0;
     }
   }
 
@@ -612,6 +638,14 @@ class _BodyState extends State<Body> {
             // --- HEADER KHỐI ---
             Row(
               children: [
+                ReorderableDragStartListener(
+                  index: index,
+                  child: Padding(
+                    padding: const EdgeInsets.only(right: 8.0),
+                    child: Icon(Icons.drag_indicator_rounded, color: colorScheme.outline, size: 22),
+                  ),
+                ),
+
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
@@ -635,13 +669,11 @@ class _BodyState extends State<Body> {
                 ),
                 const SizedBox(width: 8),
 
-                // === THANH CÔNG CỤ MINI (ĐÃ THÊM TÍNH NĂNG CUỘN NGANG) ===
                 if (block.type == 'text') ...[
-                  // GIẢI PHÁP 1: Bọc trong Expanded + SingleChildScrollView để cuộn ngang được
                   Expanded(
                     child: SingleChildScrollView(
                       scrollDirection: Axis.horizontal,
-                      reverse: true, // Để mặc định các nút dồn về bên phải
+                      reverse: true,
                       child: Container(
                         height: 34,
                         padding: const EdgeInsets.symmetric(horizontal: 4),
@@ -652,7 +684,6 @@ class _BodyState extends State<Body> {
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            // --- IN ĐẬM ---
                             const SizedBox(width: 20),
                             IconButton(
                               icon: const Icon(Icons.format_bold_rounded, size: 18),
@@ -678,7 +709,6 @@ class _BodyState extends State<Body> {
                             ),
                             const SizedBox(width: 2),
 
-                            // --- IN NGHIÊNG ---
                             IconButton(
                               icon: const Icon(Icons.format_italic_rounded, size: 18),
                               tooltip: "In nghiêng",
@@ -703,7 +733,6 @@ class _BodyState extends State<Body> {
                             ),
                             const SizedBox(width: 2),
 
-                            // --- GẠCH CHÂN ---
                             IconButton(
                               icon: const Icon(Icons.format_underlined_rounded, size: 18),
                               tooltip: "Gạch chân",
@@ -727,7 +756,6 @@ class _BodyState extends State<Body> {
                               ),
                             ),
 
-                            // --- VẠCH NGĂN CÁCH ---
                             Padding(
                               padding: const EdgeInsets.symmetric(horizontal: 4.0),
                               child: VerticalDivider(
@@ -738,7 +766,6 @@ class _BodyState extends State<Body> {
                               ),
                             ),
 
-                            // --- CHỌN MÀU CHỮ ---
                             PopupMenuButton<String>(
                               tooltip: "Màu chữ",
                               initialValue: block.color ?? 'black',
@@ -749,7 +776,7 @@ class _BodyState extends State<Body> {
                               ),
                               offset: const Offset(0, 30),
                               itemBuilder: (context) => [
-                                const PopupMenuItem(value: 'black', child: Text('Đen')),
+                                const PopupMenuItem(value: 'black', child: Text('Mặc định')),
                                 const PopupMenuItem(
                                   value: 'red',
                                   child: Text('Đỏ', style: TextStyle(color: Colors.red)),
@@ -771,12 +798,11 @@ class _BodyState extends State<Body> {
                                 child: Icon(
                                   Icons.palette_rounded,
                                   size: 18,
-                                  color: _mapStringToColor(block.color ?? 'black'),
+                                  color: _mapStringToColor(block.color ?? 'black', colorScheme),
                                 ),
                               ),
                             ),
 
-                            // --- CHỌN SIZE CHỮ ---
                             PopupMenuButton<String>(
                               tooltip: "Kích thước chữ",
                               initialValue: block.fontSize ?? 'medium',
@@ -821,7 +847,24 @@ class _BodyState extends State<Body> {
                 ] else
                   const Spacer(),
 
-                // Nút Xóa
+                PopupMenuButton<String>(
+                  tooltip: "Chèn thêm khối ở dưới",
+                  onSelected: (type) => _addBlock(type, insertIndex: index + 1),
+                  position: PopupMenuPosition.under,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  itemBuilder: (context) => _getAddBlockMenuItems(),
+                  child: Container(
+                    width: 32,
+                    height: 32,
+                    margin: const EdgeInsets.only(right: 4),
+                    child: Icon(
+                      Icons.add_circle_outline_rounded,
+                      color: colorScheme.primary,
+                      size: 20,
+                    ),
+                  ),
+                ),
+
                 SizedBox(
                   width: 32,
                   height: 32,
@@ -829,26 +872,22 @@ class _BodyState extends State<Body> {
                     padding: EdgeInsets.zero,
                     icon: Icon(Icons.close_rounded, color: colorScheme.error, size: 20),
                     onPressed: () => _removeBlock(index),
-                    tooltip: "Xóa khối",
+                    tooltip: "Xóa khối này",
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 10),
 
-            // --- NỘI DUNG TÙY THEO LOẠI ---
-
-            // 1. VĂN BẢN
             if (block.type == 'text')
               TextField(
-                // Sử dụng Controller từ Map đã khai báo ở trên để không bị reset con trỏ
                 controller: _dataControllers[index],
                 onChanged: (v) => _blocks[index] = block.copyWith(data: v),
                 maxLines: null,
                 minLines: 2,
                 style: TextStyle(
                   fontSize: _mapStringToSize(block.fontSize ?? 'medium'),
-                  color: _mapStringToColor(block.color ?? 'black'),
+                  color: _mapStringToColor(block.color ?? 'black', colorScheme),
                   fontWeight: (block.isBold ?? false) ? FontWeight.bold : FontWeight.normal,
                   fontStyle: (block.isItalic ?? false) ? FontStyle.italic : FontStyle.normal,
                   decoration: (block.isUnderline ?? false)
@@ -867,7 +906,6 @@ class _BodyState extends State<Body> {
                 ),
               ),
 
-            // 2. LATEX
             if (block.type == 'latex')
               TextField(
                 controller: _dataControllers[index],
@@ -898,7 +936,6 @@ class _BodyState extends State<Body> {
                 ),
               ),
 
-            // 3. KEYLOG
             if (block.type == '580keylog' || block.type == '880keylog')
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -932,7 +969,6 @@ class _BodyState extends State<Body> {
                 ],
               ),
 
-            // 4. HÌNH ẢNH
             if (block.type == 'image') ...[
               Container(
                 width: double.infinity,
